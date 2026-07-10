@@ -1,0 +1,2780 @@
+<!DOCTYPE html>
+<!-- saved from url=(0097)https://stackblitzstartersiq9ytesy-4m5e-%2D8080-%2D639e0ff1.local-credentialless.webcontainer.io/ -->
+<html lang="th"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>🚀Dashboard PRO MAX</title>
+
+<!-- ✅ LIB -->
+<script src="./index_files/xlsx.full.min.js.ดาวน์โหลด"></script>
+<script src="./index_files/jquery.min.js.ดาวน์โหลด"></script>
+
+<link href="./index_files/select2.min.css" rel="stylesheet">
+<script src="./index_files/select2.min.js.ดาวน์โหลด"></script>
+
+<script src="./index_files/html2canvas.min.js.ดาวน์โหลด"></script>
+
+<style>
+body{margin:0;background:#0f172a;color:#fff;font-family:Arial}
+.status-badge{
+ display:inline-flex;
+ align-items:center;
+ gap:6px;
+ padding:6px 12px;
+ border-radius:20px;
+ font-size:13px;
+ font-weight:bold;
+ white-space:nowrap;
+
+ box-shadow:0 0 6px rgba(255,255,255,0.15);
+ border:1px solid rgba(255,255,255,0.1);
+}
+/* ===== SHIFT SECTION ===== */
+
+.shift-box{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+
+#shiftDaily{
+  width:120px;
+  height:38px;
+}
+
+
+#shiftDaily:focus{
+  outline:none;
+
+  border-color:#38bdf8;
+
+  box-shadow:
+    0 0 10px rgba(56,189,248,.45);
+}
+
+.btn-shift-clear{
+
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+
+  padding:10px 14px;
+
+  border-radius:12px;
+  border:1px solid rgba(239,68,68,.4);
+
+  background:rgba(239,68,68,.15);
+
+  color:#f87171;
+
+  font-size:13px;
+  font-weight:700;
+
+  cursor:pointer;
+
+  transition:all .25s ease;
+}
+
+.btn-shift-clear:hover{
+
+  background:#ef4444;
+  color:#fff;
+
+  transform:translateY(-2px);
+
+  box-shadow:
+    0 0 12px rgba(239,68,68,.7);
+}
+
+.btn-shift-clear:active{
+  transform:scale(.96);
+}
+.status-badge{
+ font-size:11px;
+}
+.work-group{
+ gap:4px;   /* เดิม 6px → ลดลง */
+}
+.status-badge{
+ font-size:10px;
+ padding:3px 6px;
+ opacity:0.7;        /* ✅ ลด spotlight */
+}
+.status-badge{
+ display:inline-flex;
+ align-items:center;
+ gap:4px;
+ padding:3px 6px;
+ border-radius:12px;
+ font-size:10px;
+ font-weight:600;
+ opacity:0.75;
+
+ background:#475569;
+ color:#e2e8f0;
+}
+/* สีแต่ละสถานะ */
+.status-assigned{ background:#f59e0b; color:#fff; }
+.status-onsite{ background:#22c55e; color:#fff; }
+.status-departed{ background:#3b82f6; color:#fff; }
+.status-created{ background:#64748b; color:#fff; }
+
+/* 🔥 onsite วิ่ง (เด่นสุด) */
+@keyframes pulse{
+  0%{opacity:1}
+  50%{opacity:.5}
+  100%{opacity:1}
+}
+.status-onsite{
+ animation:none;   /* ปิดก่อน */
+}
+
+
+/* ✅ ให้หลอดเป็น relative */
+.sla-bar{
+ width:120px;
+ height:12px;
+ background:#1e293b;
+ border-radius:10px;
+ overflow:hidden;
+ position:relative;
+}
+
+/* ✅ fill */
+.sla-fill{
+ height:100%;
+ border-radius:10px;
+ display:flex;
+ align-items:center;
+ justify-content:center;
+ font-size:10px;
+ font-weight:bold;
+ color:#000;
+}
+
+/* ✅ text % */
+.sla-percent{
+ color:#000; /* ถ้าพื้นสว่าง */
+}
+
+/* ✅ ถ้าเป็นสีแดง ใช้ตัวอักษรขาว */
+.sla-red .sla-percent{
+ color:#fff;
+}
+
+/* ✅ สี */
+.sla-green{ background:#22c55e; }
+.sla-yellow{ background:#facc15; }
+.sla-red{ background:#ef4444; }
+
+/* ✅ text */
+.sla-text{
+ font-size:11px;
+ margin-top:4px;
+ text-align:center;
+}
+
+/* ✅ STATUS ใต้ Priority */
+.status-text{
+ display:flex;
+ align-items:center;
+ justify-content:center;
+ gap:6px;
+ font-size:12px;
+ margin-top:4px;
+}
+.status-text{
+ transition: all .2s ease;
+}
+/* ✅ DOT */
+.dot{
+ width:8px;
+ height:8px;
+ border-radius:50%;
+ display:inline-block;
+}
+
+/* ✅ STATUS COLOR */
+.dot.assigned{ background:#facc15; }   /* 🟡 Assigned */
+.dot.onsite{ background:#22c55e; }     /* 🟢 On-site */
+.dot.departed{ background:#3b82f6; }   /* 🔵 Departed */
+.dot.created{ background:#94a3b8; }    /* ⚪ Created */
+
+/* HEADER */
+.header{padding:12px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+
+/* KPI */
+.kpi-row{display:flex;gap:10px;justify-content:center;margin:15px}
+.kpi{padding:10px 18px;border-radius:12px;font-weight:bold;cursor:pointer;opacity:.6}
+.kpi.active{opacity:1;transform:scale(1.1);border:2px solid #fff}
+.red{background:#ef4444}
+.orange{background:#f59e0b}
+.green{background:#22c55e}
+.gray{background:#64748b}
+
+/* CARD */
+.card{
+ margin:15px auto;     /* ✅ center */
+ padding:12px;
+ border-radius:12px;
+ width:95%;            /* ✅ สำคัญ */
+ max-width:1600px;     /* ✅ กันกว้างเกิน */
+}
+
+/* ✅ HEADER ของการ์ด */
+.card-header{
+ display:flex;
+ justify-content:space-between;
+ align-items:center;
+ margin-bottom:10px;
+}
+
+.popup{
+ position:fixed;
+ top:0; left:0;
+ width:100%;
+ height:100%;
+ background:rgba(0,0,0,0.85);
+ display:flex;
+ align-items:center;
+ justify-content:center;
+ z-index:9999;
+}
+
+/* ✅ กล่องหลัก */
+.popup-card{
+ background:#111;
+ border:2px solid orange;
+ border-radius:6px;
+ padding:16px;
+ width:340px;
+ color:#fff;
+ font-family:Consolas, monospace;
+ box-shadow:0 0 20px #000;
+}
+
+/* ✅ Title */
+.popup-card h2{
+ color:#facc15;
+ margin-bottom:8px;
+ font-size:18px;
+}
+
+/* ✅ subtitle */
+.popup-sub{
+ color:#a3e635;
+ font-size:13px;
+ line-height:1.4;
+ margin-bottom:8px;
+}
+
+/* ✅ code section */
+.popup-code{
+ color:#fbbf24;
+ font-size:12px;
+ margin-bottom:10px;
+}
+
+/* ✅ remark */
+.popup-remark{
+ margin-top:10px;
+ font-size:13px;
+ line-height:1.5;
+}
+
+/* ✅ assign */
+.popup-assign{
+ margin-top:10px;
+ font-size:12px;
+ color:#93c5fd;
+}
+
+/* ✅ status badge */
+.popup-status{
+ margin-top:8px;
+ font-weight:bold;
+ display:inline-block;
+ padding:4px 10px;
+ border-radius:6px;
+}
+
+.popup-critical{
+ background:#ef4444;
+}
+
+.popup-departed{
+ background:#84cc16;
+ color:#000;
+}
+
+.popup-time{
+ float:right;
+ color:#facc15;
+ font-weight:bold;
+}
+.popup-critical{
+ background:#ef4444;
+ color:#fff;
+}
+
+.popup-major{
+ background:#f59e0b;
+ color:#fff;
+}
+
+.popup-minor{
+ background:#22c55e;
+ color:#fff;
+}
+
+.popup-none{
+ background:#64748b;
+ color:#fff;
+}
+
+.popup-assigned{
+ background:#f59e0b;
+ color:#fff;
+}
+
+.popup-onsite{
+ background:#22c55e;
+ color:#fff;
+}
+
+.popup-departed{
+ background:#3b82f6;
+ color:#fff;
+}
+
+.popup-created{
+ background:#64748b;
+ color:#fff;
+}
+
+.popup-done{
+ background:#16a34a;
+ color:#fff;
+}
+
+.popup-held{
+ background:#a855f7;
+ color:#fff;
+}
+
+.popup-cancel{
+ background:#dc2626;
+ color:#fff;
+}
+
+.popup-transfer{
+ background:#f97316;
+ color:#fff;
+}
+
+.popup-accepted{
+ background:#0891b2;
+ color:#fff;
+}
+
+.popup-interrupted{
+ background:#eab308;
+ color:#000;
+}
+/* EXPORT */
+.btn-export{
+ display:inline-flex;
+ align-items:center;
+ gap:6px;
+ padding:8px 14px;
+ border-radius:12px;
+
+ background:rgba(34,197,94,0.15);
+ border:1px solid rgba(34,197,94,0.4);
+ backdrop-filter:blur(10px);
+
+ color:#4ade80;
+ font-weight:600;
+
+ cursor:pointer;
+ transition:all .25s ease;
+}
+
+.btn-export:hover{
+ background:#22c55e;
+ color:#022c22;
+ box-shadow:0 0 10px #22c55e,0 0 20px #22c55e;
+}
+
+/* TABLE */
+
+table{
+ width:100%;
+ min-width:1200px;
+ border-collapse:collapse;
+}
+
+th{
+ background:#334155;
+ padding:8px;
+}
+
+td{
+ padding:8px;
+ font-size:13px;
+ vertical-align:middle;
+}
+/* ✅ PRIORITY BADGE */
+.badge{
+ display:inline-block;
+ padding:8px 16px;
+ border-radius:20px;
+ font-weight:bold;
+ font-size:14px;
+ text-align:center;
+ min-width:90px;
+}
+
+/* 🔴 Critical */
+.critical{
+ background:#ef4444;
+ color:#fff;
+}
+
+/* 🟠 Major */
+.major{
+ background:#f59e0b;
+ color:#fff;
+}
+
+/* 🟢 Minor */
+.minor{
+ background:#22c55e;
+ color:#fff;
+}
+
+/* ⚪ None */
+.none{
+ background:#64748b;
+ color:#fff;
+}
+
+/* ✅ STATUS ใต้ Priority */
+.status-text{
+ display:flex;
+ align-items:center;
+ justify-content:center;
+ gap:6px;
+ font-size:13px;
+ margin-top:6px;
+}
+
+/* ✅ DOT */
+.dot{
+ width:8px;
+ height:8px;
+ border-radius:50%;
+ display:inline-block;
+}
+
+/* ✅ STATUS COLOR */
+.dot.assigned{ background:#f59e0b; }  /* ส้ม */
+.dot.created{ background:#94a3b8; }   /* เทา */
+.dot.onsite{ background:#22c55e; }    /* เขียว */
+.dot.departed{ background:#38bdf8; }  /* ฟ้า */
+
+/* WORK */
+.work{
+ display:inline-flex;
+ align-items:center;
+ gap:6px;
+ padding:6px 12px;
+ border-radius:20px;
+ font-size:13px;
+ font-weight:600;
+ white-space:nowrap;
+ box-shadow:0 2px 6px rgba(0,0,0,0.3);
+ transition:all .2s ease;
+}
+.status-done{
+ background:#16a34a;  /* เขียวเข้ม */
+ color:#fff;
+}
+
+.status-badge{
+ box-shadow:0 0 6px rgba(255,255,255,0.15);
+}
+.work:hover{
+ transform:scale(1.05);
+ box-shadow:0 4px 10px rgba(0,0,0,0.5);
+}
+
+/* 🔗 Access */
+.work-access{
+ background:linear-gradient(135deg,#7f1d1d,#dc2626);
+ color:#fecaca;
+}
+
+/* 📡 Transmission */
+.work-transmission{
+ background:linear-gradient(135deg,#1e40af,#3b82f6);
+ color:#dbeafe;
+}
+
+/* 🔌 Power */
+.work-power{
+ background:linear-gradient(135deg,#374151,#f59e0b);
+ color:#fff7ed;
+}
+
+/* 🏢 Business Circuit */
+.work-leased{
+ background:linear-gradient(135deg,#1e3a8a,#6d28d9);
+ color:#ffffff;
+}
+
+/* ❗ Fallback */
+.work-other{
+ background:#78350f;
+ color:#fcd34d;
+}
+
+/* Province */
+.prov-name{font-weight:bold}
+.dist{font-size:12px;color:#94a3b8}
+
+/* Assign */
+.assign-box{text-align:center;color:#22c55e;font-weight:bold}
+
+/* Overdue */
+.overdue{background:#7f1d1d}
+
+/* ✅ SELECT2 DARK */
+.select2-container--default .select2-selection--single{
+ background:#1e293b;border:1px solid #334155;color:#fff;height:36px;border-radius:8px;
+}
+.title-cell{
+ position:relative;
+}
+
+.title-text{
+ padding-right:18px;   /* กันไม่ให้ชนปุ่ม */
+}
+
+.remark-btn{
+ position:absolute;
+ right:6px;
+ bottom:4px;
+
+ font-size:11px;
+ cursor:pointer;
+
+ opacity:0.6;
+ transition:.2s;
+}
+
+/* ✅ hover */
+.remark-btn:hover{
+ opacity:1;
+ transform:scale(1.15);
+ color:#38bdf8;
+}
+
+/* ✅ มี remark = เด่นขึ้น */
+.has-remark{
+ color:#facc15;
+ opacity:0.9;
+}
+.popup-sub,
+.popup-code{
+ word-break: break-word;
+ overflow-wrap: anywhere;
+}
+
+.popup-sub{
+ max-height:120px;
+ overflow:auto;
+}
+.popup-major{
+ background:#f59e0b;   /* ส้ม */
+ color:#fff;
+}
+
+.popup-minor{
+ background:#22c55e;   /* เขียว */
+ color:#fff;
+}
+
+.popup-none{
+ background:#64748b;   /* เทา */
+ color:#fff;
+}
+.popup-status{
+ margin-top:8px;
+ font-weight:bold;
+ display:inline-block;
+ padding:6px 14px;
+ border-radius:10px;
+}
+.sla-box{
+ display:flex;
+ flex-direction:column;
+ align-items:center;
+ gap:4px;
+ min-height:36px;
+}
+.bottom div:first-child{
+  padding:2px 8px;
+  border-radius:6px;
+  font-size:11px;
+}
+
+.select2-selection__rendered{color:#fff !important;}
+.select2-selection__arrow b{border-color:#fff transparent transparent transparent!important;}
+.select2-dropdown{background:#1e293b;border:1px solid #334155;}
+.select2-results__option{color:#e2e8f0;padding:8px;}
+.select2-results__option--highlighted{background:#22c55e!important;color:#fff;}
+.select2-results__option[aria-selected=true]{background:#334155;color:#38bdf8;}
+.select2-search__field{background:#0f172a;color:#fff;border:none;}
+
+.no-data{text-align:center;padding:30px}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+<input type="file" id="file">
+<input id="search" placeholder="🔍 ค้นหา">
+<select id="provinceFilter" style="width:200px"></select>
+<button onclick="resetAll()">Reset</button>
+
+<button onclick="showAIBoard()" style="
+  background:#7c3aed;
+  color:#fff;
+  padding:8px 14px;
+  border:none;
+  border-radius:10px;
+  cursor:pointer;
+  font-weight:bold;
+">
+  🧠 AI Action Board
+</button>
+
+<div class="shift-box">
+
+  <textarea id="shiftDaily" placeholder="Shift Daily..."></textarea>
+
+  <button class="btn-shift-clear" onclick="clearShift()">
+
+    🧹 Clear Shift
+
+  </button>
+
+</div>
+  
+</div>
+
+<div class="kpi-row" id="kpiBar">
+<div class="kpi red" onclick="pick(&#39;critical&#39;)" id="c">Critical:0</div>
+<div class="kpi orange" onclick="pick(&#39;major&#39;)" id="m">Major:0</div>
+<div class="kpi green" onclick="pick(&#39;minor&#39;)" id="n">Minor:0</div>
+<div class="kpi gray" onclick="pick(&#39;total&#39;)" id="t">Total:0</div>
+<div class="kpi" onclick="pick(&#39;overdue&#39;)" id="o" style="background:#991b1b">Overdue:0</div>
+</div>
+
+<div id="root"></div>
+
+
+<!-- ✅ POPUP (ต้องอยู่ใน body!) -->
+<div id="remarkPopup" class="popup" style="display:none">
+  <div class="popup-card" id="remarkContent"></div>
+</div>
+
+<script>
+  
+let data=[],selected=[];
+
+let viewMode = 0;
+/*
+0 = Work Only
+1 = Status Only
+2 = Both
+*/
+function getShiftNames(){
+
+let txt =
+  document.getElementById("shiftDaily").value;
+
+return txt
+  .split("\n")
+  .map(line=>{
+
+    let m = line.match(
+      /([A-Za-z]+)\s+([A-Za-z]+)\s+\d{3}-\d+/
+    );
+
+    return m
+      ? `${m[1]} ${m[2]}`
+      : "";
+
+  })
+  .filter(Boolean);
+
+}
+
+function clearShift(){
+
+localStorage.removeItem(
+  "shiftDaily"
+);
+
+document.getElementById(
+  "shiftDaily"
+).value = "";
+
+}
+window.addEventListener("load",()=>{
+
+let box =
+  document.getElementById(
+    "shiftDaily"
+  );
+
+box.value =
+  localStorage.getItem(
+    "shiftDaily"
+  ) || "";
+
+box.addEventListener(
+  "input",
+  ()=>{
+
+    localStorage.setItem(
+      "shiftDaily",
+      box.value
+    );
+
+  }
+);
+
+});
+function getStatusInfo(s){
+  let t = (s || "").toLowerCase();
+
+  if(t.includes("on-site") || t.includes("onsite")){
+    return { cls:"onsite", icon:"🧑‍🔧", text:"On-site" };
+  }
+
+  if(t.includes("assigned")){
+    return { cls:"assigned", icon:"📋", text:"Assigned" };
+  }
+
+  if(t.includes("departed")){
+    return { cls:"departed", icon:"🚗", text:"Departed" };
+  }
+
+  // ✅ NEW
+ if(t.includes("done")){
+  return { cls:"done", icon:"🎯", text:s }; // ใช้ text จริง
+}
+  if(t.includes("accepted")){
+    return { cls:"accepted", icon:"📥", text:"Accepted" };
+  }
+
+  if(t.includes("interupted") || t.includes("interrupted")){
+    return { cls:"interrupted", icon:"⚠️", text:"Interrupted" };
+  }
+
+  if(t.includes("held")){
+    return { cls:"held", icon:"💤", text:"Held" };
+  }
+
+  if(t.includes("cancel")){
+    return { cls:"cancel", icon:"❌", text:"Cancel" };
+  }
+
+  if(t.includes("transfer")){
+    return { cls:"transfer", icon:"🔁", text:"Transfer" };
+  }
+
+  return { cls:"created", icon:" 🆕 ", text:"Created" };
+}
+
+function toggleAllStatus(){
+  viewMode = (viewMode + 1) % 3;
+  render();
+}
+
+
+function getSLA(hr, limit){
+  let pct = Math.min((hr/limit)*100, 100);
+
+  let color = "sla-green";
+
+  if(pct > 70) color = "sla-yellow";
+  if(pct > 90) color = "sla-red";
+
+  return {pct, color};
+}
+
+const PROV_CODE = {
+  // ✅ กลุ่มเดิม
+  "ขอนแก่น": "KKN",
+  "ร้อยเอ็ด": "RET",
+  "มหาสารคาม": "MKM",
+  "สกลนคร": "SNK",
+  "นครพนม": "NPM",
+  "มุกดาหาร": "MDH",
+  "กาฬสินธุ์": "KSN",
+  "อุดรธานี": "UDN",
+  "เลย": "LEI",
+  "หนองคาย": "NKI",
+  "บึงกาฬ": "BKN",
+  "หนองบัวลำภู": "NLP",
+
+  // ✅ เพิ่มใหม่
+  "นครราชสีมา": "NMA",
+  "ชัยภูมิ": "CPM",
+  "ศรีสะเกษ": "SSK",
+  "บุรีรัมย์": "BRM",
+  "อุบลราชธานี": "UBN",
+  "สุรินทร์": "SRN",
+  "ยโสธร": "YST",
+  "อำนาจเจริญ": "ACR"
+};
+
+function mapCol(r,k){for(let x of k){if(r[x]!=undefined)return r[x];}return"";}
+
+function getWorkType(t){
+  t = (t || "").toLowerCase();
+// 📉 Signal Loss (ต้องอยู่บนสุด)
+if(
+  t.includes("high loss") ||
+  t.includes("loss") ||
+  (t.includes("pon") && t.includes("loss")) ||
+  (t.includes("splitter") && t.includes("l2"))   // ✅ เพิ่มตรงนี้
+){
+  return {
+    icon:"📉",
+    text:"Signal Loss",
+    full:"📉 Signal Loss (High loss)",
+    type:"transmission"
+  };
+}
+// 🏢 Business Circuit (BIPV / INF / IPV)
+if(
+  t.includes("bipv") ||
+  t.includes("inf") ||
+  t.includes("ipv") ||
+  t.includes("binl")    // ✅ เพิ่มตรงนี้
+){
+  return {
+    icon:"🏢",
+    text:"Business Circuit",
+    full:"🏢 Business Circuit (BIPV / INF / IPV)",
+    type:"leased"
+  };
+}
+  // 🔗 Access Down
+  if(t.includes("splitter") || t.includes("pon")){
+    return {
+      icon:"🔗",
+      text:"Access Down",
+      full:"🔗 Access Down (Splitter / PON)",
+      type:"access"
+    };
+  }
+
+  // ⚡ Access Power Fail
+  if(t.includes("olt") || t.includes("ac fail")){
+    return {
+      icon:"⚡",
+      text:"Access Power Fail",
+      full:"⚡ Access Power Fail (OLT AC Fail)",
+      type:"access"
+    };
+  }
+
+  // 📡 Transmission Error
+  if(t.includes("crc")){
+    return {
+      icon:"📡",
+      text:"Transmission Error",
+      full:"📡 Transmission Error (CRC)",
+      type:"transmission"
+    };
+  }
+
+  // 🔌 Power Failure
+  if(t.includes("rectifier") || t.includes("power")){
+    return {
+      icon:"🔌",
+      text:"Power Failure",
+      full:"🔌 Power Failure (Rectifier)",
+      type:"power"
+    };
+  }
+// 🔁❌ ERPS Loop Broken
+if(t.includes("loop broken")){
+  return {
+    icon:"🔁❌",
+    text:"Loop Broken",
+    full:"🔁❌ ERPS Loop Broken",
+    type:"access"
+  };
+}
+
+  // 🚫 Link Down
+  if(t.includes("link down") || t.includes("down")){
+    return {
+      icon:"🚫",
+      text:"Link Down",
+      full:"🚫 Link Down",
+      type:"access"
+    };
+  }
+
+  return {
+    icon:"❗",
+    text:"Unknown",
+    full:"❗ Unknown",
+    type:"other"
+  };
+}
+function getSite(title){
+
+let m =
+  (title || "")
+  .match(/(ME|OX|AN)_[0-9_]+/i);
+
+return m ? m[0] : "Unknown";
+
+}
+const getHr=t=>{let d=new Date(t);return isNaN(d)?0:(new Date()-d)/3600000}
+function formatTime(hr){
+  let h = Math.floor(hr);
+  let m = Math.round((hr - h) * 60);
+
+  return h > 0
+    ? (m > 0 ? `${h}h ${m}m` : `${h}h`)
+    : `${m}m`;
+}
+function getPriorityIcon(pr){
+
+pr = (pr || "").toUpperCase();
+
+if(pr === "CRITICAL")
+  return "🚨 Critical";
+
+if(pr === "MAJOR")
+  return "⚠️ Major";
+
+if(pr === "MINOR")
+  return "🟢 Minor";
+
+return "⚪ None";
+}
+
+function getStatusIcon(status){
+
+let s = (status || "").toLowerCase();
+
+if(s.includes("done"))
+  return "✅ Done";
+
+if(s.includes("on-site") || s.includes("onsite"))
+  return "🟢 On-Site";
+
+if(s.includes("departed"))
+  return "🔵 Departed";
+
+if(s.includes("assigned"))
+  return "🟡 Assigned";
+
+if(s.includes("accepted"))
+  return "📥 Accepted";
+
+if(s.includes("held"))
+  return "💤 Held";
+
+if(s.includes("cancel"))
+  return "❌ Cancel";
+
+return "⚪ Created";
+}
+/* KPI */
+function pick(t){
+ selected=[t];
+ $('.kpi').removeClass('active');
+ $('#'+{critical:'c',major:'m',minor:'n',total:'t',overdue:'o'}[t]).addClass('active');
+ render();
+}
+
+function pass(pr,od){
+ if(!selected.length)return true;
+ let t=selected[0];
+ if(t==="overdue")return od;
+ if(t==="critical")return pr==="CRITICAL";
+ if(t==="major")return pr==="MAJOR";
+ if(t==="minor")return pr==="MINOR"||pr==="NONE";
+ return true;
+}
+
+/* ✅ EXPORT JPG + KPI */
+function exportJPG(p){
+ let box=document.createElement("div");
+ box.style.background="#0f172a"; box.style.padding="20px";
+ box.appendChild(document.getElementById("kpiBar").cloneNode(true));
+ box.appendChild(document.getElementById(p).cloneNode(true));
+ document.body.appendChild(box);
+
+html2canvas(box,{
+  scale:2,
+  useCORS:true,
+  width: box.scrollWidth,
+  height: box.scrollHeight,
+  windowWidth: box.scrollWidth
+}).then(c=>{  let a=document.createElement("a");
+  a.href=c.toDataURL("image/jpeg");
+  a.download="NOC_"+p+".jpg";
+  a.click();
+  document.body.removeChild(box);
+ });
+}
+
+/* LOAD */
+file.onchange=e=>{
+ let r=new FileReader();
+ r.onload=ev=>{
+  let wb=XLSX.read(new Uint8Array(ev.target.result),{type:'array'});
+  data=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+  initProvince(); render();
+ };
+ r.readAsArrayBuffer(e.target.files[0]);
+};
+
+/* จังหวัด */
+function initProvince(){
+ let s={};
+ data.forEach(r=>{let p=mapCol(r,["Province Name"]);if(p)s[p]=1});
+ let h='<option value="">ทุกจังหวัด</option>';
+ Object.keys(s).forEach(p=>h+=`<option>${p}</option>`);
+ $("#provinceFilter").html(h).select2();
+}
+
+$('#search,#provinceFilter').on('input change',render);
+
+function resetAll(){
+ selected=[];$('.kpi').removeClass('active');
+ $('#search').val('');$('#provinceFilter').val('').trigger('change');
+ render();
+}
+function showRemark(jobId){
+
+let r = data.find(x => x["Job ID"] == jobId);
+
+let status = getStatusInfo(r["Status"]);
+let pr = (r["Priority"] || "NONE").toLowerCase();
+
+// ✅ เวลา
+let hr = getHr(r["Create Time"]);
+
+let h = Math.floor(hr);
+let m = Math.round((hr - h) * 60);
+
+let elapsedText =
+  h > 0
+    ? `${h}h ${m}m`
+    : `${m}m`;
+
+document.getElementById("remarkContent").innerHTML = `
+  
+  <h2>${r["Job ID"]}</h2>
+
+  <div class="popup-sub">
+    ${r["Job Title"] || "-"}
+  </div>
+
+  <!-- ✅ Province -->
+  <div class="popup-code" style="margin-top:6px">
+    ${r["Province Name"] || ""} ${r["District Name"] || ""}
+  </div>
+
+  <!-- ✅ Create Time -->
+  <div class="popup-code">
+    ${r["Create Time"] || ""}
+  </div>
+
+  <!-- ✅ Remark -->
+  <div class="popup-remark">
+    <b>REMARK:</b><br>
+    ${r["Reason by WF"] || "-"}
+  </div>
+
+  <!-- ✅ Assign -->
+  <div class="popup-assign">
+    ASSIGN BY - ${r["Assign to"] || "-"}
+  </div>
+
+  <!-- ✅ Bottom section -->
+  <div style="margin-top:10px; display:flex; align-items:center; gap:8px">
+    
+    <span class="popup-status popup-${pr}">
+      ${pr.toUpperCase()}
+    </span>
+
+    <span class="popup-status popup-${status.cls}">
+      ${status.icon} ${status.text}
+    </span>
+
+    <!-- ✅ ดันเวลาไปขวาสุด -->
+    <span style="flex:1"></span>
+
+    <span class="popup-time">
+      +${elapsedText}
+    </span>
+
+  </div>
+`;
+
+document.getElementById("remarkPopup").style.display = "flex";
+}
+
+
+
+/* ✅ คลิกพื้นหลัง → ปิด popup */
+const popup = document.getElementById("remarkPopup");
+
+popup.onclick = () =>{
+  popup.style.display = "none";
+};
+
+
+
+/* ✅ คลิกใน card → ไม่ปิด */
+document.querySelector(".popup-card").onclick = (e)=>{
+  e.stopPropagation();
+}
+function showAIBoard(){
+
+let prov = $("#provinceFilter").val();
+
+let jobs = [];
+
+data.forEach(r=>{
+
+  let p = mapCol(r,["Province Name"]);
+
+  // เฉพาะจังหวัดที่เลือก
+  if(prov && p!==prov) return;
+
+  let pr =
+    (r["Priority"] || "NONE").toUpperCase();
+
+  let hr =
+    getHr(r["Create Time"]);
+
+  let limit =
+    pr==="CRITICAL" ? 3 :
+    pr==="MAJOR" ? 10 :
+    1000;
+
+  let overdue =
+    Math.max(0,hr-limit);
+
+  let score = 0;
+
+  if(pr==="CRITICAL") score+=100;
+  else if(pr==="MAJOR") score+=60;
+  else if(pr==="MINOR") score+=30;
+
+  score += overdue * 5;
+
+  jobs.push({
+  ...r,
+  score,
+  overdue,
+  limit
+});
+
+});
+
+jobs.sort((a,b)=>b.score-a.score);
+
+/* DISTRICT PRIORITY */
+
+let districtMap = {};
+
+jobs.forEach(r=>{
+
+  let district =
+    r["District Name"] || "Unknown";
+
+  if(!districtMap[district]){
+
+    districtMap[district] = {
+      jobs:[],
+      critical:0,
+      major:0,
+      minor:0,
+      overdue:0,
+      score:0
+    };
+
+  }
+
+  districtMap[district].jobs.push(r);
+
+  let pr =
+    (r["Priority"] || "")
+    .toUpperCase();
+
+  if(pr==="CRITICAL")
+    districtMap[district].critical++;
+
+  else if(pr==="MAJOR")
+    districtMap[district].major++;
+
+  else
+    districtMap[district].minor++;
+
+  if(r.overdue > 0)
+    districtMap[district].overdue++;
+
+});
+
+/* SCORE ใช้จัดอันดับเท่านั้น */
+
+let districtList =
+Object.entries(districtMap)
+.map(([name,d])=>{
+
+  d.score =
+      d.critical * 100
+    + d.major * 50
+    + d.overdue * 30
+    + d.jobs.length * 5;
+
+  return {
+    district:name,
+    ...d
+  };
+
+})
+.sort((a,b)=>b.score-a.score);
+/* ✅ สร้างรายการอำเภอ */
+let districts = {};
+
+jobs.forEach(r=>{
+
+  let d = r["District Name"] || "";
+
+  if(!d) return;
+
+  districts[d] = (districts[d] || 0) + 1;
+
+});
+
+/* ROOT CAUSE GROUP */
+let roots = {};
+
+jobs.forEach(r=>{
+
+  let work =
+    getWorkType(r["Job Title"]).text;
+
+  if(!roots[work]){
+    roots[work] = [];
+  }
+
+  roots[work].push(r);
+
+});
+let rootHtml = "";
+
+
+Object.entries(roots)
+.sort((a,b)=>{
+
+  let aCritical =
+    a[1].filter(x =>
+      (x["Priority"] || "")
+      .toUpperCase() === "CRITICAL"
+    ).length;
+
+  let bCritical =
+    b[1].filter(x =>
+      (x["Priority"] || "")
+      .toUpperCase() === "CRITICAL"
+    ).length;
+
+  if (bCritical !== aCritical)
+    return bCritical - aCritical;
+
+  return b[1].length - a[1].length;
+
+})
+.forEach(([root,list])=>{
+
+  let critical =
+    list.filter(x =>
+      (x["Priority"] || "")
+      .toUpperCase() === "CRITICAL"
+    ).length;
+  
+  let danger =
+    critical >= 3
+      ? "critical"
+      : "";
+
+    rootHtml += `
+    <div class="ai-card ${danger}">
+
+    <div class="job">
+      ${getWorkType(list[0]["Job Title"]).icon}
+      ${root}
+    </div>
+
+    <div class="detail">
+      Total Jobs : ${list.length}
+    </div>
+
+    <div class="detail">
+      Critical : ${critical}
+    </div>
+
+    <div class="reason">
+      <b>AI Action</b><br>
+      ตรวจ Root Cause นี้ก่อน
+    </div>
+
+    <hr>
+  `;
+
+  list.forEach(r=>{
+
+    rootHtml += `
+
+      <details class="job-expand">
+
+        <summary>
+          ${r["Job ID"] || "-"}
+          |
+          ${r["Priority"] || "-"}
+          |
+          ${r["Assign to"] || "-"}
+        </summary>
+
+        <div style="
+          margin-top:10px;
+          padding:10px;
+          background:#111827;
+          border-radius:8px;
+        ">
+
+          <b>Title</b><br>
+          ${r["Job Title"] || "-"}
+
+          <br><br>
+
+          <b>Status</b><br>
+          ${r["Status"] || "-"}
+
+          <br><br>
+
+          <b>Assign</b><br>
+          ${r["Assign to"] || "-"}
+
+          <br><br>
+
+          <b>Remark</b><br>
+          ${r["Reason by WF"] || "-"}
+
+        </div>
+
+      </details>
+
+    `;
+
+  });
+
+  rootHtml += `
+  </div>
+  `;
+
+});
+
+/* SITE CLUSTER */
+let sites = {};
+let engineers = {};
+
+jobs.forEach(r=>{
+
+  let eng =
+  (r["Assign to"] || "").trim();
+
+if(!eng)
+  return;
+
+  if(!engineers[eng]){
+    engineers[eng] = {
+      jobs:[]
+    };
+  }
+
+  engineers[eng].jobs.push(r);
+
+});
+
+jobs.forEach(r=>{
+
+  let site =
+    getSite(r["Job Title"]);
+
+  if(!sites[site]){
+    sites[site] = [];
+  }
+
+  sites[site].push(r);
+
+});
+let districtButtons =
+Object.keys(districts)
+.sort()
+.map(d=>`
+<button class="district-btn"
+        onclick="window.filterDistrict('${d}', this)">
+  ${d} (${districts[d]})
+</button>
+`)
+.join("");
+
+let html=`
+<html>
+<head>
+  <title>🧠 AI Action Board</title>
+<style>
+
+  
+.btn-shift-clear{
+
+display:inline-flex;
+align-items:center;
+gap:8px;
+
+padding:10px 16px;
+
+border:none;
+border-radius:12px;
+
+background:rgba(239,68,68,.15);
+border:1px solid rgba(239,68,68,.4);
+
+color:#f87171;
+
+font-weight:700;
+font-size:13px;
+
+cursor:pointer;
+
+transition:all .25s ease;
+
+backdrop-filter:blur(10px);
+}
+
+.btn-shift-clear:hover{
+
+background:#ef4444;
+color:#fff;
+
+transform:translateY(-2px);
+
+box-shadow:
+  0 0 12px #ef4444,
+  0 0 20px rgba(239,68,68,.5);
+
+}
+
+.btn-shift-clear:active{
+transform:scale(.96);
+}
+.shift-box{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+#shiftDaily{
+  width:220px;
+  height:55px;
+
+  background:#111827;
+  color:#fff;
+
+  border:1px solid #334155;
+  border-radius:10px;
+
+  padding:8px;
+
+  font-family:Consolas;
+  resize:vertical;
+}
+
+#shiftDaily:focus{
+  outline:none;
+
+  border-color:#38bdf8;
+
+  box-shadow:
+    0 0 10px rgba(56,189,248,.4);
+}
+  
+  .ai-card.pool{
+  background:linear-gradient(
+    180deg,
+    #312e81,
+    #000
+  );
+
+  border-color:#8b5cf6;
+
+  box-shadow:
+    0 0 12px rgba(139,92,246,.8);
+}
+  .duty-on{
+  color:#22c55e;
+  font-weight:bold;
+}
+
+.duty-off{
+  color:#ef4444;
+  font-weight:bold;
+}
+.shift-box{
+
+width:320px;
+
+background:#111827;
+
+border:1px solid #334155;
+border-radius:14px;
+
+padding:12px;
+
+box-shadow:
+  0 0 10px rgba(0,0,0,.3);
+
+}
+
+.shift-title{
+
+color:#38bdf8;
+
+font-weight:bold;
+font-size:14px;
+
+margin-bottom:8px;
+
+}
+
+#shiftDaily{
+
+width:100%;
+height:90px;
+
+box-sizing:border-box;
+
+background:#0f172a;
+color:#fff;
+
+border:1px solid #334155;
+border-radius:10px;
+
+padding:10px;
+
+font-size:12px;
+font-family:Consolas;
+
+resize:vertical;
+}
+
+#shiftDaily:focus{
+
+outline:none;
+
+border-color:#38bdf8;
+
+box-shadow:
+  0 0 8px rgba(56,189,248,.5);
+
+}
+
+.shift-footer{
+
+display:flex;
+justify-content:flex-end;
+
+margin-top:8px;
+}
+
+.shift-clear{
+
+background:#7f1d1d;
+color:#fff;
+
+border:none;
+
+padding:8px 12px;
+
+border-radius:8px;
+
+cursor:pointer;
+
+font-weight:bold;
+}
+
+.shift-clear:hover{
+
+background:#dc2626;
+
+}
+.shift-wrapper{
+  display:flex;
+  justify-content:center;
+  margin-top:10px;
+}
+  .job-title{
+  margin:6px 0;
+  padding-left:6px;
+
+  color:#cbd5e1;
+  font-size:11px;
+  line-height:16px;
+
+  border-left:2px solid #475569;
+
+  /* แสดง 2 บรรทัด */
+  display:-webkit-box;
+  -webkit-box-orient:vertical;
+  -webkit-line-clamp:2;
+
+  overflow:hidden;
+  text-overflow:ellipsis;
+
+  word-break:break-word;
+}
+
+.job-title:hover{
+  overflow-y:auto;
+}
+  
+  .district-summary{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  margin:10px 0;
+  font-weight:bold;
+}
+
+.district-summary span{
+  background:#111827;
+  padding:4px 10px;
+  border-radius:20px;
+}
+
+
+
+.view-bar{
+  display:flex;
+  justify-content:center;
+  gap:10px;
+  margin:15px 0;
+}
+
+  .view-bar{
+  display:flex;
+  justify-content:center;
+  gap:10px;
+  margin:15px 0;
+}
+
+.view-btn{
+  background:#1e293b;
+  color:#fff;
+  border:1px solid #334155;
+  padding:8px 16px;
+  border-radius:20px;
+  cursor:pointer;
+  font-weight:bold;
+}
+
+.view-btn.active{
+  background:#7c3aed;
+  color:#fff;
+}
+  .district-bar{
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  gap:8px;
+  margin:15px 0 20px;
+}
+
+.district-btn{
+  background:#1e293b;
+  color:#fff;
+  border:1px solid #334155;
+  padding:8px 14px;
+  border-radius:20px;
+  cursor:pointer;
+  font-weight:bold;
+  transition:.2s;
+}
+
+.district-btn:hover{
+  background:#334155;
+}
+
+.district-btn.active{
+  background:#f59e0b;
+  color:#000;
+}
+
+body{
+background:#0f172a;
+color:white;
+font-family:Consolas;
+margin:0;
+padding:20px;
+}
+
+.title{
+text-align:center;
+margin-bottom:25px;
+}
+
+.board{
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  gap:20px;
+
+  padding:20px;
+}
+.ai-card.duty-on{
+  background:linear-gradient(
+  180deg,
+  #052e16,
+  #000
+);
+
+  border-color:#22c55e;
+}
+
+.ai-card.duty-off{
+  background:linear-gradient(
+  180deg,
+  #450a0a,
+  #000
+);
+
+  border-color:#ef4444;
+}
+
+.ai-card.high{
+  box-shadow:
+    0 0 12px rgba(239,68,68,.8);
+}
+
+.ai-card.medium{
+  box-shadow:
+    0 0 12px rgba(245,158,11,.6);
+}
+
+.ai-card.low{
+  box-shadow:
+    0 0 8px rgba(34,197,94,.4);
+}
+.ai-card{
+
+width:360px;
+min-width:360px;
+
+background:#000;
+border:2px solid #f59e0b;
+
+border-radius:12px;
+padding:16px;
+
+box-shadow:
+  0 0 8px rgba(255,165,0,.4);
+}
+
+.ai-card.critical{
+border-color:#ef4444;
+
+box-shadow:
+  0 0 12px rgba(255,0,0,.8);
+}
+
+.job{
+  color:#facc15;
+  font-size:28px;
+  font-weight:bold;
+  margin-bottom:10px;
+}
+
+.detail{
+color:#84cc16;
+margin-top:10px;
+line-height:1.4;
+}
+
+.reason{
+color:#e5e7eb;
+margin-top:14px;
+}
+
+.arrow{
+font-size:42px;
+color:#facc15;
+
+text-shadow:
+  0 0 10px #facc15;
+}
+
+
+.job-expand{
+  margin-top:8px;
+  border:1px solid #334155;
+  border-radius:8px;
+  padding:8px;
+  background:#0f172a;
+}
+
+.job-expand summary{
+  cursor:pointer;
+  color:#38bdf8;
+  font-weight:bold;
+}
+
+.job-expand summary:hover{
+  color:#facc15;
+}
+
+</style>
+
+</head>
+
+<body>
+
+
+  <div class="title">
+
+<h2>🧠 AI ACTION BOARD</h2>
+
+<div class="view-bar">
+
+  <button class="view-btn active"
+    onclick="window.changeView('district',this)">
+    📋 Job Queue
+  </button>
+
+
+  <button class="view-btn"
+    onclick="window.changeView('root',this)">
+    ⚠️ Root Cause
+  </button>
+
+  <button class="view-btn"
+    onclick="window.changeView('engineer',this)">
+    👨‍🔧 Engineer Workload
+  </button>
+
+</div>
+
+<div class="district-bar">
+
+  <button class="district-btn active"
+    onclick="window.filterDistrict('', this)">
+    ทั้งหมด
+  </button>
+
+  ${districtButtons}
+
+</div>
+
+</div>
+
+<div id="districtView" class="board">
+`;
+
+districtList.forEach((d,i)=>{
+
+let rank =
+  i===0 ? "🥇" :
+  i===1 ? "🥈" :
+  i===2 ? "🥉" :
+  `#${i+1}`;
+
+let cardClass =
+  d.critical > 0
+    ? "critical"
+    : "";
+/* NEXT ACTION */
+
+let nextJobs = [...d.jobs];
+
+nextJobs.sort((a,b)=>{
+
+  let aRemain =
+    a.limit - getHr(a["Create Time"]);
+
+  let bRemain =
+    b.limit - getHr(b["Create Time"]);
+
+  // Overdue ก่อน
+  if(a.overdue > 0 && b.overdue <= 0) return -1;
+  if(b.overdue > 0 && a.overdue <= 0) return 1;
+
+  // SLA ใกล้หมดก่อน
+  if(aRemain !== bRemain)
+    return aRemain - bRemain;
+
+  let p = {
+    CRITICAL:1,
+    MAJOR:2,
+    MINOR:3,
+    NONE:4
+  };
+
+  return p[
+    (a["Priority"] || "").toUpperCase()
+  ] -
+  p[
+    (b["Priority"] || "").toUpperCase()
+  ];
+
+});
+html += `
+
+<div class="ai-card ${cardClass}"
+     data-district="${d.district}">
+
+     
+
+<div class="job">
+  ${rank} 📍 ${d.district}
+</div>
+
+<div class="district-summary">
+  <span>🚨 ${d.critical}</span>
+  <span>⚠️ ${d.major}</span>
+  <span>🕒 ${d.overdue}</span>
+  <span>📋 ${d.jobs.length}</span>
+</div>
+
+  <details class="job-expand" open>
+
+<summary>
+🔥 NEXT ACTION
+
+</summary>
+
+${nextJobs.slice(0,3).map((x,idx)=>`
+
+  <div style="
+  margin-top:8px;
+  padding:8px;
+  background:${x.overdue > 0 ? '#991b1b' : '#111827'};
+  border-radius:6px;
+  border:${x.overdue > 0 ? '1px solid #ef4444' : '1px solid #334155'};
+  box-shadow:${x.overdue > 0 ? '0 0 8px rgba(239,68,68,.5)' : 'none'};
+">
+
+<b>${idx+1}. ${x["Job ID"]}</b>
+
+<br>
+
+${getPriorityIcon(x["Priority"])}
+|
+${getStatusIcon(x["Status"])}
+
+<div class="job-title">
+
+  ${getWorkType(x["Job Title"]).icon}
+  ${getWorkType(x["Job Title"]).text}
+
+  <br>
+
+  ${x["Job Title"] || "-"}
+
+</div>
+
+👷 ${x["Assign to"] || "-"}
+
+<br>
+
+${
+  x.overdue > 0
+    ? "🔥 OVERDUE"
+    : `⏱ SLA เหลือ ${formatTime(
+        x.limit -
+        getHr(x["Create Time"])
+      )}`
+}
+
+</div>
+
+`).join("")}
+${
+  nextJobs.length > 3
+  ? `
+  <details class="job-expand" style="margin-top:8px">
+
+    <summary>
+      📂 งานเพิ่มเติม : ${nextJobs.length - 3}
+    </summary>
+
+    ${nextJobs.slice(3).map(x=>`
+
+      <div style="
+        margin-top:8px;
+        padding:8px;
+        background:${x.overdue > 0 ? '#991b1b' : '#111827'};
+        border-radius:6px;
+      ">
+
+      <b>${x["Job ID"]}</b>
+
+      <br>
+
+      ${getPriorityIcon(x["Priority"])}
+      |
+      ${getStatusIcon(x["Status"])}
+
+      <div class="job-title">
+
+      ${getWorkType(x["Job Title"]).icon}
+      ${getWorkType(x["Job Title"]).text}
+
+      <br>
+
+      ${x["Job Title"] || "-"}
+
+      </div>
+
+      👷 ${x["Assign to"] || "-"}
+
+        <br>
+
+        ${
+          x.overdue > 0
+          ? "🔥 OVERDUE"
+          : `⏱ SLA เหลือ ${formatTime(
+              x.limit -
+              getHr(x["Create Time"])
+            )}`
+        }
+
+      </div>
+
+    `).join("")}
+
+  </details>
+  `
+  : ""
+}
+
+</details>
+
+  <details class="job-expand">
+
+    <summary>
+      🚨 Critical : ${d.critical}
+    </summary>
+
+    ${
+      d.jobs
+      .filter(x=>
+        (x["Priority"]||"")
+        .toUpperCase()==="CRITICAL"
+      )
+      .map(x=>`
+
+        <div style="
+          margin-top:8px;
+          padding:8px;
+          background:#111827;
+          border-radius:6px;
+        ">
+
+        <b>${x["Job ID"]}</b>
+
+        <br>
+
+        ${getPriorityIcon(x["Priority"])}
+        |
+        ${getStatusIcon(x["Status"])}
+
+        
+        <div class="job-title">
+
+        ${getWorkType(x["Job Title"]).icon}
+        ${getWorkType(x["Job Title"]).text}
+
+        <br>
+
+        ${x["Job Title"] || "-"}
+
+        </div>
+
+
+        👷 ${x["Assign to"] || "-"}
+
+        <br>
+
+        ⏱ ${formatTime(
+        getHr(x["Create Time"])
+        )}
+
+        </div>
+
+      `).join("")
+    }
+
+  </details>
+
+  <details class="job-expand">
+
+    <summary>
+      ⚠️ Major : ${d.major}
+    </summary>
+
+    ${
+      d.jobs
+      .filter(x=>
+        (x["Priority"]||"")
+        .toUpperCase()==="MAJOR"
+      )
+      .map(x=>`
+
+        <div style="
+          margin-top:8px;
+          padding:8px;
+          background:#111827;
+          border-radius:6px;
+        ">
+        <b>${x["Job ID"]}</b>
+
+        <br>
+
+        ${getPriorityIcon(x["Priority"])}
+        |
+        ${getStatusIcon(x["Status"])}
+
+        
+        <div class="job-title">
+
+        ${getWorkType(x["Job Title"]).icon}
+        ${getWorkType(x["Job Title"]).text}
+
+        <br>
+
+        ${x["Job Title"] || "-"}
+
+        </div>
+
+
+        👷 ${x["Assign to"] || "-"}
+
+        <br>
+
+        ⏱ ${formatTime(
+          getHr(x["Create Time"])
+        )}
+        </div>
+
+      `).join("")
+    }
+
+  </details>
+
+  <details class="job-expand">
+
+    <summary>
+      🕒 Overdue : ${d.overdue}
+    </summary>
+
+    ${
+      d.jobs
+      .filter(x=>x.overdue>0)
+      .map(x=>`
+
+        <div style="
+          margin-top:8px;
+          padding:8px;
+          background:#7f1d1d;
+          border-radius:6px;
+        ">
+        <b>${x["Job ID"]}</b>
+
+        <br>
+
+        ${getPriorityIcon(x["Priority"])}
+        |
+        ${getStatusIcon(x["Status"])}
+
+        <div class="job-title">
+
+        ${getWorkType(x["Job Title"]).icon}
+        ${getWorkType(x["Job Title"]).text}
+
+        <br>
+
+        ${x["Job Title"] || "-"}
+
+      </div>
+
+      👷 ${x["Assign to"] || "-"}
+
+        <br>
+
+        🔥 OVERDUE
+        </div>
+
+      `).join("")
+    }
+
+  </details>
+
+  
+
+</div>
+
+`;
+
+});
+
+let engineerHtml = "";
+
+let shiftList = getShiftNames();
+
+let shiftNames =
+  shiftList.map(x =>
+    x.toLowerCase().trim()
+  );
+
+  Object.entries(engineers)
+
+.sort((a,b)=>{
+
+  // ✅ NER Pool อยู่บนสุดเสมอ
+  if(a[0] === "Workforce NER Pool") return -1;
+  if(b[0] === "Workforce NER Pool") return 1;
+
+  let aOn =
+    shiftNames.includes(
+      a[0].toLowerCase().trim()
+    );
+
+  let bOn =
+    shiftNames.includes(
+      b[0].toLowerCase().trim()
+    );
+
+  // ✅ ON DUTY ก่อน
+  if(aOn && !bOn) return -1;
+  if(!aOn && bOn) return 1;
+
+  // ✅ งานเยอะสุดก่อน
+  return (
+    b[1].jobs.length -
+    a[1].jobs.length
+  );
+
+})
+
+.forEach(([eng,obj])=>{
+
+  let isPool =
+    eng === "Workforce NER Pool";
+
+  let onDuty =
+    shiftNames.includes(
+      eng.toLowerCase().trim()
+    );
+
+  /* ===== ไม่มีงาน ===== */
+
+  if(
+  !isPool &&
+  obj.jobs.length === 0
+){
+  return;
+}
+
+  let dutyText =
+    isPool
+      ? "📦 NER POOL"
+      : onDuty
+      ? "🟢 ON DUTY"
+      : "⚫ OFF DUTY";
+
+  let cardClass =
+    isPool
+      ? "pool"
+      : onDuty
+      ? "duty-on"
+      : "duty-off";
+
+  let critical =
+    obj.jobs.filter(x=>
+      (x["Priority"]||"")
+      .toUpperCase()==="CRITICAL"
+    ).length;
+
+  let major =
+    obj.jobs.filter(x=>
+      (x["Priority"]||"")
+      .toUpperCase()==="MAJOR"
+    ).length;
+
+  let overdue =
+    obj.jobs.filter(x=>
+      x.overdue>0
+    ).length;
+
+  let level =
+    obj.jobs.length >= 8
+      ? "🔴 HIGH"
+      : obj.jobs.length >= 4
+      ? "🟡 MEDIUM"
+      : "🟢 LOW";
+
+  engineerHtml += `
+  <div class="ai-card ${cardClass}">
+
+    <div class="job">
+      👨‍🔧 ${eng}
+    </div>
+
+    <div class="detail">
+      ${dutyText}
+    </div>
+
+    <details class="job-expand">
+
+<summary>
+  📋 Jobs : ${obj.jobs.length}
+</summary>
+
+${obj.jobs.map(job=>{
+
+  let remain =
+    job.overdue > 0
+    ? "🔥 OVERDUE"
+    : `⏱ ${formatTime(
+        job.limit -
+        getHr(job["Create Time"])
+      )}`;
+
+  return `
+    <div style="
+      margin-top:8px;
+      padding:8px;
+      background:#111827;
+      border-radius:8px;
+    ">
+
+    <b>${job["Job ID"]}</b>
+
+<br>
+
+${getPriorityIcon(job["Priority"])}
+|
+${getStatusIcon(job["Status"])}
+
+<br>
+
+${getWorkType(job["Job Title"]).icon}
+${getWorkType(job["Job Title"]).text}
+
+<br>
+
+${remain}
+
+    </div>
+  `;
+}).join("")}
+
+</details>
+
+    <div class="detail">
+      🚨 Critical : ${critical}
+    </div>
+
+    <div class="detail">
+      ⚠️ Major : ${major}
+    </div>
+
+    <div class="detail">
+      🕒 Overdue : ${overdue}
+    </div>
+
+    <div class="reason">
+      Workload : ${level}
+    </div>
+
+  </div>
+  `;
+
+});
+
+html += `
+
+</div>
+
+<div id="rootView"
+     class="board"
+     style="display:none">
+
+  ${rootHtml}
+
+</div>
+<div id="engineerView"
+     class="board"
+     style="display:none">
+
+  ${engineerHtml}
+
+</div>
+</div>
+
+
+</body>
+</html>
+`;
+
+let w = window.open();
+w.document.write(html);
+w.document.close();
+
+w.changeView = function(view, btn){
+
+w.document
+  .querySelectorAll(".view-btn")
+  .forEach(x=>x.classList.remove("active"));
+
+btn.classList.add("active");
+
+let engineerView =
+  w.document.getElementById("engineerView");
+
+if(engineerView)
+  engineerView.style.display="none";
+let districtView =
+  w.document.getElementById("districtView");
+
+let rootView =
+  w.document.getElementById("rootView");
+
+let siteView =
+  w.document.getElementById("siteView");
+
+if(districtView)
+  districtView.style.display = "none";
+
+if(rootView)
+  rootView.style.display = "none";
+
+if(siteView)
+  siteView.style.display = "none";
+
+switch(view){
+
+  case "engineer":
+  if(engineerView)
+    engineerView.style.display="flex";
+break;
+
+  case "district":
+  if(districtView)
+    districtView.style.display = "flex";
+  break;
+
+case "root":
+  if(rootView)
+    rootView.style.display = "flex";
+  break;
+
+case "site":
+  if(siteView)
+    siteView.style.display = "flex";
+  break;
+
+}
+
+};
+
+
+w.filterDistrict = function(district, btn){
+
+w.document
+  .querySelectorAll(".district-btn")
+  .forEach(x =>
+    x.classList.remove("active")
+  );
+
+if(btn){
+  btn.classList.add("active");
+}
+
+w.document
+  .querySelectorAll("#districtView .ai-card")
+  .forEach(card=>{
+
+    let cardDistrict =
+      (card.dataset.district || "")
+      .trim()
+      .toLowerCase();
+
+    let targetDistrict =
+      (district || "")
+      .trim()
+      .toLowerCase();
+
+    card.style.display =
+      !district ||
+      cardDistrict === targetDistrict
+        ? ""
+        : "none";
+
+  });
+
+w.document
+  .querySelectorAll(".arrow")
+  .forEach(a=>{
+
+    a.style.display =
+      district ? "none" : "";
+
+  });
+
+};
+
+}
+
+/* ✅ RENDER */
+function render(){
+
+ let prov=$("#provinceFilter").val();
+
+ let map={},c=0,m=0,n=0,o=0;
+
+
+ data.forEach(r=>{
+
+  let pr=(mapCol(r,["Priority"])||"NONE").toUpperCase();
+  let p=mapCol(r,["Province Name"]);
+
+  /* ✅ SEARCH */
+ let job=(mapCol(r,["Job ID"])||"").toLowerCase();
+let title=(mapCol(r,["Job Title"])||"").toLowerCase();
+let status=(mapCol(r,["Status"])||"").toLowerCase();
+let assign=(mapCol(r,["Assign to"])||"").toLowerCase();
+let province=(mapCol(r,["Province Name"])||"").toLowerCase();
+let district=(mapCol(r,["District Name"])||"").toLowerCase();
+let work=getWorkType(title).text.toLowerCase();
+
+// ✅ SLA คำนวณก่อน
+let hr = getHr(r["Create Time"]);
+let limit =
+  pr === "CRITICAL" ? 3 :
+  pr === "MAJOR" ? 10 :
+  1000;
+
+let od = hr > limit;
+
+// ✅ SEARCH (ใช้ overdue ได้)
+let k = $('#search').val().toLowerCase().trim();
+
+let keys = k.split(/\s+/);
+
+let code = (PROV_CODE[p] || "").toLowerCase();
+
+let text = job+" "+title+" "+status+" "+assign+" "+province+" "+district+" "+work+" "+code;
+if(od) text += " overdue";
+
+for(let key of keys){
+  if(key === "overdue" && !od) return;
+  if(key !== "overdue" && !text.includes(key)) return;
+}
+
+
+
+// ✅ filter จังหวัด
+if(prov && p!==prov)return;
+
+
+
+  if(pr==="CRITICAL")c++;
+  else if(pr==="MAJOR")m++;
+  else n++;
+  if(od)o++;
+  if(!pass(pr,od))return;
+
+  if(!map[p])map[p]=[];
+
+  map[p].push({...r,pr,hr,limit,od,
+    district:r["District Name"],
+    status:r["Status"],
+    assign:r["Assign to"]||"-",
+    work:getWorkType(title)
+  });
+ });
+
+$("#c").text("Critical:"+c);
+$("#m").text("Major:"+m);
+$("#n").text("Minor:"+n);
+$("#t").text("Total:"+(c+m+n));
+$("#o").text("Overdue:"+o);
+
+root.innerHTML=Object.keys(map).map(p=>`
+<div class="card" id="${p}">
+<div class="card-header">
+<h3>
+  📍 ${PROV_CODE[p] ? `(${PROV_CODE[p]}) ` : ""}${p}
+</h3>
+<button class="btn-export" onclick="exportJPG('${p}')">
+  <span class="icon">📸</span>
+  <span class="text">Export</span>
+</button></div>
+
+<table>
+
+<tr><th>Job</th><th>Priority</th><th>Create</th><th>
+  Mode
+  <span onclick="toggleAllStatus()" style="cursor:pointer;margin-left:6px">
+    ${
+      viewMode === 0 ? "👁 Work" :
+      viewMode === 1 ? "📊 Status" :
+      "🔄 Both"
+    }
+  </span>
+</th>
+
+
+</th>
+
+<th>Title</th><th>Province</th><th>Assign</th><th>Elapsed</th><th>Remain</th></tr>
+
+${map[p].map(r=>`
+<tr class="${r.od?'overdue':''}">
+<td>${r["Job ID"]||""}</td>
+<td>
+  <div class="badge ${r.pr.toLowerCase()}">${r.pr}</div>
+</td>
+<td>${r["Create Time"]||""}</td>
+<td>
+
+<div class="work work-${r.work.type}"
+     style="display:${(viewMode===0 || viewMode===2) ? 'inline-flex' : 'none'}">
+  ${r.work.icon} ${r.work.text}
+  
+</div>
+
+<div class="status-badge status-${getStatusInfo(r.status).cls}"
+     style="display:${(viewMode===1 || viewMode===2) ? 'inline-flex' : 'none'}">
+
+  ${getStatusInfo(r.status).icon}
+  ${getStatusInfo(r.status).text}
+
+</div>
+
+
+
+</td>
+
+<td class="title-cell">
+  <div class="title-text">
+    ${r["Job Title"] || ""}
+  </div>
+
+  <span class="remark-btn ${r["Reason by WF"] ? 'has-remark' : ''}"
+        onclick="showRemark('${r["Job ID"]}')">
+    ℹ️
+  </span>
+</td>
+
+<td><div class="prov-name">${p}</div>
+<div class="dist">${r.district||""}</div></td>
+<td><div class="assign-box">${r.assign}</div></td>
+<td>
+  ${(()=>{
+    let s = getSLA(r.hr, r.limit);
+
+    return `
+    <div class="sla-box">
+  <div class="sla-bar">
+    <div class="sla-fill ${s.color}" style="width:${s.pct}%"></div>
+  </div>
+
+  <div class="sla-text">
+    ${s.pct.toFixed(0)}%   <!-- ✅ เปอร์เซ็นต์ -->
+  </div>
+
+  <div class="sla-text">
+    ${formatTime(r.hr)}    <!-- ✅ เวลา -->
+  </div>
+</div>
+
+    `;
+  })()}
+</td>
+
+<td>
+  ${(()=>{
+    let s = getSLA(r.hr, r.limit);
+
+    return `
+    <div class="sla-box">
+  <div class="sla-bar">
+    <div class="sla-fill ${r.od?'sla-red':s.color}" style="width:${s.pct}%"></div>
+  </div>
+
+  <div class="sla-text">
+    ${s.pct.toFixed(0)}%
+  </div>
+
+  <div class="sla-text">
+    ${r.od ? "🔥OVERDUE🔥" : formatTime(r.limit - r.hr)}
+  </div>
+</div>
+
+    `;
+  })()}
+</td>
+
+</tr>
+`).join("")}
+
+</table>
+</div>
+`).join("") || '<div class="no-data">❌ ไม่พบข้อมูล</div>';
+}
+
+</script>
+
+
+
+
+
+      <script>
+        const source = new EventSource('/livereload');
+        const reload = () => location.reload(true);
+        source.onmessage = reload;
+        source.onerror = () => (source.onopen = reload);
+        console.log('[servor] listening for file changes');
+      </script>
+    </body></html>
