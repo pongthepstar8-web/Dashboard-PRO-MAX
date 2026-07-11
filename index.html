@@ -1786,12 +1786,18 @@ margin-bottom:25px;
 
 .ai-card.duty-off{
   background:linear-gradient(
-  180deg,
-  #450a0a,
-  #000
-);
+    180deg,
+    #1f2937,
+    #000
+  );
 
-  border-color:#ef4444;
+  border-color:#6b7280;
+
+  opacity:.75;
+}
+
+.off-name{
+  color:#9ca3af !important;
 }
 
 .ai-card.high{
@@ -2327,12 +2333,7 @@ let shiftNames =
   return;
 }
 
-  let dutyText =
-    isPool
-      ? "📦 NER POOL"
-      : onDuty
-      ? "🟢 ON DUTY"
-      : "⚫ OFF DUTY";
+  let dutyText = "";
 
   let cardClass =
     isPool
@@ -2368,8 +2369,8 @@ let shiftNames =
   engineerHtml += `
   <div class="ai-card ${cardClass}">
 
-    <div class="job">
-      👨‍🔧 ${eng}
+    <div class="job ${!onDuty && !isPool ? 'off-name' : ''}">
+    👨‍🔧 ${eng}
     </div>
 
   
