@@ -2372,14 +2372,22 @@ let shiftNames =
       👨‍🔧 ${eng}
     </div>
 
-    <div class="detail">
+    <div class="detail"
+     style="
+       color:${onDuty ? '#22c55e' : '#ef4444'};
+       font-weight:bold;
+     ">
+  ${dutyText}
+</div>
+
+<div class="detail">
   📍 ${obj.districts.size} District(s)
 </div>
 
 <div style="
-  margin-top:6px;
-  color:#94a3b8;
-  font-size:12px;
+  color:#93c5fd;
+  margin-top:4px;
+  font-size:13px;
 ">
   ${[...obj.districts].join(" • ")}
 </div>
