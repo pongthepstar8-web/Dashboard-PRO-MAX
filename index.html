@@ -2333,7 +2333,19 @@ let shiftNames =
   return;
 }
 
-  let dutyText = "";
+let currentJob =
+  [...obj.jobs]
+  .sort((a,b)=>{
+
+    let aRemain =
+      a.limit - getHr(a["Create Time"]);
+
+    let bRemain =
+      b.limit - getHr(b["Create Time"]);
+
+    return aRemain - bRemain;
+
+  })[0];
 
   let cardClass =
     isPool
@@ -2370,21 +2382,18 @@ let shiftNames =
   <div class="ai-card ${cardClass}">
 
     <div class="job ${!onDuty && !isPool ? 'off-name' : ''}">
-    👨‍🔧 ${eng}
+    ${isPool ? '🛟' : '👨‍🔧'} ${eng}
     </div>
 
-  
-<div class="detail"
-     style="
-       color:${onDuty ? '#22c55e' : '#ef4444'};
-       font-weight:bold;
-     ">
-  ${dutyText}
-</div>
 
-<div class="detail">
-  📍 ${obj.districts.size} District(s)
-</div>
+    <div class="detail">
+  📍 Current Area :
+  ${currentJob?.["District Name"] || "-"}
+  </div>
+
+  <div class="detail">
+  🗺️ ${obj.districts.size} District(s)
+  </div>
 
 <div style="
   color:#93c5fd;
