@@ -866,17 +866,18 @@ if(
     type:"transmission"
   };
 }
-// 🏢 Business Circuit (BIPV / INF / IPV)
+// 🏢 Business Circuit
 if(
   t.includes("bipv") ||
   t.includes("inf") ||
   t.includes("ipv") ||
-  t.includes("binl")    // ✅ เพิ่มตรงนี้
+  t.includes("binl") ||
+  t.includes("inl")
 ){
   return {
     icon:"🏢",
     text:"Business Circuit",
-    full:"🏢 Business Circuit (BIPV / INF / IPV)",
+    full:"🏢 Business Circuit (BIPV / INF / IPV / INL)",
     type:"leased"
   };
 }
