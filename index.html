@@ -1422,11 +1422,18 @@ jobs.forEach(r=>{
 if(!eng)
   return;
 
-  if(!engineers[eng]){
-    engineers[eng] = {
-      jobs:[]
-    };
-  }
+ if(!engineers[eng]){
+  engineers[eng] = {
+    jobs:[],
+    districts:new Set()
+  };
+}
+
+if(r["District Name"]){
+  engineers[eng].districts.add(
+    r["District Name"]
+  );
+}
 
   engineers[eng].jobs.push(r);
 
@@ -2366,8 +2373,16 @@ let shiftNames =
     </div>
 
     <div class="detail">
-      ${dutyText}
-    </div>
+  📍 ${obj.districts.size} District(s)
+</div>
+
+<div style="
+  margin-top:6px;
+  color:#94a3b8;
+  font-size:12px;
+">
+  ${[...obj.districts].join(" • ")}
+</div>
 
     <details class="job-expand">
 
