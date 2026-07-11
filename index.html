@@ -1422,7 +1422,7 @@ jobs.forEach(r=>{
 if(!eng)
   return;
 
- if(!engineers[eng]){
+  if(!engineers[eng]){
   engineers[eng] = {
     jobs:[],
     districts:new Set()
@@ -2372,7 +2372,8 @@ let shiftNames =
       👨‍🔧 ${eng}
     </div>
 
-    <div class="detail"
+  
+<div class="detail"
      style="
        color:${onDuty ? '#22c55e' : '#ef4444'};
        font-weight:bold;
