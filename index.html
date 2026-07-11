@@ -1,16 +1,16 @@
 <!DOCTYPE html>
-<!-- saved from url=(0097)https://stackblitzstartersiq9ytesy-4m5e-%2D8080-%2D639e0ff1.local-credentialless.webcontainer.io/ -->
-<html lang="th"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<html lang="th">
+<meta charset="UTF-8">
 <title>🚀Dashboard PRO MAX</title>
 
 <!-- ✅ LIB -->
-<script src="./index_files/xlsx.full.min.js.ดาวน์โหลด"></script>
-<script src="./index_files/jquery.min.js.ดาวน์โหลด"></script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 
-<link href="./index_files/select2.min.css" rel="stylesheet">
-<script src="./index_files/select2.min.js.ดาวน์โหลด"></script>
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
-<script src="./index_files/html2canvas.min.js.ดาวน์โหลด"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
 <style>
 body{margin:0;background:#0f172a;color:#fff;font-family:Arial}
@@ -662,9 +662,14 @@ td{
 
 <div class="shift-box">
 
-  <textarea id="shiftDaily" placeholder="Shift Daily..."></textarea>
+  <textarea
+    id="shiftDaily"
+    placeholder="Shift Daily..."
+  ></textarea>
 
-  <button class="btn-shift-clear" onclick="clearShift()">
+  <button
+    class="btn-shift-clear"
+    onclick="clearShift()">
 
     🧹 Clear Shift
 
@@ -675,11 +680,11 @@ td{
 </div>
 
 <div class="kpi-row" id="kpiBar">
-<div class="kpi red" onclick="pick(&#39;critical&#39;)" id="c">Critical:0</div>
-<div class="kpi orange" onclick="pick(&#39;major&#39;)" id="m">Major:0</div>
-<div class="kpi green" onclick="pick(&#39;minor&#39;)" id="n">Minor:0</div>
-<div class="kpi gray" onclick="pick(&#39;total&#39;)" id="t">Total:0</div>
-<div class="kpi" onclick="pick(&#39;overdue&#39;)" id="o" style="background:#991b1b">Overdue:0</div>
+<div class="kpi red" onclick="pick('critical')" id="c">Critical:0</div>
+<div class="kpi orange" onclick="pick('major')" id="m">Major:0</div>
+<div class="kpi green" onclick="pick('minor')" id="n">Minor:0</div>
+<div class="kpi gray" onclick="pick('total')" id="t">Total:0</div>
+<div class="kpi" onclick="pick('overdue')" id="o" style="background:#991b1b">Overdue:0</div>
 </div>
 
 <div id="root"></div>
@@ -2766,15 +2771,6 @@ ${map[p].map(r=>`
 
 </script>
 
+</body>
 
-
-
-
-      <script>
-        const source = new EventSource('/livereload');
-        const reload = () => location.reload(true);
-        source.onmessage = reload;
-        source.onerror = () => (source.onopen = reload);
-        console.log('[servor] listening for file changes');
-      </script>
-    </body></html>
+</html>
