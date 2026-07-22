@@ -1,181 +1,2058 @@
 <!DOCTYPE html>
 <html lang="th">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🚀 Dashboard PRO MAX + AI Map</title>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>🚀 Dashboard PRO MAX + AI Map</title>
 
-<!-- ✅ LIB -->
-<script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet"/>
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <!-- ✅ LIB -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <link
+      href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
-<style>
-body{margin:0;background:#0f172a;color:#fff;font-family:Arial,sans-serif}
-.header{padding:12px;display:flex;gap:8px;justify-content:center;align-items:center;flex-wrap:wrap;background:#020617;border-bottom:1px solid #334155}
-input,select,textarea,button{font-family:Arial,sans-serif}
-#search{padding:9px 12px;border-radius:8px;border:1px solid #334155;background:#1e293b;color:#fff}
-button{cursor:pointer}
-.shift-box{display:flex;align-items:center;gap:10px}
-#shiftDaily{width:180px;height:42px;background:#111827;color:#fff;border:1px solid #334155;border-radius:10px;padding:8px;resize:vertical}
-#shiftDaily:focus{outline:none;border-color:#38bdf8;box-shadow:0 0 10px rgba(56,189,248,.45)}
-.btn-shift-clear{display:inline-flex;align-items:center;justify-content:center;padding:10px 14px;border-radius:12px;border:1px solid rgba(239,68,68,.4);background:rgba(239,68,68,.15);color:#f87171;font-size:13px;font-weight:700;cursor:pointer;transition:all .25s ease}
-.btn-shift-clear:hover{background:#ef4444;color:#fff;transform:translateY(-2px);box-shadow:0 0 12px rgba(239,68,68,.7)}
-.kpi-row{display:flex;gap:10px;justify-content:center;margin:15px;flex-wrap:wrap}
-.kpi{padding:10px 18px;border-radius:12px;font-weight:bold;cursor:pointer;opacity:.65;user-select:none}
-.kpi.active{opacity:1;transform:scale(1.08);border:2px solid #fff}
-.red{background:#ef4444}.orange{background:#f59e0b}.green{background:#22c55e}.gray{background:#64748b}
-.card{margin:15px auto;padding:12px;border-radius:12px;width:95%;max-width:1600px;background:#111827;border:1px solid #334155;box-shadow:0 0 12px rgba(0,0,0,.25)}
-.card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:12px;flex-wrap:wrap}
-.btn-export{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:12px;background:rgba(34,197,94,0.15);border:1px solid rgba(34,197,94,0.4);color:#4ade80;font-weight:600;cursor:pointer;transition:all .25s ease}
-.btn-export:hover{background:#22c55e;color:#022c22;box-shadow:0 0 10px #22c55e,0 0 20px #22c55e}
-table{width:100%;min-width:1200px;border-collapse:collapse}th{background:#334155;padding:8px}td{padding:8px;font-size:13px;vertical-align:middle;border-bottom:1px solid rgba(148,163,184,.15)}
-.badge{display:inline-block;padding:8px 16px;border-radius:20px;font-weight:bold;font-size:14px;text-align:center;min-width:90px}.critical{background:#ef4444;color:#fff}.major{background:#f59e0b;color:#fff}.minor{background:#22c55e;color:#fff}.none{background:#64748b;color:#fff}
-.work{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:20px;font-size:13px;font-weight:600;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,0.3)}
-.work-access{background:linear-gradient(135deg,#7f1d1d,#dc2626);color:#fecaca}.work-transmission{background:linear-gradient(135deg,#1e40af,#3b82f6);color:#dbeafe}.work-power{background:linear-gradient(135deg,#374151,#f59e0b);color:#fff7ed}.work-leased{background:linear-gradient(135deg,#1e3a8a,#6d28d9);color:#fff}.work-other{background:#78350f;color:#fcd34d}
-.status-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 6px;border-radius:12px;font-size:10px;font-weight:600;opacity:.75;background:#475569;color:#e2e8f0;box-shadow:0 0 6px rgba(255,255,255,0.15)}
-.status-assigned{background:#f59e0b;color:#fff}.status-onsite{background:#22c55e;color:#fff}.status-departed{background:#3b82f6;color:#fff}.status-created{background:#64748b;color:#fff}.status-done{background:#16a34a;color:#fff}
-.prov-name{font-weight:bold}.dist{font-size:12px;color:#94a3b8}.assign-box{text-align:center;color:#22c55e;font-weight:bold}.overdue{background:#7f1d1d}.title-cell{position:relative}.title-text{padding-right:20px}.remark-btn{position:absolute;right:6px;bottom:4px;font-size:11px;cursor:pointer;opacity:.65}.remark-btn:hover{opacity:1;transform:scale(1.15);color:#38bdf8}.has-remark{color:#facc15;opacity:.9}
-.sla-bar{width:120px;height:12px;background:#1e293b;border-radius:10px;overflow:hidden;position:relative}.sla-fill{height:100%;border-radius:10px}.sla-green{background:#22c55e}.sla-yellow{background:#facc15}.sla-red{background:#ef4444}.sla-text{font-size:11px;margin-top:4px;text-align:center}.sla-box{display:flex;flex-direction:column;align-items:center;gap:4px;min-height:36px}
-.select2-container--default .select2-selection--single{background:#1e293b;border:1px solid #334155;color:#fff;height:36px;border-radius:8px}.select2-selection__rendered{color:#fff!important}.select2-selection__arrow b{border-color:#fff transparent transparent transparent!important}.select2-dropdown{background:#1e293b;border:1px solid #334155}.select2-results__option{color:#e2e8f0;padding:8px}.select2-results__option--highlighted{background:#22c55e!important;color:#fff}.select2-results__option[aria-selected=true]{background:#334155;color:#38bdf8}.select2-search__field{background:#0f172a;color:#fff;border:none}
-.no-data{text-align:center;padding:30px}
-.popup{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center;z-index:9999}.popup-card{background:#111;border:2px solid orange;border-radius:8px;padding:16px;width:380px;color:#fff;font-family:Consolas,monospace;box-shadow:0 0 20px #000}.popup-card h2{color:#facc15;margin-bottom:8px;font-size:18px}.popup-sub{color:#a3e635;font-size:13px;line-height:1.4;margin-bottom:8px;max-height:120px;overflow:auto}.popup-code{color:#fbbf24;font-size:12px;margin-bottom:10px;word-break:break-word}.popup-remark{margin-top:10px;font-size:13px;line-height:1.5}.popup-assign{margin-top:10px;font-size:12px;color:#93c5fd}.popup-status{margin-top:8px;font-weight:bold;display:inline-block;padding:6px 14px;border-radius:10px}.popup-time{float:right;color:#facc15;font-weight:bold}.popup-critical{background:#ef4444;color:#fff}.popup-major{background:#f59e0b;color:#fff}.popup-minor{background:#22c55e;color:#fff}.popup-none{background:#64748b;color:#fff}.popup-assigned{background:#f59e0b;color:#fff}.popup-onsite{background:#22c55e;color:#fff}.popup-departed{background:#3b82f6;color:#fff}.popup-created{background:#64748b;color:#fff}.popup-done{background:#16a34a;color:#fff}.popup-held{background:#a855f7;color:#fff}.popup-cancel{background:#dc2626;color:#fff}.popup-transfer{background:#f97316;color:#fff}.popup-accepted{background:#0891b2;color:#fff}.popup-interrupted{background:#eab308;color:#000}
-</style>
-</head>
-<body>
+    <style>
+      body {
+        margin: 0;
+        background: #0f172a;
+        color: #fff;
+        font-family: Arial, sans-serif;
+      }
+      .header {
+        padding: 12px;
+        display: flex;
+        gap: 8px;
+        justify-content: center;
+        align-items: center;
+        flex-wrap: wrap;
+        background: #020617;
+        border-bottom: 1px solid #334155;
+      }
+      input,
+      select,
+      textarea,
+      button {
+        font-family: Arial, sans-serif;
+      }
+      #search {
+        padding: 9px 12px;
+        border-radius: 8px;
+        border: 1px solid #334155;
+        background: #1e293b;
+        color: #fff;
+      }
+      button {
+        cursor: pointer;
+      }
+      .shift-box {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      #shiftDaily {
+        width: 180px;
+        height: 42px;
+        background: #111827;
+        color: #fff;
+        border: 1px solid #334155;
+        border-radius: 10px;
+        padding: 8px;
+        resize: vertical;
+      }
+      #shiftDaily:focus {
+        outline: none;
+        border-color: #38bdf8;
+        box-shadow: 0 0 10px rgba(56, 189, 248, 0.45);
+      }
+      .btn-shift-clear {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 10px 14px;
+        border-radius: 12px;
+        border: 1px solid rgba(239, 68, 68, 0.4);
+        background: rgba(239, 68, 68, 0.15);
+        color: #f87171;
+        font-size: 13px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.25s ease;
+      }
+      .btn-shift-clear:hover {
+        background: #ef4444;
+        color: #fff;
+        transform: translateY(-2px);
+        box-shadow: 0 0 12px rgba(239, 68, 68, 0.7);
+      }
+      .kpi-row {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+        margin: 15px;
+        flex-wrap: wrap;
+      }
+      .kpi {
+        padding: 10px 18px;
+        border-radius: 12px;
+        font-weight: bold;
+        cursor: pointer;
+        opacity: 0.65;
+        user-select: none;
+      }
+      .kpi.active {
+        opacity: 1;
+        transform: scale(1.08);
+        border: 2px solid #fff;
+      }
+      .red {
+        background: #ef4444;
+      }
+      .orange {
+        background: #f59e0b;
+      }
+      .green {
+        background: #22c55e;
+      }
+      .gray {
+        background: #64748b;
+      }
+      .card {
+        margin: 15px auto;
+        padding: 12px;
+        border-radius: 12px;
+        width: 95%;
+        max-width: 1600px;
+        background: #111827;
+        border: 1px solid #334155;
+        box-shadow: 0 0 12px rgba(0, 0, 0, 0.25);
+      }
+      .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+      .btn-export {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 14px;
+        border-radius: 12px;
+        background: rgba(34, 197, 94, 0.15);
+        border: 1px solid rgba(34, 197, 94, 0.4);
+        color: #4ade80;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.25s ease;
+      }
+      .btn-export:hover {
+        background: #22c55e;
+        color: #022c22;
+        box-shadow: 0 0 10px #22c55e, 0 0 20px #22c55e;
+      }
+      table {
+        width: 100%;
+        min-width: 1200px;
+        border-collapse: collapse;
+      }
+      th {
+        background: #334155;
+        padding: 8px;
+      }
+      td {
+        padding: 8px;
+        font-size: 13px;
+        vertical-align: middle;
+        border-bottom: 1px solid rgba(148, 163, 184, 0.15);
+      }
+      .badge {
+        display: inline-block;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-weight: bold;
+        font-size: 14px;
+        text-align: center;
+        min-width: 90px;
+      }
+      .critical {
+        background: #ef4444;
+        color: #fff;
+      }
+      .major {
+        background: #f59e0b;
+        color: #fff;
+      }
+      .minor {
+        background: #22c55e;
+        color: #fff;
+      }
+      .none {
+        background: #64748b;
+        color: #fff;
+      }
+      .work {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 13px;
+        font-weight: 600;
+        white-space: nowrap;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+      }
+      .work-access {
+        background: linear-gradient(135deg, #7f1d1d, #dc2626);
+        color: #fecaca;
+      }
+      .work-transmission {
+        background: linear-gradient(135deg, #1e40af, #3b82f6);
+        color: #dbeafe;
+      }
+      .work-power {
+        background: linear-gradient(135deg, #374151, #f59e0b);
+        color: #fff7ed;
+      }
+      .work-leased {
+        background: linear-gradient(135deg, #1e3a8a, #6d28d9);
+        color: #fff;
+      }
+      .work-other {
+        background: #78350f;
+        color: #fcd34d;
+      }
+      .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 3px 6px;
+        border-radius: 12px;
+        font-size: 10px;
+        font-weight: 600;
+        opacity: 0.75;
+        background: #475569;
+        color: #e2e8f0;
+        box-shadow: 0 0 6px rgba(255, 255, 255, 0.15);
+      }
+      .status-assigned {
+        background: #f59e0b;
+        color: #fff;
+      }
+      .status-onsite {
+        background: #22c55e;
+        color: #fff;
+      }
+      .status-departed {
+        background: #3b82f6;
+        color: #fff;
+      }
+      .status-created {
+        background: #64748b;
+        color: #fff;
+      }
+      .status-done {
+        background: #16a34a;
+        color: #fff;
+      }
+      .prov-name {
+        font-weight: bold;
+      }
+      .dist {
+        font-size: 12px;
+        color: #94a3b8;
+      }
+      .assign-box {
+        text-align: center;
+        color: #22c55e;
+        font-weight: bold;
+      }
+      .overdue {
+        background: #7f1d1d;
+      }
+      .title-cell {
+        position: relative;
+      }
+      .title-text {
+        padding-right: 20px;
+      }
+      .remark-btn {
+        position: absolute;
+        right: 6px;
+        bottom: 4px;
+        font-size: 11px;
+        cursor: pointer;
+        opacity: 0.65;
+      }
+      .remark-btn:hover {
+        opacity: 1;
+        transform: scale(1.15);
+        color: #38bdf8;
+      }
+      .has-remark {
+        color: #facc15;
+        opacity: 0.9;
+      }
+      .sla-bar {
+        width: 120px;
+        height: 12px;
+        background: #1e293b;
+        border-radius: 10px;
+        overflow: hidden;
+        position: relative;
+      }
+      .sla-fill {
+        height: 100%;
+        border-radius: 10px;
+      }
+      .sla-green {
+        background: #22c55e;
+      }
+      .sla-yellow {
+        background: #facc15;
+      }
+      .sla-red {
+        background: #ef4444;
+      }
+      .sla-text {
+        font-size: 11px;
+        margin-top: 4px;
+        text-align: center;
+      }
+      .sla-box {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        min-height: 36px;
+      }
+      .select2-container--default .select2-selection--single {
+        background: #1e293b;
+        border: 1px solid #334155;
+        color: #fff;
+        height: 36px;
+        border-radius: 8px;
+      }
+      .select2-selection__rendered {
+        color: #fff !important;
+      }
+      .select2-selection__arrow b {
+        border-color: #fff transparent transparent transparent !important;
+      }
+      .select2-dropdown {
+        background: #1e293b;
+        border: 1px solid #334155;
+      }
+      .select2-results__option {
+        color: #e2e8f0;
+        padding: 8px;
+      }
+      .select2-results__option--highlighted {
+        background: #22c55e !important;
+        color: #fff;
+      }
+      .select2-results__option[aria-selected='true'] {
+        background: #334155;
+        color: #38bdf8;
+      }
+      .select2-search__field {
+        background: #0f172a;
+        color: #fff;
+        border: none;
+      }
+      .no-data {
+        text-align: center;
+        padding: 30px;
+      }
+      .popup {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.85);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+      }
+      .popup-card {
+        background: #111;
+        border: 2px solid orange;
+        border-radius: 8px;
+        padding: 16px;
+        width: 380px;
+        color: #fff;
+        font-family: Consolas, monospace;
+        box-shadow: 0 0 20px #000;
+      }
+      .popup-card h2 {
+        color: #facc15;
+        margin-bottom: 8px;
+        font-size: 18px;
+      }
+      .popup-sub {
+        color: #a3e635;
+        font-size: 13px;
+        line-height: 1.4;
+        margin-bottom: 8px;
+        max-height: 120px;
+        overflow: auto;
+      }
+      .popup-code {
+        color: #fbbf24;
+        font-size: 12px;
+        margin-bottom: 10px;
+        word-break: break-word;
+      }
+      .popup-remark {
+        margin-top: 10px;
+        font-size: 13px;
+        line-height: 1.5;
+      }
+      .popup-assign {
+        margin-top: 10px;
+        font-size: 12px;
+        color: #93c5fd;
+      }
+      .popup-status {
+        margin-top: 8px;
+        font-weight: bold;
+        display: inline-block;
+        padding: 6px 14px;
+        border-radius: 10px;
+      }
+      .popup-time {
+        float: right;
+        color: #facc15;
+        font-weight: bold;
+      }
+      .popup-critical {
+        background: #ef4444;
+        color: #fff;
+      }
+      .popup-major {
+        background: #f59e0b;
+        color: #fff;
+      }
+      .popup-minor {
+        background: #22c55e;
+        color: #fff;
+      }
+      .popup-none {
+        background: #64748b;
+        color: #fff;
+      }
+      .popup-assigned {
+        background: #f59e0b;
+        color: #fff;
+      }
+      .popup-onsite {
+        background: #22c55e;
+        color: #fff;
+      }
+      .popup-departed {
+        background: #3b82f6;
+        color: #fff;
+      }
+      .popup-created {
+        background: #64748b;
+        color: #fff;
+      }
+      .popup-done {
+        background: #16a34a;
+        color: #fff;
+      }
+      .popup-held {
+        background: #a855f7;
+        color: #fff;
+      }
+      .popup-cancel {
+        background: #dc2626;
+        color: #fff;
+      }
+      .popup-transfer {
+        background: #f97316;
+        color: #fff;
+      }
+      .popup-accepted {
+        background: #0891b2;
+        color: #fff;
+      }
+      .popup-interrupted {
+        background: #eab308;
+        color: #000;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <input type="file" id="file" accept=".xlsx,.xls,.csv" />
+      <input id="search" placeholder="🔍 ค้นหา" />
+      <select id="provinceFilter" style="width: 200px"></select>
+      <button onclick="resetAll()">Reset</button>
+      <button
+        onclick="showAIBoard()"
+        style="
+          background: #7c3aed;
+          color: #fff;
+          padding: 8px 14px;
+          border: none;
+          border-radius: 10px;
+          cursor: pointer;
+          font-weight: bold;
+        "
+      >
+        🧠 AI Action Board
+      </button>
+      <div class="shift-box">
+        <textarea id="shiftDaily" placeholder="Shift Daily..."></textarea>
+        <button class="btn-shift-clear" onclick="clearShift()">
+          🧹 Clear Shift
+        </button>
+      </div>
+    </div>
 
-<div class="header">
-  <input type="file" id="file" accept=".xlsx,.xls,.csv">
-  <input id="search" placeholder="🔍 ค้นหา">
-  <select id="provinceFilter" style="width:200px"></select>
-  <button onclick="resetAll()">Reset</button>
-  <button onclick="showAIBoard()" style="background:#7c3aed;color:#fff;padding:8px 14px;border:none;border-radius:10px;cursor:pointer;font-weight:bold">🧠 AI Action Board</button>
-  <div class="shift-box">
-    <textarea id="shiftDaily" placeholder="Shift Daily..."></textarea>
-    <button class="btn-shift-clear" onclick="clearShift()">🧹 Clear Shift</button>
+    <div class="kpi-row" id="kpiBar">
+      <div class="kpi red" onclick="pick('critical')" id="c">Critical:0</div>
+      <div class="kpi orange" onclick="pick('major')" id="m">Major:0</div>
+      <div class="kpi green" onclick="pick('minor')" id="n">Minor:0</div>
+      <div class="kpi gray" onclick="pick('total')" id="t">Total:0</div>
+      <div
+        class="kpi"
+        onclick="pick('overdue')"
+        id="o"
+        style="background: #991b1b"
+      >
+        Overdue:0
+      </div>
+    </div>
+
+    <div id="root"></div>
+    <div id="remarkPopup" class="popup" style="display: none">
+      <div class="popup-card" id="remarkContent"></div>
+    </div>
+
+    <script>
+      let data = [],
+        selected = [];
+      let viewMode = 0;
+
+      function getShiftNames() {
+        let txt = document.getElementById('shiftDaily').value;
+        return txt
+          .split('\n')
+          .map((line) => {
+            let m = line.match(/([A-Za-z]+)\s+([A-Za-z]+)\s+\d{3}-\d+/);
+            if (m) return `${m[1]} ${m[2]}`;
+            let p = line.trim().split(/\s+/);
+            return p.length >= 2 ? p.slice(-2).join(' ').trim() : '';
+          })
+          .filter(Boolean);
+      }
+      function clearShift() {
+        localStorage.removeItem('shiftDaily');
+        document.getElementById('shiftDaily').value = '';
+      }
+      window.addEventListener('load', () => {
+        let box = document.getElementById('shiftDaily');
+        box.value = localStorage.getItem('shiftDaily') || '';
+        box.addEventListener('input', () =>
+          localStorage.setItem('shiftDaily', box.value)
+        );
+      });
+      function mapCol(r, k) {
+        for (let x of k) {
+          if (r[x] != undefined) return r[x];
+        }
+        return '';
+      }
+      const getHr = (t) => {
+        let d = new Date(t);
+        return isNaN(d) ? 0 : (new Date() - d) / 3600000;
+      };
+      function formatTime(hr) {
+        let h = Math.floor(hr);
+        let m = Math.round((hr - h) * 60);
+        return h > 0 ? (m > 0 ? `${h}h ${m}m` : `${h}h`) : `${m}m`;
+      }
+      function getSLA(hr, limit) {
+        let pct = Math.min((hr / limit) * 100, 100);
+        let color = 'sla-green';
+        if (pct > 70) color = 'sla-yellow';
+        if (pct > 90) color = 'sla-red';
+        return { pct, color };
+      }
+      const PROV_CODE = {
+        ขอนแก่น: 'KKN',
+        ร้อยเอ็ด: 'RET',
+        มหาสารคาม: 'MKM',
+        สกลนคร: 'SNK',
+        นครพนม: 'NPM',
+        มุกดาหาร: 'MDH',
+        กาฬสินธุ์: 'KSN',
+        อุดรธานี: 'UDN',
+        เลย: 'LEI',
+        หนองคาย: 'NKI',
+        บึงกาฬ: 'BKN',
+        หนองบัวลำภู: 'NLP',
+        นครราชสีมา: 'NMA',
+        ชัยภูมิ: 'CPM',
+        ศรีสะเกษ: 'SSK',
+        บุรีรัมย์: 'BRM',
+        อุบลราชธานี: 'UBN',
+        สุรินทร์: 'SRN',
+        ยโสธร: 'YST',
+        อำนาจเจริญ: 'ACR',
+      };
+      function getStatusInfo(s) {
+        let t = (s || '').toLowerCase();
+        if (t.includes('on-site') || t.includes('onsite'))
+          return { cls: 'onsite', icon: '🧑‍🔧', text: 'On-site' };
+        if (t.includes('assigned'))
+          return { cls: 'assigned', icon: '📋', text: 'Assigned' };
+        if (t.includes('departed'))
+          return { cls: 'departed', icon: '🚗', text: 'Departed' };
+        if (t.includes('done')) return { cls: 'done', icon: '🎯', text: s };
+        if (t.includes('accepted'))
+          return { cls: 'accepted', icon: '📥', text: 'Accepted' };
+        if (t.includes('interupted') || t.includes('interrupted'))
+          return { cls: 'interrupted', icon: '⚠️', text: 'Interrupted' };
+        if (t.includes('held'))
+          return { cls: 'held', icon: '💤', text: 'Held' };
+        if (t.includes('cancel'))
+          return { cls: 'cancel', icon: '❌', text: 'Cancel' };
+        if (t.includes('transfer'))
+          return { cls: 'transfer', icon: '🔁', text: 'Transfer' };
+        return { cls: 'created', icon: '🆕', text: 'Created' };
+      }
+      function getStatusIcon(status) {
+        let s = (status || '').toLowerCase();
+        if (s.includes('done')) return '✅ Done';
+        if (s.includes('on-site') || s.includes('onsite')) return '🟢 On-Site';
+        if (s.includes('departed')) return '🔵 Departed';
+        if (s.includes('assigned')) return '🟡 Assigned';
+        if (s.includes('accepted')) return '📥 Accepted';
+        if (s.includes('held')) return '💤 Held';
+        if (s.includes('cancel')) return '❌ Cancel';
+        return '⚪ Created';
+      }
+      function getPriorityIcon(pr) {
+        pr = (pr || '').toUpperCase();
+        if (pr === 'CRITICAL') return '🚨 Critical';
+        if (pr === 'MAJOR') return '⚠️ Major';
+        if (pr === 'MINOR') return '🟢 Minor';
+        return '⚪ None';
+      }
+      function getWorkType(t) {
+        t = (t || '').toLowerCase();
+        if (
+          t.includes('high loss') ||
+          t.includes('loss') ||
+          (t.includes('pon') && t.includes('loss')) ||
+          (t.includes('splitter') && t.includes('l2'))
+        )
+          return {
+            icon: '📉',
+            text: 'Signal Loss',
+            full: '📉 Signal Loss (High loss)',
+            type: 'transmission',
+          };
+        if (
+          t.includes('bipv') ||
+          t.includes('inf') ||
+          t.includes('ipv') ||
+          t.includes('binl') ||
+          t.includes('inl')
+        )
+          return {
+            icon: '🏢',
+            text: 'Business Circuit',
+            full: '🏢 Business Circuit (BIPV / INF / IPV / INL)',
+            type: 'leased',
+          };
+        if (t.includes('splitter') || t.includes('pon'))
+          return {
+            icon: '🔗',
+            text: 'Access Down',
+            full: '🔗 Access Down (Splitter / PON)',
+            type: 'access',
+          };
+        if (t.includes('olt') || t.includes('ac fail'))
+          return {
+            icon: '⚡',
+            text: 'Access Power Fail',
+            full: '⚡ Access Power Fail (OLT AC Fail)',
+            type: 'access',
+          };
+        if (t.includes('crc'))
+          return {
+            icon: '📡',
+            text: 'Transmission Error',
+            full: '📡 Transmission Error (CRC)',
+            type: 'transmission',
+          };
+        if (t.includes('rectifier') || t.includes('power'))
+          return {
+            icon: '🔌',
+            text: 'Power Failure',
+            full: '🔌 Power Failure (Rectifier)',
+            type: 'power',
+          };
+        if (t.includes('loop broken'))
+          return {
+            icon: '🔁❌',
+            text: 'Loop Broken',
+            full: '🔁❌ ERPS Loop Broken',
+            type: 'access',
+          };
+        if (t.includes('link down') || t.includes('down'))
+          return {
+            icon: '🚫',
+            text: 'Link Down',
+            full: '🚫 Link Down',
+            type: 'access',
+          };
+        return {
+          icon: '❗',
+          text: 'Unknown',
+          full: '❗ Unknown',
+          type: 'other',
+        };
+      }
+      function getSite(title) {
+        let m = (title || '').match(/(ME|OX|AN)_[0-9_]+/i);
+        return m ? m[0] : 'Unknown';
+      }
+      function toggleAllStatus() {
+        viewMode = (viewMode + 1) % 3;
+        render();
+      }
+      function pick(t) {
+        selected = [t];
+        $('.kpi').removeClass('active');
+        $(
+          '#' +
+            { critical: 'c', major: 'm', minor: 'n', total: 't', overdue: 'o' }[
+              t
+            ]
+        ).addClass('active');
+        render();
+      }
+      function pass(pr, od) {
+        if (!selected.length) return true;
+        let t = selected[0];
+        if (t === 'overdue') return od;
+        if (t === 'critical') return pr === 'CRITICAL';
+        if (t === 'major') return pr === 'MAJOR';
+        if (t === 'minor') return pr === 'MINOR' || pr === 'NONE';
+        return true;
+      }
+      function exportJPG(p) {
+        let box = document.createElement('div');
+        box.style.background = '#0f172a';
+        box.style.padding = '20px';
+        box.appendChild(document.getElementById('kpiBar').cloneNode(true));
+        box.appendChild(document.getElementById(p).cloneNode(true));
+        document.body.appendChild(box);
+        html2canvas(box, {
+          scale: 2,
+          useCORS: true,
+          width: box.scrollWidth,
+          height: box.scrollHeight,
+          windowWidth: box.scrollWidth,
+        }).then((c) => {
+          let a = document.createElement('a');
+          a.href = c.toDataURL('image/jpeg');
+          a.download = 'NOC_' + p + '.jpg';
+          a.click();
+          document.body.removeChild(box);
+        });
+      }
+      file.onchange = (e) => {
+        let r = new FileReader();
+        r.onload = (ev) => {
+          let wb = XLSX.read(new Uint8Array(ev.target.result), {
+            type: 'array',
+          });
+          data = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+          initProvince();
+          render();
+        };
+        r.readAsArrayBuffer(e.target.files[0]);
+      };
+      function initProvince() {
+        let s = {};
+        data.forEach((r) => {
+          let p = mapCol(r, ['Province Name']);
+          if (p) s[p] = 1;
+        });
+        let h = '<option value="">ทุกจังหวัด</option>';
+        Object.keys(s)
+          .sort()
+          .forEach((p) => (h += `<option>${p}</option>`));
+        $('#provinceFilter').html(h).select2();
+      }
+      $('#search,#provinceFilter').on('input change', render);
+      function resetAll() {
+        selected = [];
+        $('.kpi').removeClass('active');
+        $('#search').val('');
+        $('#provinceFilter').val('').trigger('change');
+        render();
+      }
+      function showRemark(jobId) {
+        let r = data.find((x) => x['Job ID'] == jobId);
+        if (!r) return;
+        let status = getStatusInfo(r['Status']);
+        let pr = (r['Priority'] || 'NONE').toLowerCase();
+        let hr = getHr(r['Create Time']);
+        let h = Math.floor(hr),
+          m = Math.round((hr - h) * 60);
+        let elapsedText = h > 0 ? `${h}h ${m}m` : `${m}m`;
+        document.getElementById('remarkContent').innerHTML = `<h2>${
+          r['Job ID']
+        }</h2><div class="popup-sub">${
+          r['Job Title'] || '-'
+        }</div><div class="popup-code" style="margin-top:6px">${
+          r['Province Name'] || ''
+        } ${r['District Name'] || ''}</div><div class="popup-code">${
+          r['Create Time'] || ''
+        }</div><div class="popup-remark"><b>REMARK:</b><br>${
+          r['Reason by WF'] || '-'
+        }</div><div class="popup-assign">ASSIGN BY - ${
+          r['Assign to'] || '-'
+        }</div><div style="margin-top:10px;display:flex;align-items:center;gap:8px"><span class="popup-status popup-${pr}">${pr.toUpperCase()}</span><span class="popup-status popup-${
+          status.cls
+        }">${status.icon} ${
+          status.text
+        }</span><span style="flex:1"></span><span class="popup-time">+${elapsedText}</span></div>`;
+        document.getElementById('remarkPopup').style.display = 'flex';
+      }
+      const popup = document.getElementById('remarkPopup');
+      popup.onclick = () => (popup.style.display = 'none');
+      document.querySelector('.popup-card').onclick = (e) =>
+        e.stopPropagation();
+
+      /* ================= AI MAP HELPERS ================= */
+      function isThailandCoord(lat, lng) {
+        return lat >= 5 && lat <= 21 && lng >= 97 && lng <= 106.8;
+      }
+      function normalizeThaiCoord(a, b) {
+        let lat = parseFloat(a),
+          lng = parseFloat(b);
+        if (isNaN(lat) || isNaN(lng)) return null;
+        if (isThailandCoord(lat, lng)) return { lat, lng };
+        if (isThailandCoord(lng, lat)) return { lat: lng, lng: lat };
+        return null;
+      }
+      function isThailandCoord(lat, lng) {
+        return lat >= 5 && lat <= 21 && lng >= 97 && lng <= 106.8;
+      }
+
+      function normalizeThaiCoord(a, b) {
+        let lat = parseFloat(a);
+        let lng = parseFloat(b);
+
+        if (isNaN(lat) || isNaN(lng)) return null;
+
+        // ปกติ lat,lng
+        if (isThailandCoord(lat, lng)) {
+          return { lat, lng };
+        }
+
+        // กรณีใส่สลับ lng,lat
+        if (isThailandCoord(lng, lat)) {
+          return {
+            lat: lng,
+            lng: lat,
+          };
+        }
+
+        // ถ้าไม่ใช่พิกัดประเทศไทย ไม่ใช้
+        return null;
+      }
+
+      function isThailandCoord(lat, lng) {
+        return lat >= 5 && lat <= 21 && lng >= 97 && lng <= 106.8;
+      }
+
+      function normalizeThaiCoord(a, b) {
+        let lat = parseFloat(a);
+        let lng = parseFloat(b);
+
+        if (isNaN(lat) || isNaN(lng)) return null;
+
+        // ปกติ lat,lng
+        if (isThailandCoord(lat, lng)) {
+          return { lat, lng };
+        }
+
+        // กรณีพิกัดสลับ lng,lat
+        if (isThailandCoord(lng, lat)) {
+          return {
+            lat: lng,
+            lng: lat,
+          };
+        }
+
+        return null;
+      }
+
+      function extractGPS(title) {
+        title = title || '';
+
+        // ต้องมี keyword บอกว่าเป็นพิกัด
+        // ลดการจับเลขจาก Title เช่น 3804_142 หรือ SitePriority
+        let hasGpsKeyword = /gps|coord|coordinate|พิกัด|lat|lon|lng/i.test(
+          title
+        );
+
+        // Lat:17.9805025 Lon:104.069824
+        let m = title.match(
+          /lat[:= ]\s*(-?\d{1,2}\.\d+).*?(lon|lng)[:= ]\s*(-?\d{1,3}\.\d+)/i
+        );
+
+        if (m) {
+          let c = normalizeThaiCoord(m[1], m[3]);
+
+          if (c) return c;
+        }
+
+        // Decimal comma: 17.9805025,104.069824
+        let re = /(-?\d{1,3}\.\d+)\s*,\s*(-?\d{1,3}\.\d+)/g;
+
+        while ((m = re.exec(title)) !== null) {
+          let c = normalizeThaiCoord(m[1], m[2]);
+
+          if (c) return c;
+        }
+
+        // Space decimal: GPS 17.9805025 104.069824
+        // จับเฉพาะมีคำว่า gps/พิกัด/coord เท่านั้น
+        if (hasGpsKeyword) {
+          re = /(-?\d{1,3}\.\d+)\s+(-?\d{1,3}\.\d+)/g;
+
+          while ((m = re.exec(title)) !== null) {
+            let c = normalizeThaiCoord(m[1], m[2]);
+
+            if (c) return c;
+          }
+        }
+
+        // DMS: 17°58'45.4"N 104°03'12.4"E
+        m = title.match(
+          /(\d{1,2})°(\d{1,2})'([\d.]+)"([NS])\s+(\d{1,3})°(\d{1,2})'([\d.]+)"([EW])/i
+        );
+
+        if (m) {
+          let lat = Number(m[1]) + Number(m[2]) / 60 + Number(m[3]) / 3600;
+
+          let lng = Number(m[5]) + Number(m[6]) / 60 + Number(m[7]) / 3600;
+
+          if (m[4].toUpperCase() === 'S') lat *= -1;
+
+          if (m[8].toUpperCase() === 'W') lng *= -1;
+
+          if (isThailandCoord(lat, lng)) {
+            return { lat, lng };
+          }
+        }
+
+        return null;
+      }
+      function distanceKm(lat1, lng1, lat2, lng2) {
+        const R = 6371;
+
+        let dLat = ((lat2 - lat1) * Math.PI) / 180;
+
+        let dLng = ((lng2 - lng1) * Math.PI) / 180;
+
+        let a =
+          Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+          Math.cos((lat1 * Math.PI) / 180) *
+            Math.cos((lat2 * Math.PI) / 180) *
+            Math.sin(dLng / 2) *
+            Math.sin(dLng / 2);
+
+        let c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+        return R * c;
+      }
+
+      function isCoordNearJobArea(gps, province, district) {
+        if (!gps) return false;
+
+        let areaCoord = getAreaCoord(province, district);
+
+        // ถ้าไม่มีฐานอำเภอ/จังหวัด ให้รับ GPS ได้ถ้าอยู่ในไทย
+        if (!areaCoord) {
+          return isThailandCoord(gps.lat, gps.lng);
+        }
+
+        let dist = distanceKm(gps.lat, gps.lng, areaCoord[0], areaCoord[1]);
+
+        // ถ้าห่างจากอำเภอ/จังหวัดเกิน 120 km ถือว่าผิดพื้นที่
+        return dist <= 120;
+      }
+      function normalizeMapKey(v) {
+        return (v || '').toString().trim().toLowerCase().replace(/\s+/g, ' ');
+      }
+      const DISTRICT_COORD = {
+        // Maha Sarakham
+        'มหาสารคาม|เมืองมหาสารคาม': [16.1851, 103.3026],
+        'มหาสารคาม|โกสุมพิสัย': [16.248, 103.067],
+        'มหาสารคาม|กันทรวิชัย': [16.33, 103.3],
+
+        // Bueng Kan
+        'บึงกาฬ|เมืองบึงกาฬ': [18.3609, 103.6467],
+        'บึงกาฬ|เซกา': [17.928, 103.955],
+        'บึงกาฬ|โซ่พิสัย': [18.083, 103.443],
+        'บึงกาฬ|พรเจริญ': [18.05, 103.7],
+        'บึงกาฬ|ศรีวิไล': [18.18, 103.75],
+        // Bueng Kan / บึงกาฬ
+        'บึงกาฬ|เมืองบึงกาฬ': [18.3609, 103.6467],
+        'บึงกาฬ|เซกา': [17.928, 103.955],
+        'บึงกาฬ|โซ่พิสัย': [18.083, 103.443],
+        'บึงกาฬ|บุ่งคล้า': [18.302, 103.974],
+        'บึงกาฬ|พรเจริญ': [18.05, 103.7],
+        'บึงกาฬ|ศรีวิไล': [18.18, 103.75],
+        'บึงกาฬ|ปากคาด': [18.3, 103.3],
+        'บึงกาฬ|บึงโขงหลง': [17.965, 104.04],
+
+        // English fallback
+        'Bueng Kan|Mueang Bueng Kan': [18.3609, 103.6467],
+        'Bueng Kan|Seka': [17.928, 103.955],
+        'Bueng Kan|So Phisai': [18.083, 103.443],
+        'Bueng Kan|Bung Khla': [18.302, 103.974],
+        'Bueng Kan|Phon Charoen': [18.05, 103.7],
+        'Bueng Kan|Si Wilai': [18.18, 103.75],
+        'Bueng Kan|Pak Khat': [18.3, 103.3],
+        'Bueng Kan|Bueng Khong Long': [17.965, 104.04],
+
+        // Nakhon Ratchasima
+        'นครราชสีมา|เมืองนครราชสีมา': [14.9799, 102.0977],
+        'นครราชสีมา|โชคชัย': [14.728, 102.165],
+        'นครราชสีมา|ชุมพวง': [15.348, 102.741],
+        'นครราชสีมา|โนนสูง': [15.18, 102.257],
+        'นครราชสีมา|โนนแดง': [15.411, 102.54],
+        'นครราชสีมา|โนนไทย': [15.195, 102.073],
+        'นครราชสีมา|วังน้ำเขียว': [14.4195, 101.8618],
+        'นครราชสีมา|ปากช่อง': [14.708, 101.416],
+        'นครราชสีมา|ปักธงชัย': [14.722, 102.025],
+        'นครราชสีมา|พิมาย': [15.221, 102.494],
+        'นครราชสีมา|ประทาย': [15.532, 102.722],
+        'นครราชสีมา|บัวใหญ่': [15.585, 102.425],
+        'นครราชสีมา|สีคิ้ว': [14.899, 101.723],
+
+        // Nong Khai
+        'หนองคาย|เมืองหนองคาย': [17.8783, 102.7413],
+        'หนองคาย|โพนพิสัย': [18.024, 103.078],
+        'หนองคาย|ท่าบ่อ': [17.85, 102.59],
+        'หนองคาย|ศรีเชียงใหม่': [17.96, 102.58],
+
+        // Udon Thani
+        'อุดรธานี|เมืองอุดรธานี': [17.4138, 102.7872],
+        'อุดรธานี|ไชยวาน': [17.294, 103.233],
+        'อุดรธานี|โนนสะอาด': [16.973, 102.893],
+        'อุดรธานี|กุมภวาปี': [17.108, 103.014],
+        'อุดรธานี|บ้านผือ': [17.7, 102.48],
+        'อุดรธานี|หนองหาน': [17.36, 103.105],
+
+        // Khon Kaen
+        'ขอนแก่น|เมืองขอนแก่น': [16.4322, 102.8236],
+        'ขอนแก่น|บ้านไผ่': [16.06, 102.729],
+        'ขอนแก่น|ชุมแพ': [16.5443, 102.0992],
+        'ขอนแก่น|พล': [15.816, 102.599],
+        'ขอนแก่น|น้ำพอง': [16.703, 102.855],
+        'ขอนแก่น|ภูเวียง': [16.65, 102.38],
+        'ขอนแก่น|กระนวน': [16.706, 103.086],
+        'ขอนแก่น|มัญจาคีรี': [16.13, 102.53],
+
+        // Roi Et
+        'ร้อยเอ็ด|เมืองร้อยเอ็ด': [16.0567, 103.6531],
+        'ร้อยเอ็ด|เกษตรวิสัย': [15.6552, 103.5855],
+        'ร้อยเอ็ด|จตุรพักตรพิมาน': [15.844, 103.557],
+        'ร้อยเอ็ด|เสลภูมิ': [16.029, 103.938],
+        'ร้อยเอ็ด|โพนทอง': [16.303, 103.975],
+        'ร้อยเอ็ด|สุวรรณภูมิ': [15.603, 103.802],
+        'ร้อยเอ็ด|ธวัชบุรี': [16.038, 103.746],
+        'ร้อยเอ็ด|อาจสามารถ': [15.85, 103.88],
+
+        // Sakon Nakhon
+        'สกลนคร|เมืองสกลนคร': [17.1546, 104.1348],
+        'สกลนคร|สว่างแดนดิน': [17.475, 103.457],
+        'สกลนคร|วานรนิวาส': [17.635, 103.751],
+        'สกลนคร|พรรณานิคม': [17.35, 103.85],
+        'สกลนคร|พังโคน': [17.39, 103.72],
+        'สกลนคร|กุสุมาลย์': [17.33, 104.33],
+        'สกลนคร|อากาศอำนวย': [17.6, 103.96],
+
+        // Nakhon Phanom
+        'นครพนม|เมืองนครพนม': [17.4108, 104.7784],
+        'นครพนม|นาแก': [16.946, 104.501],
+        'นครพนม|ธาตุพนม': [16.936, 104.724],
+        'นครพนม|เรณูนคร': [17.05, 104.677],
+        'นครพนม|ท่าอุเทน': [17.58, 104.6],
+        'นครพนม|บ้านแพง': [17.965, 104.215],
+        'นครพนม|ศรีสงคราม': [17.627, 104.25],
+
+        // Kalasin
+        'กาฬสินธุ์|เมืองกาฬสินธุ์': [16.4314, 103.5059],
+        'กาฬสินธุ์|ยางตลาด': [16.399, 103.367],
+        'กาฬสินธุ์|กุฉินารายณ์': [16.541, 104.05],
+        'กาฬสินธุ์|สมเด็จ': [16.705, 103.75],
+        'กาฬสินธุ์|สหัสขันธ์': [16.715, 103.53],
+
+        // Mukdahan
+        'มุกดาหาร|เมืองมุกดาหาร': [16.5453, 104.7235],
+        'มุกดาหาร|คำชะอี': [16.577, 104.421],
+        'มุกดาหาร|ดอนตาล': [16.316, 104.92],
+        'มุกดาหาร|นิคมคำสร้อย': [16.37, 104.55],
+
+        // Ubon Ratchathani
+        'อุบลราชธานี|เมืองอุบลราชธานี': [15.2447, 104.8473],
+        'อุบลราชธานี|วารินชำราบ': [15.193, 104.862],
+        'อุบลราชธานี|เดชอุดม': [14.905, 105.078],
+        'อุบลราชธานี|ตระการพืชผล': [15.61, 105.02],
+        'อุบลราชธานี|พิบูลมังสาหาร': [15.244, 105.229],
+
+        // Si Sa Ket
+        'ศรีสะเกษ|เมืองศรีสะเกษ': [15.1186, 104.322],
+        'ศรีสะเกษ|กันทรลักษ์': [14.64, 104.65],
+        'ศรีสะเกษ|ขุขันธ์': [14.713, 104.199],
+        'ศรีสะเกษ|อุทุมพรพิสัย': [15.11, 104.14],
+
+        // Surin
+        'สุรินทร์|เมืองสุรินทร์': [14.8818, 103.4937],
+        'สุรินทร์|ปราสาท': [14.64, 103.4],
+        'สุรินทร์|สังขะ': [14.636, 103.85],
+        'สุรินทร์|รัตนบุรี': [15.318, 103.85],
+
+        // Buriram
+        'บุรีรัมย์|เมืองบุรีรัมย์': [14.993, 103.1029],
+        'บุรีรัมย์|นางรอง': [14.637, 102.792],
+        'บุรีรัมย์|ประโคนชัย': [14.61, 103.08],
+        'บุรีรัมย์|พุทไธสง': [15.547, 103.03],
+        'บุรีรัมย์|ละหานทราย': [14.41, 102.86],
+
+        // Chaiyaphum
+        'ชัยภูมิ|เมืองชัยภูมิ': [15.8068, 102.0315],
+        'ชัยภูมิ|ภูเขียว': [16.376, 102.128],
+        'ชัยภูมิ|บำเหน็จณรงค์': [15.501, 101.69],
+        'ชัยภูมิ|จัตุรัส': [15.565, 101.845],
+        'ชัยภูมิ|แก้งคร้อ': [16.108, 102.258],
+
+        // Yasothon
+        'ยโสธร|เมืองยโสธร': [15.7926, 104.1453],
+        'ยโสธร|เลิงนกทา': [16.207, 104.556],
+        'ยโสธร|คำเขื่อนแก้ว': [15.66, 104.3],
+
+        // Amnat Charoen
+        'อำนาจเจริญ|เมืองอำนาจเจริญ': [15.8657, 104.6258],
+        'อำนาจเจริญ|ปทุมราชวงศา': [15.89, 104.905],
+
+        // English / local group names
+        'nakhon phanom|na kae': [16.946, 104.501],
+        'bueng kan|seka': [17.928, 103.955],
+        'roi et|mueang roi et': [16.0567, 103.6531],
+        'khon kaen|mueang khon kaen': [16.4322, 102.8236],
+        'sakon nakhon|mueang sakon nakhon': [17.1546, 104.1348],
+        'udonthani|mueang udon thani': [17.4138, 102.7872],
+        'nma 1|เมืองนครราชสีมา': [14.9799, 102.0977],
+        'nma 3|วังน้ำเขียว': [14.4195, 101.8618],
+        'ubn|เมืองอุบลราชธานี': [15.2447, 104.8473],
+      };
+
+      const PROVINCE_COORD = {
+        ขอนแก่น: [16.4322, 102.8236],
+        ร้อยเอ็ด: [16.0567, 103.6531],
+        มหาสารคาม: [16.1851, 103.3026],
+        สกลนคร: [17.1546, 104.1348],
+        นครพนม: [17.4108, 104.7784],
+        มุกดาหาร: [16.5453, 104.7235],
+        กาฬสินธุ์: [16.4314, 103.5059],
+        อุดรธานี: [17.4138, 102.7872],
+        เลย: [17.486, 101.7223],
+        หนองคาย: [17.8783, 102.7413],
+        บึงกาฬ: [18.3609, 103.6467],
+        บึงกาฬ: [18.3609, 103.6467],
+        'Bueng Kan': [18.3609, 103.6467],
+        หนองบัวลำภู: [17.2218, 102.426],
+        นครราชสีมา: [14.9799, 102.0977],
+        ชัยภูมิ: [15.8068, 102.0315],
+        ศรีสะเกษ: [15.1186, 104.322],
+        บุรีรัมย์: [14.993, 103.1029],
+        อุบลราชธานี: [15.2447, 104.8473],
+        สุรินทร์: [14.8818, 103.4937],
+        ยโสธร: [15.7926, 104.1453],
+        อำนาจเจริญ: [15.8657, 104.6258],
+        'Nakhon Phanom': [17.4108, 104.7784],
+        'Bueng Kan': [18.3609, 103.6467],
+        'Roi Et': [16.0567, 103.6531],
+        'Khon Kaen': [16.4322, 102.8236],
+        'Sakon Nakhon': [17.1546, 104.1348],
+        Udonthani: [17.4138, 102.7872],
+        UBN: [15.2447, 104.8473],
+        'NMA 1': [14.9799, 102.0977],
+        'NMA 2': [14.9799, 102.0977],
+        'NMA 3': [14.4195, 101.8618],
+      };
+      function getAreaCoord(province, district) {
+        let key1 = `${province}|${district}`;
+        let key2 = `${normalizeMapKey(province)}|${normalizeMapKey(district)}`;
+        if (DISTRICT_COORD[key1]) return DISTRICT_COORD[key1];
+        if (DISTRICT_COORD[key2]) return DISTRICT_COORD[key2];
+        // If district coordinate is unknown, fallback to province center only.
+        // This avoids plotting outside Thailand but may be approximate.
+        if (PROVINCE_COORD[province]) return PROVINCE_COORD[province];
+        let pkey = Object.keys(PROVINCE_COORD).find(
+          (k) => normalizeMapKey(k) === normalizeMapKey(province)
+        );
+        if (pkey) return PROVINCE_COORD[pkey];
+        return null;
+      }
+      async function geocodeArea(province, district) {
+        if (!province && !district) return null;
+
+        let cacheKey =
+          'geo_' + normalizeMapKey(province) + '_' + normalizeMapKey(district);
+
+        let cached = localStorage.getItem(cacheKey);
+
+        if (cached) {
+          try {
+            return JSON.parse(cached);
+          } catch (e) {}
+        }
+
+        let q = district
+          ? `${district} ${province} Thailand`
+          : `${province} Thailand`;
+
+        let url =
+          'https://nominatim.openstreetmap.org/search' +
+          '?format=json' +
+          '&limit=1' +
+          '&countrycodes=th' +
+          '&q=' +
+          encodeURIComponent(q);
+
+        try {
+          let res = await fetch(url);
+
+          let json = await res.json();
+
+          if (json && json.length) {
+            let lat = parseFloat(json[0].lat);
+
+            let lng = parseFloat(json[0].lon);
+
+            if (isThailandCoord(lat, lng)) {
+              let coord = [lat, lng];
+
+              localStorage.setItem(cacheKey, JSON.stringify(coord));
+
+              return coord;
+            }
+          }
+        } catch (e) {
+          console.warn('Geocode failed:', province, district, e);
+        }
+
+        return null;
+      }
+      function markerColor(job) {
+        let pr = (job['Priority'] || '').toUpperCase();
+        if (job.overdue > 0) return '#dc2626';
+        if (pr === 'CRITICAL') return '#ef4444';
+        if (pr === 'MAJOR') return '#f59e0b';
+        if (pr === 'MINOR') return '#22c55e';
+        return '#64748b';
+      }
+
+      function showAIBoard() {
+        let prov = $('#provinceFilter').val();
+        let jobs = [];
+        data.forEach((r) => {
+          let p = mapCol(r, ['Province Name']);
+          if (prov && p !== prov) return;
+          let pr = (r['Priority'] || 'NONE').toUpperCase();
+          let hr = getHr(r['Create Time']);
+          let limit = pr === 'CRITICAL' ? 3 : pr === 'MAJOR' ? 10 : 1000;
+          let overdue = Math.max(0, hr - limit);
+          let score = 0;
+          if (pr === 'CRITICAL') score += 100;
+          else if (pr === 'MAJOR') score += 60;
+          else if (pr === 'MINOR') score += 30;
+          score += overdue * 5;
+          jobs.push({ ...r, score, overdue, limit });
+        });
+        jobs.sort((a, b) => b.score - a.score);
+        let districtMap = {};
+        jobs.forEach((r) => {
+          let district = r['District Name'] || 'Unknown';
+          if (!districtMap[district])
+            districtMap[district] = {
+              jobs: [],
+              critical: 0,
+              major: 0,
+              minor: 0,
+              overdue: 0,
+              score: 0,
+            };
+          districtMap[district].jobs.push(r);
+          let pr = (r['Priority'] || '').toUpperCase();
+          if (pr === 'CRITICAL') districtMap[district].critical++;
+          else if (pr === 'MAJOR') districtMap[district].major++;
+          else districtMap[district].minor++;
+          if (r.overdue > 0) districtMap[district].overdue++;
+        });
+        let districtList = Object.entries(districtMap)
+          .map(([name, d]) => {
+            d.score =
+              d.critical * 100 +
+              d.major * 50 +
+              d.overdue * 30 +
+              d.jobs.length * 5;
+            return { district: name, ...d };
+          })
+          .sort((a, b) => b.score - a.score);
+        let districts = {};
+        jobs.forEach((r) => {
+          let d = r['District Name'] || '';
+          if (d) districts[d] = (districts[d] || 0) + 1;
+        });
+        let roots = {};
+        jobs.forEach((r) => {
+          let work = getWorkType(r['Job Title']).text;
+          if (!roots[work]) roots[work] = [];
+          roots[work].push(r);
+        });
+        let rootHtml = '';
+        Object.entries(roots)
+          .sort((a, b) => b[1].length - a[1].length)
+          .forEach(([root, list]) => {
+            let critical = list.filter(
+              (x) => (x['Priority'] || '').toUpperCase() === 'CRITICAL'
+            ).length;
+            let danger = critical >= 3 ? 'critical' : '';
+            rootHtml += `<div class="ai-card ${danger}"><div class="job">${
+              getWorkType(list[0]['Job Title']).icon
+            } ${root}</div><div class="detail">Total Jobs : ${
+              list.length
+            }</div><div class="detail">Critical : ${critical}</div><div class="reason"><b>AI Action</b><br>ตรวจ Root Cause นี้ก่อน</div><hr>`;
+            list.forEach((r) => {
+              rootHtml += `<details class="job-expand"><summary>${
+                r['Job ID'] || '-'
+              } | ${r['Priority'] || '-'} | ${
+                r['Assign to'] || '-'
+              }</summary><div style="margin-top:10px;padding:10px;background:#111827;border-radius:8px"><b>Title</b><br>${
+                r['Job Title'] || '-'
+              }<br><br><b>Status</b><br>${
+                r['Status'] || '-'
+              }<br><br><b>Assign</b><br>${
+                r['Assign to'] || '-'
+              }<br><br><b>Remark</b><br>${
+                r['Reason by WF'] || '-'
+              }</div></details>`;
+            });
+            rootHtml += `</div>`;
+          });
+        let engineers = {};
+        jobs.forEach((r) => {
+          let eng = (r['Assign to'] || '').trim();
+          if (!eng) return;
+          if (!engineers[eng])
+            engineers[eng] = { jobs: [], districts: new Set() };
+          if (r['District Name'])
+            engineers[eng].districts.add(r['District Name']);
+          engineers[eng].jobs.push(r);
+        });
+        let districtButtons = Object.keys(districts)
+          .sort()
+          .map(
+            (d) =>
+              `<button class="district-btn" onclick="window.filterDistrict('${String(
+                d
+              ).replace(/'/g, "\\'")}', this)">${d} (${districts[d]})</button>`
+          )
+          .join('');
+        let safeJobsJson = JSON.stringify(jobs).replace(
+          /<\/script/gi,
+          '<\\/script'
+        );
+        let html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>🧠 AI Action Board</title><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"><\/script><style>
+          .job-list{
+  margin-top:8px;
+}
+
+.job-list.scroll{
+  max-height:470px;
+  overflow-y:auto;
+  padding-right:6px;
+}
+
+.job-list.scroll::-webkit-scrollbar{
+  width:8px;
+}
+
+.job-list.scroll::-webkit-scrollbar-track{
+  background:#020617;
+  border-radius:10px;
+}
+
+.job-list.scroll::-webkit-scrollbar-thumb{
+  background:#475569;
+  border-radius:10px;
+}
+
+.job-list.scroll::-webkit-scrollbar-thumb:hover{
+  background:#38bdf8;
+}
+
+.summary-chip{
+  background:#111827;
+  padding:4px 10px;
+  border-radius:20px;
+  cursor:pointer;
+  transition:.2s;
+  border:1px solid transparent;
+  user-select:none;
+}
+
+.summary-chip:hover{
+  background:#334155;
+  transform:translateY(-1px);
+}
+
+.summary-chip.active{
+  background:#f59e0b;
+  color:#000;
+  border-color:#facc15;
+  box-shadow:0 0 8px rgba(245,158,11,.8);
+}
+
+.dist-job{
+  transition:.2s;
+}
+
+.dist-job.hide{
+  display:none;
+}
+
+.job-filter-title{
+  color:#38bdf8;
+  font-weight:bold;
+  margin-top:8px;
+  font-size:13px;
+}
+      body{background:#0f172a;color:white;font-family:Consolas,monospace;margin:0;padding:20px}.title{text-align:center;margin-bottom:25px}.view-bar{display:flex;justify-content:center;gap:10px;margin:15px 0;flex-wrap:wrap}.view-btn{background:#1e293b;color:#fff;border:1px solid #334155;padding:8px 16px;border-radius:20px;cursor:pointer;font-weight:bold}.view-btn.active{background:#7c3aed}.district-bar{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin:15px 0 20px}.district-btn{background:#1e293b;color:#fff;border:1px solid #334155;padding:8px 14px;border-radius:20px;cursor:pointer;font-weight:bold}.district-btn.active{background:#f59e0b;color:#000}.board{display:flex;flex-wrap:wrap;justify-content:center;gap:20px;padding:20px}.ai-card{width:360px;min-width:360px;background:#000;border:2px solid #f59e0b;border-radius:12px;padding:16px;box-shadow:0 0 8px rgba(255,165,0,.4)}.ai-card.critical{border-color:#ef4444;box-shadow:0 0 12px rgba(255,0,0,.8)}.ai-card.pool{background:linear-gradient(180deg,#312e81,#000);border-color:#8b5cf6;box-shadow:0 0 12px rgba(139,92,246,.8)}.ai-card.duty-on{background:linear-gradient(180deg,#052e16,#000);border-color:#22c55e}.ai-card.duty-off{background:linear-gradient(180deg,#1f2937,#000);border-color:#6b7280;opacity:.75}.off-name{color:#9ca3af!important}.job{color:#facc15;font-size:28px;font-weight:bold;margin-bottom:10px}.detail{color:#84cc16;margin-top:10px;line-height:1.4}.reason{color:#e5e7eb;margin-top:14px}.district-summary{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0;font-weight:bold}.district-summary span{background:#111827;padding:4px 10px;border-radius:20px}.job-title{margin:6px 0;padding-left:6px;color:#cbd5e1;font-size:11px;line-height:16px;border-left:2px solid #475569;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;text-overflow:ellipsis;word-break:break-word}.job-expand{margin-top:8px;border:1px solid #334155;border-radius:8px;padding:8px;background:#0f172a}.job-expand summary{cursor:pointer;color:#38bdf8;font-weight:bold}.job-expand summary:hover{color:#facc15}#mapView{display:none;width:100%;padding:12px}.map-panel{width:100%;display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}.map-btn{background:#1e293b;color:#fff;border:1px solid #334155;padding:8px 14px;border-radius:12px;cursor:pointer;font-weight:bold}.map-btn:hover{background:#334155}#aiMap{width:100%;height:78vh;border:2px solid #334155;border-radius:14px;overflow:hidden}.map-popup{color:#111827;font-family:Arial;min-width:280px;max-width:380px}.map-popup-title{font-weight:bold;color:#dc2626;margin-bottom:8px;font-size:15px}.map-job-box{margin-top:8px;padding:8px;background:#f1f5f9;border-radius:8px;border:1px solid #cbd5e1}.map-job-box summary{cursor:pointer;font-weight:bold}.route-link{display:inline-block;margin-top:8px;padding:7px 10px;background:#2563eb;color:#fff!important;text-decoration:none;border-radius:8px;font-weight:bold}
+      <\/style></head><body><div class="title"><h2>🧠 AI ACTION BOARD</h2><div class="view-bar"><button class="view-btn active" onclick="window.changeView('district',this)">📋 Job Queue</button><button class="view-btn" onclick="window.changeView('root',this)">⚠️ Root Cause</button><button class="view-btn" onclick="window.changeView('engineer',this)">👨‍🔧 Engineer Workload</button><button class="view-btn" onclick="window.changeView('map',this)">🗺️ AI Map</button></div><div class="district-bar"><button class="district-btn active" onclick="window.filterDistrict('', this)">ทั้งหมด</button>${districtButtons}</div></div><div id="districtView" class="board">`;
+        districtList.forEach((d, i) => {
+          let rank =
+            i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `#${i + 1}`;
+          let cardClass = d.critical > 0 ? 'critical' : '';
+          let nextJobs = [...d.jobs].sort((a, b) => {
+            let ar = a.limit - getHr(a['Create Time']),
+              br = b.limit - getHr(b['Create Time']);
+            if (a.overdue > 0 && b.overdue <= 0) return -1;
+            if (b.overdue > 0 && a.overdue <= 0) return 1;
+            if (ar !== br) return ar - br;
+            let p = { CRITICAL: 1, MAJOR: 2, MINOR: 3, NONE: 4 };
+            return (
+              p[(a['Priority'] || '').toUpperCase()] -
+              p[(b['Priority'] || '').toUpperCase()]
+            );
+          });
+          function renderDistrictJob(x, no) {
+            let pr = (x['Priority'] || 'NONE').toUpperCase();
+
+            let isOverdue = x.overdue > 0;
+
+            return `
+
+  <div class="dist-job"
+       data-priority="${pr}"
+       data-overdue="${isOverdue ? 'yes' : 'no'}"
+       style="
+        margin-top:8px;
+        padding:8px;
+        background:${isOverdue ? '#991b1b' : '#111827'};
+        border-radius:6px;
+        border:${isOverdue ? '1px solid #ef4444' : '1px solid #334155'};
+        box-shadow:${isOverdue ? '0 0 8px rgba(239,68,68,.5)' : 'none'};
+      ">
+
+    <b>${no}. ${x['Job ID'] || '-'}</b>
+
+    <br>
+
+    ${getPriorityIcon(x['Priority'])}
+    |
+    ${getStatusIcon(x['Status'])}
+
+    <div class="job-title">
+
+      ${getWorkType(x['Job Title']).icon}
+      ${getWorkType(x['Job Title']).text}
+
+      <br>
+
+      ${x['Job Title'] || '-'}
+
+    </div>
+
+    👷 ${x['Assign to'] || '-'}
+
+    <br>
+
+    ${
+      isOverdue
+        ? '🔥 OVERDUE'
+        : `⏱ SLA เหลือ ${formatTime(x.limit - getHr(x['Create Time']))}`
+    }
+
   </div>
+
+`;
+          }
+          html += `<div class="ai-card ${cardClass}" data-district="${
+            d.district
+          }"><div class="job">${rank} 📍 ${
+            d.district
+          }</div><div class="district-summary">
+
+<span class="summary-chip"
+      onclick="window.filterCardJobs(this,'critical')">
+  🚨 ${d.critical}
+</span>
+
+<span class="summary-chip"
+      onclick="window.filterCardJobs(this,'major')">
+  ⚠️ ${d.major}
+</span>
+
+<span class="summary-chip"
+      onclick="window.filterCardJobs(this,'overdue')">
+  🕒 ${d.overdue}
+</span>
+
+<span class="summary-chip active"
+      onclick="window.filterCardJobs(this,'all')">
+  📋 ${d.jobs.length}
+</span>
+
+</div><details class="job-expand" open><summary>🔥 NEXT ACTION</summary><div class="job-filter-title">
+  📋 แสดงงานทั้งหมดในอำเภอนี้ : ${nextJobs.length} งาน
 </div>
 
-<div class="kpi-row" id="kpiBar">
-  <div class="kpi red" onclick="pick('critical')" id="c">Critical:0</div>
-  <div class="kpi orange" onclick="pick('major')" id="m">Major:0</div>
-  <div class="kpi green" onclick="pick('minor')" id="n">Minor:0</div>
-  <div class="kpi gray" onclick="pick('total')" id="t">Total:0</div>
-  <div class="kpi" onclick="pick('overdue')" id="o" style="background:#991b1b">Overdue:0</div>
+<div class="job-list ${nextJobs.length > 3 ? 'scroll' : ''}">
+
+${nextJobs.map((x, idx) => renderDistrictJob(x, idx + 1)).join('')}
+
 </div>
 
-<div id="root"></div>
-<div id="remarkPopup" class="popup" style="display:none"><div class="popup-card" id="remarkContent"></div></div>
+</details>
+</div>`;
+        });
+        let shiftNames = getShiftNames().map((x) => x.toLowerCase().trim());
+        let engineerHtml = '';
+        Object.entries(engineers)
+          .sort((a, b) => {
+            if (a[0] === 'Workforce NER Pool') return -1;
+            if (b[0] === 'Workforce NER Pool') return 1;
+            let aOn = shiftNames.includes(a[0].toLowerCase().trim()),
+              bOn = shiftNames.includes(b[0].toLowerCase().trim());
+            if (aOn && !bOn) return -1;
+            if (!aOn && bOn) return 1;
+            return b[1].jobs.length - a[1].jobs.length;
+          })
+          .forEach(([eng, obj]) => {
+            let isPool = eng === 'Workforce NER Pool';
+            let onDuty = shiftNames.includes(eng.toLowerCase().trim());
+            if (!isPool && obj.jobs.length === 0) return;
+            let currentJob = [...obj.jobs].sort(
+              (a, b) =>
+                a.limit -
+                getHr(a['Create Time']) -
+                (b.limit - getHr(b['Create Time']))
+            )[0];
+            let cardClass = isPool ? 'pool' : onDuty ? 'duty-on' : 'duty-off';
+            let critical = obj.jobs.filter(
+              (x) => (x['Priority'] || '').toUpperCase() === 'CRITICAL'
+            ).length;
+            let major = obj.jobs.filter(
+              (x) => (x['Priority'] || '').toUpperCase() === 'MAJOR'
+            ).length;
+            let overdue = obj.jobs.filter((x) => x.overdue > 0).length;
+            let level =
+              obj.jobs.length >= 8
+                ? '🔴 HIGH'
+                : obj.jobs.length >= 4
+                ? '🟡 MEDIUM'
+                : '🟢 LOW';
+            engineerHtml += `<div class="ai-card ${cardClass}"><div class="job ${
+              !onDuty && !isPool ? 'off-name' : ''
+            }">${
+              isPool ? '🛟' : '👨‍🔧'
+            } ${eng}</div><div class="detail">📍 Current Area : ${
+              currentJob?.['District Name'] || '-'
+            }</div><div class="detail">🗺️ ${
+              obj.districts.size
+            } District(s)</div><div style="color:#93c5fd;margin-top:4px;font-size:13px">${[
+              ...obj.districts,
+            ].join(
+              ' • '
+            )}</div><details class="job-expand"><summary>📋 Jobs : ${
+              obj.jobs.length
+            }</summary>${obj.jobs
+              .map((job) => {
+                let remain =
+                  job.overdue > 0
+                    ? '🔥 OVERDUE'
+                    : `⏱ ${formatTime(job.limit - getHr(job['Create Time']))}`;
+                return `<div style="margin-top:8px;padding:8px;background:#111827;border-radius:8px"><b>${
+                  job['Job ID']
+                }</b><br>${getPriorityIcon(job['Priority'])} | ${getStatusIcon(
+                  job['Status']
+                )}<br>${getWorkType(job['Job Title']).icon} ${
+                  getWorkType(job['Job Title']).text
+                }<br>${remain}</div>`;
+              })
+              .join(
+                ''
+              )}</details><div class="detail">🚨 Critical : ${critical}</div><div class="detail">⚠️ Major : ${major}</div><div class="detail">🕒 Overdue : ${overdue}</div><div class="reason">Workload : ${level}</div></div>`;
+          });
+        html += `</div><div id="rootView" class="board" style="display:none">${rootHtml}</div><div id="engineerView" class="board" style="display:none">${engineerHtml}</div><div id="mapView"><div class="map-panel"><button class="map-btn" onclick="window.drawAIRoute()">🛣️ Draw AI Route</button><button class="map-btn" onclick="window.openGoogleRoute()">🧭 Open Google Maps</button><button class="map-btn" onclick="window.clearAIRoute()">🧹 Clear Route</button><button class="map-btn" onclick="window.fitAllMarkers()">📍 Fit All Jobs</button></div><div id="aiMap"></div></div><script>window.AI_JOBS=${safeJobsJson};<\/script></body></html>`;
+        let w = window.open();
+        w.document.write(html);
+        w.document.close();
+        let aiMapInited = false,
+          aiMap = null,
+          aiMarkers = [],
+          aiRoutePoints = [],
+          aiRouteLine = null;
+        w.initAIMap = function () {
+          if (aiMapInited) {
+            setTimeout(() => aiMap && aiMap.invalidateSize(), 250);
+            return;
+          }
+          aiMapInited = true;
+          aiMap = w.L.map(w.document.getElementById('aiMap')).setView(
+            [16.5, 103.5],
+            7
+          );
+          w.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© OpenStreetMap',
+          }).addTo(aiMap);
+          buildAIMapMarkers();
+          setTimeout(() => aiMap.invalidateSize(), 500);
+        };
+        function makeMapIcon(job) {
+          let color = markerColor(job);
+          return w.L.divIcon({
+            className: '',
+            html: `<div style="width:21px;height:21px;background:${color};border:3px solid white;border-radius:50%;box-shadow:0 0 13px ${color}"></div>`,
+            iconSize: [28, 28],
+            iconAnchor: [14, 14],
+          });
+        }
+        function buildMapPopup(group) {
+          let jobsHtml = group.jobs
+            .map((job) => {
+              let work = getWorkType(job['Job Title']);
+              let remain =
+                job.overdue > 0
+                  ? '🔥 OVERDUE'
+                  : `⏱ SLA เหลือ ${formatTime(
+                      job.limit - getHr(job['Create Time'])
+                    )}`;
+              let gps = extractGPS(job['Job Title'] || '');
+              let lat = gps?.lat || group.lat;
+              let lng = gps?.lng || group.lng;
+              let gmapUrl = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+              return `<details class="map-job-box"><summary>${
+                job['Priority'] || '-'
+              } | ${
+                job['Job ID'] || '-'
+              }</summary><div style="margin-top:8px"><b>Title</b><br>${
+                job['Job Title'] || '-'
+              }<br><br><b>Status</b><br>${getStatusIcon(
+                job['Status']
+              )}<br><br><b>Assign</b><br>${
+                job['Assign to'] || '-'
+              }<br><br><b>Area</b><br>${job['Province Name'] || '-'} / ${
+                job['District Name'] || '-'
+              }<br><br>${work.icon} ${
+                work.text
+              }<br>${remain}<br><a class="route-link" href="${gmapUrl}" target="_blank">🧭 Route to this Job</a></div></details>`;
+            })
+            .join('');
+          return `<div class="map-popup"><div class="map-popup-title">📍 Jobs on this marker : ${group.jobs.length}</div>${jobsHtml}</div>`;
+        }
+        async function buildAIMapMarkers() {
+          let groups = {};
+          let titleGPSSet = new Set();
 
-<script>
-let data=[],selected=[];
-let viewMode=0;
+          for (const job of jobs) {
+            let title = job['Job Title'] || '';
 
-function getShiftNames(){
-  let txt=document.getElementById("shiftDaily").value;
-  return txt.split("\n").map(line=>{
-    let m=line.match(/([A-Za-z]+)\s+([A-Za-z]+)\s+\d{3}-\d+/);
-    if(m) return `${m[1]} ${m[2]}`;
-    let p=line.trim().split(/\s+/);
-    return p.length>=2 ? p.slice(-2).join(" ").trim() : "";
-  }).filter(Boolean);
-}
-function clearShift(){localStorage.removeItem("shiftDaily");document.getElementById("shiftDaily").value="";}
-window.addEventListener("load",()=>{let box=document.getElementById("shiftDaily");box.value=localStorage.getItem("shiftDaily")||"";box.addEventListener("input",()=>localStorage.setItem("shiftDaily",box.value));});
-function mapCol(r,k){for(let x of k){if(r[x]!=undefined)return r[x];}return"";}
-const getHr=t=>{let d=new Date(t);return isNaN(d)?0:(new Date()-d)/3600000}
-function formatTime(hr){let h=Math.floor(hr);let m=Math.round((hr-h)*60);return h>0?(m>0?`${h}h ${m}m`:`${h}h`):`${m}m`;}
-function getSLA(hr,limit){let pct=Math.min((hr/limit)*100,100);let color="sla-green";if(pct>70)color="sla-yellow";if(pct>90)color="sla-red";return{pct,color};}
-const PROV_CODE={"ขอนแก่น":"KKN","ร้อยเอ็ด":"RET","มหาสารคาม":"MKM","สกลนคร":"SNK","นครพนม":"NPM","มุกดาหาร":"MDH","กาฬสินธุ์":"KSN","อุดรธานี":"UDN","เลย":"LEI","หนองคาย":"NKI","บึงกาฬ":"BKN","หนองบัวลำภู":"NLP","นครราชสีมา":"NMA","ชัยภูมิ":"CPM","ศรีสะเกษ":"SSK","บุรีรัมย์":"BRM","อุบลราชธานี":"UBN","สุรินทร์":"SRN","ยโสธร":"YST","อำนาจเจริญ":"ACR"};
-function getStatusInfo(s){let t=(s||"").toLowerCase();if(t.includes("on-site")||t.includes("onsite"))return{cls:"onsite",icon:"🧑‍🔧",text:"On-site"};if(t.includes("assigned"))return{cls:"assigned",icon:"📋",text:"Assigned"};if(t.includes("departed"))return{cls:"departed",icon:"🚗",text:"Departed"};if(t.includes("done"))return{cls:"done",icon:"🎯",text:s};if(t.includes("accepted"))return{cls:"accepted",icon:"📥",text:"Accepted"};if(t.includes("interupted")||t.includes("interrupted"))return{cls:"interrupted",icon:"⚠️",text:"Interrupted"};if(t.includes("held"))return{cls:"held",icon:"💤",text:"Held"};if(t.includes("cancel"))return{cls:"cancel",icon:"❌",text:"Cancel"};if(t.includes("transfer"))return{cls:"transfer",icon:"🔁",text:"Transfer"};return{cls:"created",icon:"🆕",text:"Created"};}
-function getStatusIcon(status){let s=(status||"").toLowerCase();if(s.includes("done"))return"✅ Done";if(s.includes("on-site")||s.includes("onsite"))return"🟢 On-Site";if(s.includes("departed"))return"🔵 Departed";if(s.includes("assigned"))return"🟡 Assigned";if(s.includes("accepted"))return"📥 Accepted";if(s.includes("held"))return"💤 Held";if(s.includes("cancel"))return"❌ Cancel";return"⚪ Created";}
-function getPriorityIcon(pr){pr=(pr||"").toUpperCase();if(pr==="CRITICAL")return"🚨 Critical";if(pr==="MAJOR")return"⚠️ Major";if(pr==="MINOR")return"🟢 Minor";return"⚪ None";}
-function getWorkType(t){t=(t||"").toLowerCase();if(t.includes("high loss")||t.includes("loss")||(t.includes("pon")&&t.includes("loss"))||(t.includes("splitter")&&t.includes("l2")))return{icon:"📉",text:"Signal Loss",full:"📉 Signal Loss (High loss)",type:"transmission"};if(t.includes("bipv")||t.includes("inf")||t.includes("ipv")||t.includes("binl")||t.includes("inl"))return{icon:"🏢",text:"Business Circuit",full:"🏢 Business Circuit (BIPV / INF / IPV / INL)",type:"leased"};if(t.includes("splitter")||t.includes("pon"))return{icon:"🔗",text:"Access Down",full:"🔗 Access Down (Splitter / PON)",type:"access"};if(t.includes("olt")||t.includes("ac fail"))return{icon:"⚡",text:"Access Power Fail",full:"⚡ Access Power Fail (OLT AC Fail)",type:"access"};if(t.includes("crc"))return{icon:"📡",text:"Transmission Error",full:"📡 Transmission Error (CRC)",type:"transmission"};if(t.includes("rectifier")||t.includes("power"))return{icon:"🔌",text:"Power Failure",full:"🔌 Power Failure (Rectifier)",type:"power"};if(t.includes("loop broken"))return{icon:"🔁❌",text:"Loop Broken",full:"🔁❌ ERPS Loop Broken",type:"access"};if(t.includes("link down")||t.includes("down"))return{icon:"🚫",text:"Link Down",full:"🚫 Link Down",type:"access"};return{icon:"❗",text:"Unknown",full:"❗ Unknown",type:"other"};}
-function getSite(title){let m=(title||"").match(/(ME|OX|AN)_[0-9_]+/i);return m?m[0]:"Unknown";}
-function toggleAllStatus(){viewMode=(viewMode+1)%3;render();}
-function pick(t){selected=[t];$('.kpi').removeClass('active');$('#'+{critical:'c',major:'m',minor:'n',total:'t',overdue:'o'}[t]).addClass('active');render();}
-function pass(pr,od){if(!selected.length)return true;let t=selected[0];if(t==="overdue")return od;if(t==="critical")return pr==="CRITICAL";if(t==="major")return pr==="MAJOR";if(t==="minor")return pr==="MINOR"||pr==="NONE";return true;}
-function exportJPG(p){let box=document.createElement("div");box.style.background="#0f172a";box.style.padding="20px";box.appendChild(document.getElementById("kpiBar").cloneNode(true));box.appendChild(document.getElementById(p).cloneNode(true));document.body.appendChild(box);html2canvas(box,{scale:2,useCORS:true,width:box.scrollWidth,height:box.scrollHeight,windowWidth:box.scrollWidth}).then(c=>{let a=document.createElement("a");a.href=c.toDataURL("image/jpeg");a.download="NOC_"+p+".jpg";a.click();document.body.removeChild(box);});}
-file.onchange=e=>{let r=new FileReader();r.onload=ev=>{let wb=XLSX.read(new Uint8Array(ev.target.result),{type:'array'});data=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);initProvince();render();};r.readAsArrayBuffer(e.target.files[0]);};
-function initProvince(){let s={};data.forEach(r=>{let p=mapCol(r,["Province Name"]);if(p)s[p]=1});let h='<option value="">ทุกจังหวัด</option>';Object.keys(s).sort().forEach(p=>h+=`<option>${p}</option>`);$("#provinceFilter").html(h).select2();}
-$('#search,#provinceFilter').on('input change',render);
-function resetAll(){selected=[];$('.kpi').removeClass('active');$('#search').val('');$('#provinceFilter').val('').trigger('change');render();}
-function showRemark(jobId){let r=data.find(x=>x["Job ID"]==jobId);if(!r)return;let status=getStatusInfo(r["Status"]);let pr=(r["Priority"]||"NONE").toLowerCase();let hr=getHr(r["Create Time"]);let h=Math.floor(hr),m=Math.round((hr-h)*60);let elapsedText=h>0?`${h}h ${m}m`:`${m}m`;document.getElementById("remarkContent").innerHTML=`<h2>${r["Job ID"]}</h2><div class="popup-sub">${r["Job Title"]||"-"}</div><div class="popup-code" style="margin-top:6px">${r["Province Name"]||""} ${r["District Name"]||""}</div><div class="popup-code">${r["Create Time"]||""}</div><div class="popup-remark"><b>REMARK:</b><br>${r["Reason by WF"]||"-"}</div><div class="popup-assign">ASSIGN BY - ${r["Assign to"]||"-"}</div><div style="margin-top:10px;display:flex;align-items:center;gap:8px"><span class="popup-status popup-${pr}">${pr.toUpperCase()}</span><span class="popup-status popup-${status.cls}">${status.icon} ${status.text}</span><span style="flex:1"></span><span class="popup-time">+${elapsedText}</span></div>`;document.getElementById("remarkPopup").style.display="flex";}
-const popup=document.getElementById("remarkPopup");popup.onclick=()=>popup.style.display="none";document.querySelector(".popup-card").onclick=e=>e.stopPropagation();
+            let gps = extractGPS(title);
 
-/* ================= AI MAP HELPERS ================= */
-function isThailandCoord(lat,lng){return lat>=5&&lat<=21&&lng>=97&&lng<=106.8;}
-function normalizeThaiCoord(a,b){let lat=parseFloat(a),lng=parseFloat(b);if(isNaN(lat)||isNaN(lng))return null;if(isThailandCoord(lat,lng))return{lat,lng};if(isThailandCoord(lng,lat))return{lat:lng,lng:lat};return null;}
-function extractGPS(title){
-  title=title||"";
-  // 1) Lat/Lon labels: Lat:17.9805025 Lon:104.069824
-  let m=title.match(/lat[:= ]\s*(-?\d{1,2}\.\d+).*?(lon|lng)[:= ]\s*(-?\d{1,3}\.\d+)/i);
-  if(m){let c=normalizeThaiCoord(m[1],m[3]);if(c)return c;}
-  // 2) Decimal pairs with comma: 17.9805025,104.069824
-  let re=/(-?\d{1,3}\.\d+)\s*,\s*(-?\d{1,3}\.\d+)/g;
-  while((m=re.exec(title))!==null){let c=normalizeThaiCoord(m[1],m[2]);if(c)return c;}
-  // 3) Decimal pairs with space only if GPS keyword exists
-  if(/gps|coord|coordinate|พิกัด|lat|lon|lng/i.test(title)){
-    re=/(-?\d{1,3}\.\d+)\s+(-?\d{1,3}\.\d+)/g;
-    while((m=re.exec(title))!==null){let c=normalizeThaiCoord(m[1],m[2]);if(c)return c;}
-  }
-  // 4) DMS: 17°58'45.4"N 104°03'12.4"E
-  m=title.match(/(\d{1,2})°(\d{1,2})'([\d.]+)"([NS])\s+(\d{1,3})°(\d{1,2})'([\d.]+)"([EW])/i);
-  if(m){let lat=Number(m[1])+Number(m[2])/60+Number(m[3])/3600;let lng=Number(m[5])+Number(m[6])/60+Number(m[7])/3600;if(m[4].toUpperCase()==="S")lat*=-1;if(m[8].toUpperCase()==="W")lng*=-1;if(isThailandCoord(lat,lng))return{lat,lng};}
-  return null;
-}
-function normalizeMapKey(v){return(v||"").toString().trim().toLowerCase().replace(/\s+/g," ");}
-const DISTRICT_COORD={"นครพนม|นาแก":[16.9460,104.5010],"นครพนม|เมืองนครพนม":[17.4108,104.7784],"บึงกาฬ|เซกา":[17.9280,103.9550],"บึงกาฬ|เมืองบึงกาฬ":[18.3609,103.6467],"ร้อยเอ็ด|เมืองร้อยเอ็ด":[16.0567,103.6531],"ร้อยเอ็ด|เกษตรวิสัย":[15.6552,103.5855],"ร้อยเอ็ด|จตุรพักตรพิมาน":[15.8440,103.5570],"ร้อยเอ็ด|เสลภูมิ":[16.0290,103.9380],"ขอนแก่น|เมืองขอนแก่น":[16.4322,102.8236],"ขอนแก่น|บ้านไผ่":[16.0600,102.7290],"ขอนแก่น|ชุมแพ":[16.5443,102.0992],"สกลนคร|เมืองสกลนคร":[17.1546,104.1348],"สกลนคร|สว่างแดนดิน":[17.4750,103.4570],"สกลนคร|วานรนิวาส":[17.6350,103.7510],"อุดรธานี|เมืองอุดรธานี":[17.4138,102.7872],"นครราชสีมา|เมืองนครราชสีมา":[14.9799,102.0977],"นครราชสีมา|วังน้ำเขียว":[14.4195,101.8618],"อุบลราชธานี|เมืองอุบลราชธานี":[15.2447,104.8473],"nakhon phanom|na kae":[16.9460,104.5010],"bueng kan|seka":[17.9280,103.9550],"roi et|mueang roi et":[16.0567,103.6531],"khon kaen|mueang khon kaen":[16.4322,102.8236],"sakon nakhon|mueang sakon nakhon":[17.1546,104.1348],"udonthani|mueang udon thani":[17.4138,102.7872],"nma 1|เมืองนครราชสีมา":[14.9799,102.0977],"nma 3|วังน้ำเขียว":[14.4195,101.8618],"ubn|เมืองอุบลราชธานี":[15.2447,104.8473]};
-const PROVINCE_COORD={"ขอนแก่น":[16.4322,102.8236],"ร้อยเอ็ด":[16.0567,103.6531],"มหาสารคาม":[16.1851,103.3026],"สกลนคร":[17.1546,104.1348],"นครพนม":[17.4108,104.7784],"มุกดาหาร":[16.5453,104.7235],"กาฬสินธุ์":[16.4314,103.5059],"อุดรธานี":[17.4138,102.7872],"เลย":[17.4860,101.7223],"หนองคาย":[17.8783,102.7413],"บึงกาฬ":[18.3609,103.6467],"หนองบัวลำภู":[17.2218,102.4260],"นครราชสีมา":[14.9799,102.0977],"ชัยภูมิ":[15.8068,102.0315],"ศรีสะเกษ":[15.1186,104.3220],"บุรีรัมย์":[14.9930,103.1029],"อุบลราชธานี":[15.2447,104.8473],"สุรินทร์":[14.8818,103.4937],"ยโสธร":[15.7926,104.1453],"อำนาจเจริญ":[15.8657,104.6258],"Nakhon Phanom":[17.4108,104.7784],"Bueng Kan":[18.3609,103.6467],"Roi Et":[16.0567,103.6531],"Khon Kaen":[16.4322,102.8236],"Sakon Nakhon":[17.1546,104.1348],"Udonthani":[17.4138,102.7872],"UBN":[15.2447,104.8473],"NMA 1":[14.9799,102.0977],"NMA 2":[14.9799,102.0977],"NMA 3":[14.4195,101.8618]};
-function getAreaCoord(province,district){
-  let key1=`${province}|${district}`;
-  let key2=`${normalizeMapKey(province)}|${normalizeMapKey(district)}`;
-  if(DISTRICT_COORD[key1])return DISTRICT_COORD[key1];
-  if(DISTRICT_COORD[key2])return DISTRICT_COORD[key2];
-  // If district coordinate is unknown, fallback to province center only.
-  // This avoids plotting outside Thailand but may be approximate.
-  if(PROVINCE_COORD[province])return PROVINCE_COORD[province];
-  let pkey=Object.keys(PROVINCE_COORD).find(k=>normalizeMapKey(k)===normalizeMapKey(province));
-  if(pkey)return PROVINCE_COORD[pkey];
-  return null;
-}
-function markerColor(job){let pr=(job["Priority"]||"").toUpperCase();if(job.overdue>0)return"#dc2626";if(pr==="CRITICAL")return"#ef4444";if(pr==="MAJOR")return"#f59e0b";if(pr==="MINOR")return"#22c55e";return"#64748b";}
+            let province = job['Province Name'] || '';
 
-function showAIBoard(){
-  let prov=$("#provinceFilter").val();let jobs=[];
-  data.forEach(r=>{let p=mapCol(r,["Province Name"]);if(prov&&p!==prov)return;let pr=(r["Priority"]||"NONE").toUpperCase();let hr=getHr(r["Create Time"]);let limit=pr==="CRITICAL"?3:pr==="MAJOR"?10:1000;let overdue=Math.max(0,hr-limit);let score=0;if(pr==="CRITICAL")score+=100;else if(pr==="MAJOR")score+=60;else if(pr==="MINOR")score+=30;score+=overdue*5;jobs.push({...r,score,overdue,limit});});
-  jobs.sort((a,b)=>b.score-a.score);
-  let districtMap={};jobs.forEach(r=>{let district=r["District Name"]||"Unknown";if(!districtMap[district])districtMap[district]={jobs:[],critical:0,major:0,minor:0,overdue:0,score:0};districtMap[district].jobs.push(r);let pr=(r["Priority"]||"").toUpperCase();if(pr==="CRITICAL")districtMap[district].critical++;else if(pr==="MAJOR")districtMap[district].major++;else districtMap[district].minor++;if(r.overdue>0)districtMap[district].overdue++;});
-  let districtList=Object.entries(districtMap).map(([name,d])=>{d.score=d.critical*100+d.major*50+d.overdue*30+d.jobs.length*5;return{district:name,...d};}).sort((a,b)=>b.score-a.score);
-  let districts={};jobs.forEach(r=>{let d=r["District Name"]||"";if(d)districts[d]=(districts[d]||0)+1;});
-  let roots={};jobs.forEach(r=>{let work=getWorkType(r["Job Title"]).text;if(!roots[work])roots[work]=[];roots[work].push(r);});
-  let rootHtml="";Object.entries(roots).sort((a,b)=>b[1].length-a[1].length).forEach(([root,list])=>{let critical=list.filter(x=>(x["Priority"]||"").toUpperCase()==="CRITICAL").length;let danger=critical>=3?"critical":"";rootHtml+=`<div class="ai-card ${danger}"><div class="job">${getWorkType(list[0]["Job Title"]).icon} ${root}</div><div class="detail">Total Jobs : ${list.length}</div><div class="detail">Critical : ${critical}</div><div class="reason"><b>AI Action</b><br>ตรวจ Root Cause นี้ก่อน</div><hr>`;list.forEach(r=>{rootHtml+=`<details class="job-expand"><summary>${r["Job ID"]||"-"} | ${r["Priority"]||"-"} | ${r["Assign to"]||"-"}</summary><div style="margin-top:10px;padding:10px;background:#111827;border-radius:8px"><b>Title</b><br>${r["Job Title"]||"-"}<br><br><b>Status</b><br>${r["Status"]||"-"}<br><br><b>Assign</b><br>${r["Assign to"]||"-"}<br><br><b>Remark</b><br>${r["Reason by WF"]||"-"}</div></details>`});rootHtml+=`</div>`;});
-  let engineers={};jobs.forEach(r=>{let eng=(r["Assign to"]||"").trim();if(!eng)return;if(!engineers[eng])engineers[eng]={jobs:[],districts:new Set()};if(r["District Name"])engineers[eng].districts.add(r["District Name"]);engineers[eng].jobs.push(r);});
-  let districtButtons=Object.keys(districts).sort().map(d=>`<button class="district-btn" onclick="window.filterDistrict('${String(d).replace(/'/g,"\\'")}', this)">${d} (${districts[d]})</button>`).join("");
-  let safeJobsJson=JSON.stringify(jobs).replace(/<\/script/gi,'<\\/script');
-  let html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>🧠 AI Action Board</title><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"><\/script><style>
-body{background:#0f172a;color:white;font-family:Consolas,monospace;margin:0;padding:20px}.title{text-align:center;margin-bottom:25px}.view-bar{display:flex;justify-content:center;gap:10px;margin:15px 0;flex-wrap:wrap}.view-btn{background:#1e293b;color:#fff;border:1px solid #334155;padding:8px 16px;border-radius:20px;cursor:pointer;font-weight:bold}.view-btn.active{background:#7c3aed}.district-bar{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin:15px 0 20px}.district-btn{background:#1e293b;color:#fff;border:1px solid #334155;padding:8px 14px;border-radius:20px;cursor:pointer;font-weight:bold}.district-btn.active{background:#f59e0b;color:#000}.board{display:flex;flex-wrap:wrap;justify-content:center;gap:20px;padding:20px}.ai-card{width:360px;min-width:360px;background:#000;border:2px solid #f59e0b;border-radius:12px;padding:16px;box-shadow:0 0 8px rgba(255,165,0,.4)}.ai-card.critical{border-color:#ef4444;box-shadow:0 0 12px rgba(255,0,0,.8)}.ai-card.pool{background:linear-gradient(180deg,#312e81,#000);border-color:#8b5cf6;box-shadow:0 0 12px rgba(139,92,246,.8)}.ai-card.duty-on{background:linear-gradient(180deg,#052e16,#000);border-color:#22c55e}.ai-card.duty-off{background:linear-gradient(180deg,#1f2937,#000);border-color:#6b7280;opacity:.75}.off-name{color:#9ca3af!important}.job{color:#facc15;font-size:28px;font-weight:bold;margin-bottom:10px}.detail{color:#84cc16;margin-top:10px;line-height:1.4}.reason{color:#e5e7eb;margin-top:14px}.district-summary{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0;font-weight:bold}.district-summary span{background:#111827;padding:4px 10px;border-radius:20px}.job-title{margin:6px 0;padding-left:6px;color:#cbd5e1;font-size:11px;line-height:16px;border-left:2px solid #475569;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;text-overflow:ellipsis;word-break:break-word}.job-expand{margin-top:8px;border:1px solid #334155;border-radius:8px;padding:8px;background:#0f172a}.job-expand summary{cursor:pointer;color:#38bdf8;font-weight:bold}.job-expand summary:hover{color:#facc15}#mapView{display:none;width:100%;padding:12px}.map-panel{width:100%;display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}.map-btn{background:#1e293b;color:#fff;border:1px solid #334155;padding:8px 14px;border-radius:12px;cursor:pointer;font-weight:bold}.map-btn:hover{background:#334155}#aiMap{width:100%;height:78vh;border:2px solid #334155;border-radius:14px;overflow:hidden}.map-popup{color:#111827;font-family:Arial;min-width:280px;max-width:380px}.map-popup-title{font-weight:bold;color:#dc2626;margin-bottom:8px;font-size:15px}.map-job-box{margin-top:8px;padding:8px;background:#f1f5f9;border-radius:8px;border:1px solid #cbd5e1}.map-job-box summary{cursor:pointer;font-weight:bold}.route-link{display:inline-block;margin-top:8px;padding:7px 10px;background:#2563eb;color:#fff!important;text-decoration:none;border-radius:8px;font-weight:bold}
-<\/style></head><body><div class="title"><h2>🧠 AI ACTION BOARD</h2><div class="view-bar"><button class="view-btn active" onclick="window.changeView('district',this)">📋 Job Queue</button><button class="view-btn" onclick="window.changeView('root',this)">⚠️ Root Cause</button><button class="view-btn" onclick="window.changeView('engineer',this)">👨‍🔧 Engineer Workload</button><button class="view-btn" onclick="window.changeView('map',this)">🗺️ AI Map</button></div><div class="district-bar"><button class="district-btn active" onclick="window.filterDistrict('', this)">ทั้งหมด</button>${districtButtons}</div></div><div id="districtView" class="board">`;
-  districtList.forEach((d,i)=>{let rank=i===0?"🥇":i===1?"🥈":i===2?"🥉":`#${i+1}`;let cardClass=d.critical>0?"critical":"";let nextJobs=[...d.jobs].sort((a,b)=>{let ar=a.limit-getHr(a["Create Time"]),br=b.limit-getHr(b["Create Time"]);if(a.overdue>0&&b.overdue<=0)return-1;if(b.overdue>0&&a.overdue<=0)return 1;if(ar!==br)return ar-br;let p={CRITICAL:1,MAJOR:2,MINOR:3,NONE:4};return p[(a["Priority"]||"").toUpperCase()]-p[(b["Priority"]||"").toUpperCase()];});html+=`<div class="ai-card ${cardClass}" data-district="${d.district}"><div class="job">${rank} 📍 ${d.district}</div><div class="district-summary"><span>🚨 ${d.critical}</span><span>⚠️ ${d.major}</span><span>🕒 ${d.overdue}</span><span>📋 ${d.jobs.length}</span></div><details class="job-expand" open><summary>🔥 NEXT ACTION</summary>${nextJobs.slice(0,3).map((x,idx)=>`<div style="margin-top:8px;padding:8px;background:${x.overdue>0?'#991b1b':'#111827'};border-radius:6px;border:${x.overdue>0?'1px solid #ef4444':'1px solid #334155'};box-shadow:${x.overdue>0?'0 0 8px rgba(239,68,68,.5)':'none'}"><b>${idx+1}. ${x["Job ID"]}</b><br>${getPriorityIcon(x["Priority"])} | ${getStatusIcon(x["Status"])}<div class="job-title">${getWorkType(x["Job Title"]).icon} ${getWorkType(x["Job Title"]).text}<br>${x["Job Title"]||"-"}</div>👷 ${x["Assign to"]||"-"}<br>${x.overdue>0?"🔥 OVERDUE":`⏱ SLA เหลือ ${formatTime(x.limit-getHr(x["Create Time"]))}`}</div>`).join("")}</details></div>`;});
-  let shiftNames=getShiftNames().map(x=>x.toLowerCase().trim());let engineerHtml="";Object.entries(engineers).sort((a,b)=>{if(a[0]==="Workforce NER Pool")return-1;if(b[0]==="Workforce NER Pool")return 1;let aOn=shiftNames.includes(a[0].toLowerCase().trim()),bOn=shiftNames.includes(b[0].toLowerCase().trim());if(aOn&&!bOn)return-1;if(!aOn&&bOn)return 1;return b[1].jobs.length-a[1].jobs.length;}).forEach(([eng,obj])=>{let isPool=eng==="Workforce NER Pool";let onDuty=shiftNames.includes(eng.toLowerCase().trim());if(!isPool&&obj.jobs.length===0)return;let currentJob=[...obj.jobs].sort((a,b)=>(a.limit-getHr(a["Create Time"]))-(b.limit-getHr(b["Create Time"])))[0];let cardClass=isPool?"pool":onDuty?"duty-on":"duty-off";let critical=obj.jobs.filter(x=>(x["Priority"]||"").toUpperCase()==="CRITICAL").length;let major=obj.jobs.filter(x=>(x["Priority"]||"").toUpperCase()==="MAJOR").length;let overdue=obj.jobs.filter(x=>x.overdue>0).length;let level=obj.jobs.length>=8?"🔴 HIGH":obj.jobs.length>=4?"🟡 MEDIUM":"🟢 LOW";engineerHtml+=`<div class="ai-card ${cardClass}"><div class="job ${!onDuty&&!isPool?'off-name':''}">${isPool?'🛟':'👨‍🔧'} ${eng}</div><div class="detail">📍 Current Area : ${currentJob?.["District Name"]||"-"}</div><div class="detail">🗺️ ${obj.districts.size} District(s)</div><div style="color:#93c5fd;margin-top:4px;font-size:13px">${[...obj.districts].join(" • ")}</div><details class="job-expand"><summary>📋 Jobs : ${obj.jobs.length}</summary>${obj.jobs.map(job=>{let remain=job.overdue>0?"🔥 OVERDUE":`⏱ ${formatTime(job.limit-getHr(job["Create Time"]))}`;return`<div style="margin-top:8px;padding:8px;background:#111827;border-radius:8px"><b>${job["Job ID"]}</b><br>${getPriorityIcon(job["Priority"])} | ${getStatusIcon(job["Status"])}<br>${getWorkType(job["Job Title"]).icon} ${getWorkType(job["Job Title"]).text}<br>${remain}</div>`;}).join("")}</details><div class="detail">🚨 Critical : ${critical}</div><div class="detail">⚠️ Major : ${major}</div><div class="detail">🕒 Overdue : ${overdue}</div><div class="reason">Workload : ${level}</div></div>`;});
-  html+=`</div><div id="rootView" class="board" style="display:none">${rootHtml}</div><div id="engineerView" class="board" style="display:none">${engineerHtml}</div><div id="mapView"><div class="map-panel"><button class="map-btn" onclick="window.drawAIRoute()">🛣️ Draw AI Route</button><button class="map-btn" onclick="window.openGoogleRoute()">🧭 Open Google Maps</button><button class="map-btn" onclick="window.clearAIRoute()">🧹 Clear Route</button><button class="map-btn" onclick="window.fitAllMarkers()">📍 Fit All Jobs</button></div><div id="aiMap"></div></div><script>window.AI_JOBS=${safeJobsJson};<\/script></body></html>`;
-  let w=window.open();w.document.write(html);w.document.close();
-  let aiMapInited=false,aiMap=null,aiMarkers=[],aiRoutePoints=[],aiRouteLine=null;
-  w.initAIMap=function(){if(aiMapInited){setTimeout(()=>aiMap&&aiMap.invalidateSize(),250);return;}aiMapInited=true;aiMap=w.L.map(w.document.getElementById("aiMap")).setView([16.5,103.5],7);w.L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:"© OpenStreetMap"}).addTo(aiMap);buildAIMapMarkers();setTimeout(()=>aiMap.invalidateSize(),500);};
-  function makeMapIcon(job){let color=markerColor(job);return w.L.divIcon({className:"",html:`<div style="width:21px;height:21px;background:${color};border:3px solid white;border-radius:50%;box-shadow:0 0 13px ${color}"></div>`,iconSize:[28,28],iconAnchor:[14,14]});}
-  function buildMapPopup(group){let jobsHtml=group.jobs.map(job=>{let work=getWorkType(job["Job Title"]);let remain=job.overdue>0?"🔥 OVERDUE":`⏱ SLA เหลือ ${formatTime(job.limit-getHr(job["Create Time"]))}`;let gps=extractGPS(job["Job Title"]||"");let lat=gps?.lat||group.lat;let lng=gps?.lng||group.lng;let gmapUrl=`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;return`<details class="map-job-box"><summary>${job["Priority"]||"-"} | ${job["Job ID"]||"-"}</summary><div style="margin-top:8px"><b>Title</b><br>${job["Job Title"]||"-"}<br><br><b>Status</b><br>${getStatusIcon(job["Status"])}<br><br><b>Assign</b><br>${job["Assign to"]||"-"}<br><br><b>Area</b><br>${job["Province Name"]||"-"} / ${job["District Name"]||"-"}<br><br>${work.icon} ${work.text}<br>${remain}<br><a class="route-link" href="${gmapUrl}" target="_blank">🧭 Route to this Job</a></div></details>`;}).join("");return`<div class="map-popup"><div class="map-popup-title">📍 Jobs on this marker : ${group.jobs.length}</div>${jobsHtml}</div>`;}
-  function buildAIMapMarkers(){let groups={},titleGPSSet=new Set();jobs.forEach(job=>{let title=job["Job Title"]||"";let gps=extractGPS(title);let lat,lng,key;if(gps){let gpsKey=title.trim().toLowerCase();if(titleGPSSet.has(gpsKey))return;titleGPSSet.add(gpsKey);lat=gps.lat;lng=gps.lng;key=`GPS|${gpsKey}`;}else{let province=job["Province Name"]||"";let district=job["District Name"]||"";let coord=getAreaCoord(province,district);if(!coord){console.warn("No coordinate:",province,district);return;}lat=coord[0];lng=coord[1];key=`DISTRICT|${province}|${district}`;}if(!groups[key])groups[key]={lat,lng,jobs:[]};groups[key].jobs.push(job);});Object.values(groups).forEach(group=>{let mainJob=group.jobs[0];let marker=w.L.marker([group.lat,group.lng],{icon:makeMapIcon(mainJob)}).addTo(aiMap).bindPopup(buildMapPopup(group));aiMarkers.push(marker);aiRoutePoints.push([group.lat,group.lng]);});w.fitAllMarkers();}
-  w.drawAIRoute=function(){if(!aiMap||aiRoutePoints.length<2)return;if(aiRouteLine)aiMap.removeLayer(aiRouteLine);aiRouteLine=w.L.polyline(aiRoutePoints,{color:"#22c55e",weight:5,opacity:.85}).addTo(aiMap);aiMap.fitBounds(aiRouteLine.getBounds(),{padding:[40,40]});};
-  w.clearAIRoute=function(){if(aiRouteLine){aiMap.removeLayer(aiRouteLine);aiRouteLine=null;}};
-  w.fitAllMarkers=function(){if(!aiMap||aiRoutePoints.length===0)return;aiMap.fitBounds(aiRoutePoints,{padding:[50,50]});};
-  w.openGoogleRoute=function(){if(aiRoutePoints.length<1)return;if(aiRoutePoints.length===1){let only=aiRoutePoints[0];window.open(`https://www.google.com/maps/dir/?api=1&destination=${only[0]},${only[1]}`,"_blank");return;}let start=aiRoutePoints[0],end=aiRoutePoints[aiRoutePoints.length-1];let middle=aiRoutePoints.slice(1,-1).slice(0,8).map(p=>`${p[0]},${p[1]}`).join("|");let url=`https://www.google.com/maps/dir/?api=1&origin=${start[0]},${start[1]}&destination=${end[0]},${end[1]}`+(middle?`&waypoints=${middle}`:"");window.open(url,"_blank");};
-  w.changeView=function(view,btn){w.document.querySelectorAll(".view-btn").forEach(x=>x.classList.remove("active"));btn.classList.add("active");let engineerView=w.document.getElementById("engineerView"),districtView=w.document.getElementById("districtView"),rootView=w.document.getElementById("rootView"),mapView=w.document.getElementById("mapView");if(engineerView)engineerView.style.display="none";if(districtView)districtView.style.display="none";if(rootView)rootView.style.display="none";if(mapView)mapView.style.display="none";switch(view){case"engineer":if(engineerView)engineerView.style.display="flex";break;case"district":if(districtView)districtView.style.display="flex";break;case"root":if(rootView)rootView.style.display="flex";break;case"map":if(mapView){mapView.style.display="block";setTimeout(()=>w.initAIMap&&w.initAIMap(),300);}break;}};
-  w.filterDistrict=function(district,btn){w.document.querySelectorAll(".district-btn").forEach(x=>x.classList.remove("active"));if(btn)btn.classList.add("active");w.document.querySelectorAll("#districtView .ai-card").forEach(card=>{let cardDistrict=(card.dataset.district||"").trim().toLowerCase();let targetDistrict=(district||"").trim().toLowerCase();card.style.display=!district||cardDistrict===targetDistrict?"":"none";});};
-}
+            let district = job['District Name'] || '';
 
-function render(){let prov=$("#provinceFilter").val();let map={},c=0,m=0,n=0,o=0;data.forEach(r=>{let pr=(mapCol(r,["Priority"])||"NONE").toUpperCase();let p=mapCol(r,["Province Name"]);let job=(mapCol(r,["Job ID"])||"").toLowerCase();let title=(mapCol(r,["Job Title"])||"").toLowerCase();let status=(mapCol(r,["Status"])||"").toLowerCase();let assign=(mapCol(r,["Assign to"])||"").toLowerCase();let province=(mapCol(r,["Province Name"])||"").toLowerCase();let district=(mapCol(r,["District Name"])||"").toLowerCase();let work=getWorkType(title).text.toLowerCase();let hr=getHr(r["Create Time"]);let limit=pr==="CRITICAL"?3:pr==="MAJOR"?10:1000;let od=hr>limit;let k=$('#search').val().toLowerCase().trim();let keys=k?k.split(/\s+/):[];let code=(PROV_CODE[p]||"").toLowerCase();let text=job+" "+title+" "+status+" "+assign+" "+province+" "+district+" "+work+" "+code;if(od)text+=" overdue";for(let key of keys){if(key==="overdue"&&!od)return;if(key!=="overdue"&&!text.includes(key))return;}if(prov&&p!==prov)return;if(pr==="CRITICAL")c++;else if(pr==="MAJOR")m++;else n++;if(od)o++;if(!pass(pr,od))return;if(!map[p])map[p]=[];map[p].push({...r,pr,hr,limit,od,district:r["District Name"],status:r["Status"],assign:r["Assign to"]||"-",work:getWorkType(title)});});$("#c").text("Critical:"+c);$("#m").text("Major:"+m);$("#n").text("Minor:"+n);$("#t").text("Total:"+(c+m+n));$("#o").text("Overdue:"+o);root.innerHTML=Object.keys(map).map(p=>`<div class="card" id="${p}"><div class="card-header"><h3>📍 ${PROV_CODE[p]?`(${PROV_CODE[p]}) `:""}${p}</h3><button class="btn-export" onclick="exportJPG('${p}')"><span>📸</span><span>Export</span></button></div><table><tr><th>Job</th><th>Priority</th><th>Create</th><th>Mode <span onclick="toggleAllStatus()" style="cursor:pointer;margin-left:6px">${viewMode===0?"👁 Work":viewMode===1?"📊 Status":"🔄 Both"}</span></th><th>Title</th><th>Province</th><th>Assign</th><th>Elapsed</th><th>Remain</th></tr>${map[p].map(r=>`<tr class="${r.od?'overdue':''}"><td>${r["Job ID"]||""}</td><td><div class="badge ${r.pr.toLowerCase()}">${r.pr}</div></td><td>${r["Create Time"]||""}</td><td><div class="work work-${r.work.type}" style="display:${(viewMode===0||viewMode===2)?'inline-flex':'none'}">${r.work.icon} ${r.work.text}</div><div class="status-badge status-${getStatusInfo(r.status).cls}" style="display:${(viewMode===1||viewMode===2)?'inline-flex':'none'}">${getStatusInfo(r.status).icon} ${getStatusInfo(r.status).text}</div></td><td class="title-cell"><div class="title-text">${r["Job Title"]||""}</div><span class="remark-btn ${r["Reason by WF"]?'has-remark':''}" onclick="showRemark('${r["Job ID"]}')">ℹ️</span></td><td><div class="prov-name">${p}</div><div class="dist">${r.district||""}</div></td><td><div class="assign-box">${r.assign}</div></td><td>${(()=>{let s=getSLA(r.hr,r.limit);return`<div class="sla-box"><div class="sla-bar"><div class="sla-fill ${s.color}" style="width:${s.pct}%"></div></div><div class="sla-text">${s.pct.toFixed(0)}%</div><div class="sla-text">${formatTime(r.hr)}</div></div>`})()}</td><td>${(()=>{let s=getSLA(r.hr,r.limit);return`<div class="sla-box"><div class="sla-bar"><div class="sla-fill ${r.od?'sla-red':s.color}" style="width:${s.pct}%"></div></div><div class="sla-text">${s.pct.toFixed(0)}%</div><div class="sla-text">${r.od?"🔥OVERDUE🔥":formatTime(r.limit-r.hr)}</div></div>`})()}</td></tr>`).join("")}</table></div>`).join("")||'<div class="no-data">❌ ไม่พบข้อมูล</div>';}
-</script>
-</body>
+            // ✅ ถ้า GPS อยู่นอกพื้นที่ Job ให้ใช้พิกัดอำเภอแทน
+            if (gps && !isCoordNearJobArea(gps, province, district)) {
+              console.warn(
+                'GPS ignored - outside job area:',
+                job['Job ID'],
+                province,
+                district,
+                gps
+              );
+
+              gps = null;
+            }
+
+            let lat, lng, key;
+
+            if (gps) {
+              // 1 Title ที่มีพิกัด = 1 หมุด
+              let gpsKey = title.trim().toLowerCase();
+
+              if (titleGPSSet.has(gpsKey)) continue;
+
+              titleGPSSet.add(gpsKey);
+
+              lat = gps.lat;
+              lng = gps.lng;
+
+              key = `GPS|${gpsKey}`;
+            } else {
+              let coord = getAreaCoord(province, district);
+
+              if (!coord) {
+                coord = await geocodeArea(province, district);
+              }
+
+              if (!coord) {
+                console.warn('No coordinate:', province, district);
+
+                continue;
+              }
+
+              lat = coord[0];
+              lng = coord[1];
+
+              key = `DISTRICT|${province}|${district}`;
+            }
+
+            if (!groups[key]) {
+              groups[key] = {
+                lat,
+                lng,
+                jobs: [],
+              };
+            }
+
+            groups[key].jobs.push(job);
+          }
+
+          Object.values(groups).forEach((group) => {
+            let mainJob = group.jobs[0];
+
+            let marker = w.L.marker([group.lat, group.lng], {
+              icon: makeMapIcon(mainJob),
+            })
+              .addTo(aiMap)
+              .bindPopup(buildMapPopup(group));
+
+            aiMarkers.push(marker);
+
+            aiRoutePoints.push([group.lat, group.lng]);
+          });
+
+          w.fitAllMarkers();
+        }
+
+        w.drawAIRoute = function () {
+          if (!aiMap || aiRoutePoints.length < 2) return;
+          if (aiRouteLine) aiMap.removeLayer(aiRouteLine);
+          aiRouteLine = w.L.polyline(aiRoutePoints, {
+            color: '#22c55e',
+            weight: 5,
+            opacity: 0.85,
+          }).addTo(aiMap);
+          aiMap.fitBounds(aiRouteLine.getBounds(), { padding: [40, 40] });
+        };
+        w.clearAIRoute = function () {
+          if (aiRouteLine) {
+            aiMap.removeLayer(aiRouteLine);
+            aiRouteLine = null;
+          }
+        };
+        w.fitAllMarkers = function () {
+          if (!aiMap || aiRoutePoints.length === 0) return;
+          aiMap.fitBounds(aiRoutePoints, { padding: [50, 50] });
+        };
+        w.openGoogleRoute = function () {
+          if (aiRoutePoints.length < 1) return;
+          if (aiRoutePoints.length === 1) {
+            let only = aiRoutePoints[0];
+            window.open(
+              `https://www.google.com/maps/dir/?api=1&destination=${only[0]},${only[1]}`,
+              '_blank'
+            );
+            return;
+          }
+          let start = aiRoutePoints[0],
+            end = aiRoutePoints[aiRoutePoints.length - 1];
+          let middle = aiRoutePoints
+            .slice(1, -1)
+            .slice(0, 8)
+            .map((p) => `${p[0]},${p[1]}`)
+            .join('|');
+          let url =
+            `https://www.google.com/maps/dir/?api=1&origin=${start[0]},${start[1]}&destination=${end[0]},${end[1]}` +
+            (middle ? `&waypoints=${middle}` : '');
+          window.open(url, '_blank');
+        };
+        w.changeView = function (view, btn) {
+          w.document
+            .querySelectorAll('.view-btn')
+            .forEach((x) => x.classList.remove('active'));
+          btn.classList.add('active');
+          let engineerView = w.document.getElementById('engineerView'),
+            districtView = w.document.getElementById('districtView'),
+            rootView = w.document.getElementById('rootView'),
+            mapView = w.document.getElementById('mapView');
+          if (engineerView) engineerView.style.display = 'none';
+          if (districtView) districtView.style.display = 'none';
+          if (rootView) rootView.style.display = 'none';
+          if (mapView) mapView.style.display = 'none';
+          switch (view) {
+            case 'engineer':
+              if (engineerView) engineerView.style.display = 'flex';
+              break;
+            case 'district':
+              if (districtView) districtView.style.display = 'flex';
+              break;
+            case 'root':
+              if (rootView) rootView.style.display = 'flex';
+              break;
+            case 'map':
+              if (mapView) {
+                mapView.style.display = 'block';
+                setTimeout(() => w.initAIMap && w.initAIMap(), 300);
+              }
+              break;
+          }
+        };
+        w.filterCardJobs = function (btn, type) {
+          let card = btn.closest('.ai-card');
+
+          if (!card) return;
+
+          card
+            .querySelectorAll('.summary-chip')
+            .forEach((x) => x.classList.remove('active'));
+
+          btn.classList.add('active');
+
+          let jobs = card.querySelectorAll('.dist-job');
+
+          jobs.forEach((job) => {
+            let pr = job.dataset.priority || '';
+
+            let overdue = job.dataset.overdue || 'no';
+
+            let show = true;
+
+            if (type === 'critical') {
+              show = pr === 'CRITICAL';
+            } else if (type === 'major') {
+              show = pr === 'MAJOR';
+            } else if (type === 'overdue') {
+              show = overdue === 'yes';
+            } else {
+              show = true;
+            }
+
+            job.classList.toggle('hide', !show);
+          });
+        };
+        w.filterDistrict = function (district, btn) {
+          w.document
+            .querySelectorAll('.district-btn')
+            .forEach((x) => x.classList.remove('active'));
+          if (btn) btn.classList.add('active');
+          w.document
+            .querySelectorAll('#districtView .ai-card')
+            .forEach((card) => {
+              let cardDistrict = (card.dataset.district || '')
+                .trim()
+                .toLowerCase();
+              let targetDistrict = (district || '').trim().toLowerCase();
+              card.style.display =
+                !district || cardDistrict === targetDistrict ? '' : 'none';
+            });
+        };
+      }
+
+      function render() {
+        let prov = $('#provinceFilter').val();
+        let map = {},
+          c = 0,
+          m = 0,
+          n = 0,
+          o = 0;
+        data.forEach((r) => {
+          let pr = (mapCol(r, ['Priority']) || 'NONE').toUpperCase();
+          let p = mapCol(r, ['Province Name']);
+          let job = (mapCol(r, ['Job ID']) || '').toLowerCase();
+          let title = (mapCol(r, ['Job Title']) || '').toLowerCase();
+          let status = (mapCol(r, ['Status']) || '').toLowerCase();
+          let assign = (mapCol(r, ['Assign to']) || '').toLowerCase();
+          let province = (mapCol(r, ['Province Name']) || '').toLowerCase();
+          let district = (mapCol(r, ['District Name']) || '').toLowerCase();
+          let work = getWorkType(title).text.toLowerCase();
+          let hr = getHr(r['Create Time']);
+          let limit = pr === 'CRITICAL' ? 3 : pr === 'MAJOR' ? 10 : 1000;
+          let od = hr > limit;
+          let k = $('#search').val().toLowerCase().trim();
+          let keys = k ? k.split(/\s+/) : [];
+          let code = (PROV_CODE[p] || '').toLowerCase();
+          let text =
+            job +
+            ' ' +
+            title +
+            ' ' +
+            status +
+            ' ' +
+            assign +
+            ' ' +
+            province +
+            ' ' +
+            district +
+            ' ' +
+            work +
+            ' ' +
+            code;
+          if (od) text += ' overdue';
+          for (let key of keys) {
+            if (key === 'overdue' && !od) return;
+            if (key !== 'overdue' && !text.includes(key)) return;
+          }
+          if (prov && p !== prov) return;
+          if (pr === 'CRITICAL') c++;
+          else if (pr === 'MAJOR') m++;
+          else n++;
+          if (od) o++;
+          if (!pass(pr, od)) return;
+          if (!map[p]) map[p] = [];
+          map[p].push({
+            ...r,
+            pr,
+            hr,
+            limit,
+            od,
+            district: r['District Name'],
+            status: r['Status'],
+            assign: r['Assign to'] || '-',
+            work: getWorkType(title),
+          });
+        });
+        $('#c').text('Critical:' + c);
+        $('#m').text('Major:' + m);
+        $('#n').text('Minor:' + n);
+        $('#t').text('Total:' + (c + m + n));
+        $('#o').text('Overdue:' + o);
+        root.innerHTML =
+          Object.keys(map)
+            .map(
+              (p) =>
+                `<div class="card" id="${p}"><div class="card-header"><h3>📍 ${
+                  PROV_CODE[p] ? `(${PROV_CODE[p]}) ` : ''
+                }${p}</h3><button class="btn-export" onclick="exportJPG('${p}')"><span>📸</span><span>Export</span></button></div><table><tr><th>Job</th><th>Priority</th><th>Create</th><th>Mode <span onclick="toggleAllStatus()" style="cursor:pointer;margin-left:6px">${
+                  viewMode === 0
+                    ? '👁 Work'
+                    : viewMode === 1
+                    ? '📊 Status'
+                    : '🔄 Both'
+                }</span></th><th>Title</th><th>Province</th><th>Assign</th><th>Elapsed</th><th>Remain</th></tr>${map[
+                  p
+                ]
+                  .map(
+                    (r) =>
+                      `<tr class="${r.od ? 'overdue' : ''}"><td>${
+                        r['Job ID'] || ''
+                      }</td><td><div class="badge ${r.pr.toLowerCase()}">${
+                        r.pr
+                      }</div></td><td>${
+                        r['Create Time'] || ''
+                      }</td><td><div class="work work-${
+                        r.work.type
+                      }" style="display:${
+                        viewMode === 0 || viewMode === 2
+                          ? 'inline-flex'
+                          : 'none'
+                      }">${r.work.icon} ${
+                        r.work.text
+                      }</div><div class="status-badge status-${
+                        getStatusInfo(r.status).cls
+                      }" style="display:${
+                        viewMode === 1 || viewMode === 2
+                          ? 'inline-flex'
+                          : 'none'
+                      }">${getStatusInfo(r.status).icon} ${
+                        getStatusInfo(r.status).text
+                      }</div></td><td class="title-cell"><div class="title-text">${
+                        r['Job Title'] || ''
+                      }</div><span class="remark-btn ${
+                        r['Reason by WF'] ? 'has-remark' : ''
+                      }" onclick="showRemark('${
+                        r['Job ID']
+                      }')">ℹ️</span></td><td><div class="prov-name">${p}</div><div class="dist">${
+                        r.district || ''
+                      }</div></td><td><div class="assign-box">${
+                        r.assign
+                      }</div></td><td>${(() => {
+                        let s = getSLA(r.hr, r.limit);
+                        return `<div class="sla-box"><div class="sla-bar"><div class="sla-fill ${
+                          s.color
+                        }" style="width:${
+                          s.pct
+                        }%"></div></div><div class="sla-text">${s.pct.toFixed(
+                          0
+                        )}%</div><div class="sla-text">${formatTime(
+                          r.hr
+                        )}</div></div>`;
+                      })()}</td><td>${(() => {
+                        let s = getSLA(r.hr, r.limit);
+                        return `<div class="sla-box"><div class="sla-bar"><div class="sla-fill ${
+                          r.od ? 'sla-red' : s.color
+                        }" style="width:${
+                          s.pct
+                        }%"></div></div><div class="sla-text">${s.pct.toFixed(
+                          0
+                        )}%</div><div class="sla-text">${
+                          r.od ? '🔥OVERDUE🔥' : formatTime(r.limit - r.hr)
+                        }</div></div>`;
+                      })()}</td></tr>`
+                  )
+                  .join('')}</table></div>`
+            )
+            .join('') || '<div class="no-data">❌ ไม่พบข้อมูล</div>';
+      }
+    </script>
+  </body>
 </html>
