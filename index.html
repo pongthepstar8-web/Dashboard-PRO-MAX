@@ -1923,6 +1923,47 @@ ${nextJobs.map((x, idx) => renderDistrictJob(x, idx + 1)).join('')}
             .join('');
           return `<div class="map-popup"><div class="map-popup-title">📍 Jobs on this marker : ${group.jobs.length}</div>${jobsHtml}</div>`;
         }
+        function getPriorityRank(job) {
+          let pr = (job['Priority'] || 'NONE').toUpperCase();
+
+          if (pr === 'CRITICAL') return 1;
+
+          if (pr === 'MAJOR') return 2;
+
+          if (pr === 'MINOR') return 3;
+
+          return 4;
+        }
+
+        function getHighestPriorityJob(jobs) {
+          return [...jobs].sort(
+            (a, b) => getPriorityRank(a) - getPriorityRank(b)
+          )[0];
+        }
+
+        function offsetMarkerCoord(lat, lng, index, total) {
+          if (total <= 1) {
+            return [lat, lng];
+          }
+
+          let radiusMeters = total <= 3 ? 35 : total <= 6 ? 50 : 70;
+
+          let angle = (2 * Math.PI * index) / total;
+
+          let earth = 6378137;
+
+          let dLat = (radiusMeters * Math.cos(angle)) / earth;
+
+          let dLng =
+            (radiusMeters * Math.sin(angle)) /
+            (earth * Math.cos((Math.PI * lat) / 180));
+
+          let newLat = lat + (dLat * 180) / Math.PI;
+
+          let newLng = lng + (dLng * 180) / Math.PI;
+
+          return [newLat, newLng];
+        }
         async function buildAIMapMarkers() {
           let groups = {};
           let titleGPSSet = new Set();
@@ -1993,10 +2034,42 @@ ${nextJobs.map((x, idx) => renderDistrictJob(x, idx + 1)).join('')}
             groups[key].jobs.push(job);
           }
 
-          Object.values(groups).forEach((group) => {
-            let mainJob = group.jobs[0];
+          let groupList = Object.values(groups);
 
-            let marker = w.L.marker([group.lat, group.lng], {
+          // ✅ รวมหมุดที่อยู่ใกล้กันมาก ๆ ให้อยู่ bucket เดียว
+          let buckets = {};
+
+          groupList.forEach((group) => {
+            let key = group.lat.toFixed(4) + '|' + group.lng.toFixed(4);
+
+            if (!buckets[key]) {
+              buckets[key] = [];
+            }
+
+            buckets[key].push(group);
+          });
+
+          // ✅ ใส่ index ให้หมุดที่ซ้อนกัน
+          Object.values(buckets).forEach((bucket) => {
+            bucket.forEach((group, idx) => {
+              group._offsetIndex = idx;
+
+              group._offsetTotal = bucket.length;
+            });
+          });
+
+          // ✅ วาดหมุดแบบกระจาย ไม่ให้ซ้อนกัน
+          groupList.forEach((group) => {
+            let mainJob = getHighestPriorityJob(group.jobs);
+
+            let displayCoord = offsetMarkerCoord(
+              group.lat,
+              group.lng,
+              group._offsetIndex || 0,
+              group._offsetTotal || 1
+            );
+
+            let marker = w.L.marker(displayCoord, {
               icon: makeMapIcon(mainJob),
             })
               .addTo(aiMap)
@@ -2004,7 +2077,7 @@ ${nextJobs.map((x, idx) => renderDistrictJob(x, idx + 1)).join('')}
 
             aiMarkers.push(marker);
 
-            aiAllPoints.push([group.lat, group.lng]);
+            aiAllPoints.push(displayCoord);
           });
 
           w.fitAllMarkers();
