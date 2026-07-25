@@ -48,46 +48,7 @@
       button {
         cursor: pointer;
       }
-      .shift-box {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-      }
-      #shiftDaily {
-        width: 180px;
-        height: 42px;
-        background: #111827;
-        color: #fff;
-        border: 1px solid #334155;
-        border-radius: 10px;
-        padding: 8px;
-        resize: vertical;
-      }
-      #shiftDaily:focus {
-        outline: none;
-        border-color: #38bdf8;
-        box-shadow: 0 0 10px rgba(56, 189, 248, 0.45);
-      }
-      .btn-shift-clear {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        padding: 10px 14px;
-        border-radius: 12px;
-        border: 1px solid rgba(239, 68, 68, 0.4);
-        background: rgba(239, 68, 68, 0.15);
-        color: #f87171;
-        font-size: 13px;
-        font-weight: 700;
-        cursor: pointer;
-        transition: all 0.25s ease;
-      }
-      .btn-shift-clear:hover {
-        background: #ef4444;
-        color: #fff;
-        transform: translateY(-2px);
-        box-shadow: 0 0 12px rgba(239, 68, 68, 0.7);
-      }
+
       .kpi-row {
         display: flex;
         gap: 10px;
@@ -488,6 +449,11 @@
         background: #eab308;
         color: #000;
       }
+      .locked-btn {
+        opacity: 0.45;
+        filter: grayscale(100%);
+        cursor: not-allowed !important;
+      }
     </style>
   </head>
   <body>
@@ -497,6 +463,7 @@
       <select id="provinceFilter" style="width: 200px"></select>
       <button onclick="resetAll()">Reset</button>
       <button
+        id="aiActionBtn"
         onclick="showAIBoard()"
         style="
           background: #7c3aed;
@@ -510,12 +477,21 @@
       >
         🧠 AI Action Board
       </button>
-      <div class="shift-box">
-        <textarea id="shiftDaily" placeholder="Shift Daily..."></textarea>
-        <button class="btn-shift-clear" onclick="clearShift()">
-          🧹 Clear Shift
-        </button>
-      </div>
+      <button
+        id="openSheetBtn"
+        onclick="openGoogleSheet()"
+        style="
+          background: #16a34a;
+          color: #fff;
+          padding: 8px 14px;
+          border: none;
+          border-radius: 10px;
+          cursor: pointer;
+          font-weight: bold;
+        "
+      >
+        📄 Open Sheet
+      </button>
     </div>
 
     <div class="kpi-row" id="kpiBar">
@@ -539,6 +515,17 @@
     </div>
 
     <script>
+      let data = [],
+        selected = [];
+      let viewMode = 0;
+      let shiftDailyText = '';
+      const APPS_SCRIPT_URL =
+        'https://script.google.com/macros/s/AKfycbyKED88K86X4eu2ycnl1ib0VY74iheDAWInvrRrQU7zarDu2fB_zNKTaW_TN6DGvAkxzw/exec';
+      const SHEET_URL =
+        'https://docs.google.com/spreadsheets/d/1XSR52b9wrzsBDys3PZUQTCYexOOZFa6J-bz-jR-6jaM/edit?gid=365350498#gid=365350498';
+      function getPermission() {
+        return JSON.parse(localStorage.getItem('permission') || '{}');
+      }
       function checkFactoryAuth() {
         const auth = JSON.parse(localStorage.getItem('factoryAuth'));
 
@@ -564,32 +551,102 @@
       }
 
       checkFactoryAuth();
-      let data = [],
-        selected = [];
-      let viewMode = 0;
+      function isApproved(key) {
+        const permission = getPermission();
 
+        if (permission.role === 'Admin') {
+          return true;
+        }
+
+        return permission[key] === 'Approved';
+      }
+
+      function applyExtraButtonPermission() {
+        const aiBtn = document.getElementById('aiActionBtn');
+        const sheetBtn = document.getElementById('openSheetBtn');
+
+        if (aiBtn && !isApproved('AIActionBoard')) {
+          aiBtn.classList.add('locked-btn');
+          aiBtn.disabled = true;
+          aiBtn.title = 'รออนุมัติใช้งาน AI Action Board';
+        }
+
+        if (sheetBtn && !isApproved('OpenSheet')) {
+          sheetBtn.classList.add('locked-btn');
+          sheetBtn.disabled = true;
+          sheetBtn.title = 'รออนุมัติใช้งาน Open Sheet';
+        }
+      }
+      window.addEventListener('load', function () {
+        applyExtraButtonPermission();
+      });
+      function openAIActionBoard() {
+        if (!isApproved('AIActionBoard')) {
+          alert('คุณยังไม่มีสิทธิ์ใช้งาน AI Action Board');
+          return;
+        }
+
+        // โค้ดเปิด AI Action Board เดิมของคุณ
+      }
+
+      function openGoogleSheet() {
+        if (!isApproved('OpenSheet')) {
+          alert('คุณยังไม่มีสิทธิ์เปิด Google Sheet');
+          return;
+        }
+
+        window.open(
+          'https://docs.google.com/spreadsheets/d/1XSR52b9wrzsBDys3PZUQTCYexOOZFa6J-bz-jR-6jaM/edit?gid=365350498#gid=365350498',
+          '_blank'
+        );
+      }
+      async function loadDataFromAppsScript() {
+        try {
+          let res = await fetch(APPS_SCRIPT_URL + '?action=all');
+
+          let json = await res.json();
+
+          if (!json.ok) {
+            alert('โหลดข้อมูลจาก Apps Script ไม่สำเร็จ');
+            return;
+          }
+
+          data = json.jobs || [];
+
+          shiftDailyText = json.shiftText || '';
+
+          localStorage.setItem('shiftDaily', shiftDailyText);
+
+          initProvince();
+          render();
+        } catch (err) {
+          console.error(err);
+
+          alert('ไม่สามารถโหลดข้อมูลจาก Google Sheet ได้');
+        }
+      }
       function getShiftNames() {
-        let txt = document.getElementById('shiftDaily').value;
+        let txt = shiftDailyText || localStorage.getItem('shiftDaily') || '';
+
         return txt
           .split('\n')
           .map((line) => {
-            let m = line.match(/([A-Za-z]+)\s+([A-Za-z]+)\s+\d{3}-\d+/);
-            if (m) return `${m[1]} ${m[2]}`;
-            let p = line.trim().split(/\s+/);
-            return p.length >= 2 ? p.slice(-2).join(' ').trim() : '';
+            let parts = line.split('|').map((x) => x.trim());
+
+            // SHIFT | PROVINCE | LOCAL | NAME | MOBILE
+            if (parts.length >= 4) {
+              return parts[3];
+            }
+
+            return '';
           })
           .filter(Boolean);
       }
-      function clearShift() {
-        localStorage.removeItem('shiftDaily');
-        document.getElementById('shiftDaily').value = '';
-      }
+
       window.addEventListener('load', () => {
-        let box = document.getElementById('shiftDaily');
-        box.value = localStorage.getItem('shiftDaily') || '';
-        box.addEventListener('input', () =>
-          localStorage.setItem('shiftDaily', box.value)
-        );
+        shiftDailyText = localStorage.getItem('shiftDaily') || '';
+
+        loadDataFromAppsScript();
       });
       function mapCol(r, k) {
         for (let x of k) {
@@ -801,16 +858,71 @@
       }
       file.onchange = (e) => {
         let r = new FileReader();
+
         r.onload = (ev) => {
           let wb = XLSX.read(new Uint8Array(ev.target.result), {
             type: 'array',
           });
+
+          // อ่าน Job จาก Sheet แรก
           data = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+
+          // อ่าน Shift Daily จาก Sheet: CM FE3BB Shift Daily
+          loadShiftDailyFromCMFE3BBShiftDaily(wb);
+
           initProvince();
           render();
         };
+
         r.readAsArrayBuffer(e.target.files[0]);
       };
+      function loadShiftDailyFromCMFE3BBShiftDaily(wb) {
+        let sheetName = wb.SheetNames.find(
+          (name) => name.toLowerCase().trim() === 'cm fe3bb shift daily'
+        );
+
+        if (!sheetName) {
+          console.warn('ไม่พบ Sheet: CM FE3BB Shift Daily');
+          return;
+        }
+
+        let rows = XLSX.utils.sheet_to_json(wb.Sheets[sheetName], {
+          defval: '',
+        });
+
+        if (!rows.length) {
+          console.warn('Sheet CM FE3BB Shift Daily ไม่มีข้อมูล');
+          return;
+        }
+
+        let lines = rows
+          .map((r) => {
+            let shift = r['SHIFT'] || '';
+
+            let province = r['PROVINCE'] || '';
+
+            let local = r['LOCAL'] || '';
+
+            let name = r['NAME'] || '';
+
+            let mobile = r['MOBILE'] || '';
+
+            return [shift, province, local, name, mobile]
+              .filter(Boolean)
+              .join(' | ');
+          })
+          .filter(Boolean);
+
+        let text = lines.join('\n');
+
+        let box = document.getElementById('shiftDaily');
+
+        if (box) {
+          box.value = text;
+
+          localStorage.setItem('shiftDaily', text);
+        }
+      }
       function initProvince() {
         let s = {};
         data.forEach((r) => {
@@ -1302,6 +1414,14 @@
       }
 
       function showAIBoard() {
+        2;
+        if (!isApproved('AIActionBoard')) {
+          3;
+          alert('คุณยังไม่มีสิทธิ์ใช้งาน AI Action Board');
+          4;
+          return;
+          5;
+        }
         let prov = $('#provinceFilter').val();
         let jobs = [];
         data.forEach((r) => {
