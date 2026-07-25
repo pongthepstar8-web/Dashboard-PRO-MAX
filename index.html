@@ -521,11 +521,52 @@
       let shiftDailyText = '';
       const APPS_SCRIPT_URL =
         'https://script.google.com/macros/s/AKfycbyKED88K86X4eu2ycnl1ib0VY74iheDAWInvrRrQU7zarDu2fB_zNKTaW_TN6DGvAkxzw/exec';
+
       const SHEET_URL =
         'https://docs.google.com/spreadsheets/d/1XSR52b9wrzsBDys3PZUQTCYexOOZFa6J-bz-jR-6jaM/edit?gid=365350498#gid=365350498';
       function getPermission() {
         return JSON.parse(localStorage.getItem('permission') || '{}');
       }
+
+      function normalizeStatus(value) {
+        const v = String(value || '').trim();
+
+        if (v === 'Y') return 'Approved';
+        if (v === 'N') return '';
+
+        return v;
+      }
+
+      function isApproved(key) {
+        const permission = getPermission();
+
+        if (permission.role === 'Admin') {
+          return true;
+        }
+
+        return normalizeStatus(permission[key]) === 'Approved';
+      }
+
+      function applyExtraButtonPermission() {
+        const aiBtn = document.getElementById('aiActionBtn');
+        const sheetBtn = document.getElementById('openSheetBtn');
+
+        if (aiBtn && !isApproved('AIActionBoard')) {
+          aiBtn.classList.add('locked-btn');
+          aiBtn.disabled = true;
+          aiBtn.title = 'รออนุมัติใช้งาน AI Action Board';
+        }
+
+        if (sheetBtn && !isApproved('OpenSheet')) {
+          sheetBtn.classList.add('locked-btn');
+          sheetBtn.disabled = true;
+          sheetBtn.title = 'รออนุมัติเปิด Google Sheet';
+        }
+      }
+
+      window.addEventListener('load', function () {
+        applyExtraButtonPermission();
+      });
       function checkFactoryAuth() {
         const auth = JSON.parse(localStorage.getItem('factoryAuth'));
 
@@ -551,35 +592,7 @@
       }
 
       checkFactoryAuth();
-      function isApproved(key) {
-        const permission = getPermission();
 
-        if (permission.role === 'Admin') {
-          return true;
-        }
-
-        return permission[key] === 'Approved';
-      }
-
-      function applyExtraButtonPermission() {
-        const aiBtn = document.getElementById('aiActionBtn');
-        const sheetBtn = document.getElementById('openSheetBtn');
-
-        if (aiBtn && !isApproved('AIActionBoard')) {
-          aiBtn.classList.add('locked-btn');
-          aiBtn.disabled = true;
-          aiBtn.title = 'รออนุมัติใช้งาน AI Action Board';
-        }
-
-        if (sheetBtn && !isApproved('OpenSheet')) {
-          sheetBtn.classList.add('locked-btn');
-          sheetBtn.disabled = true;
-          sheetBtn.title = 'รออนุมัติใช้งาน Open Sheet';
-        }
-      }
-      window.addEventListener('load', function () {
-        applyExtraButtonPermission();
-      });
       function openAIActionBoard() {
         if (!isApproved('AIActionBoard')) {
           alert('คุณยังไม่มีสิทธิ์ใช้งาน AI Action Board');
@@ -595,10 +608,7 @@
           return;
         }
 
-        window.open(
-          'https://docs.google.com/spreadsheets/d/1XSR52b9wrzsBDys3PZUQTCYexOOZFa6J-bz-jR-6jaM/edit?gid=365350498#gid=365350498',
-          '_blank'
-        );
+        window.open(SHEET_URL, '_blank');
       }
       async function loadDataFromAppsScript() {
         try {
@@ -1414,13 +1424,9 @@
       }
 
       function showAIBoard() {
-        2;
         if (!isApproved('AIActionBoard')) {
-          3;
           alert('คุณยังไม่มีสิทธิ์ใช้งาน AI Action Board');
-          4;
           return;
-          5;
         }
         let prov = $('#provinceFilter').val();
         let jobs = [];
