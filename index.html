@@ -1890,6 +1890,45 @@ ${nextJobs.map((x, idx) => renderDistrictJob(x, idx + 1)).join('')}
             popupAnchor: [0, -15],
           });
         }
+        w.copyJobId = function (jobId) {
+          if (!jobId) return;
+
+          if (navigator.clipboard) {
+            navigator.clipboard
+              .writeText(jobId)
+              .then(() => {
+                alert('คัดลอก Job ID แล้ว: ' + jobId);
+              })
+              .catch(() => {
+                fallbackCopyJobId(jobId);
+              });
+          } else {
+            fallbackCopyJobId(jobId);
+          }
+        };
+
+        function fallbackCopyJobId(jobId) {
+          let temp = w.document.createElement('textarea');
+
+          temp.value = jobId;
+
+          w.document.body.appendChild(temp);
+
+          temp.select();
+
+          w.document.execCommand('copy');
+
+          w.document.body.removeChild(temp);
+
+          alert('คัดลอก Job ID แล้ว: ' + jobId);
+        }
+        function safeAttr(v) {
+          return String(v || '')
+            .replace(/&/g, '&amp;')
+            .replace(/"/g, '&quot;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
+        }
         function buildMapPopup(group) {
           let jobsHtml = group.jobs
             .map((job) => {
@@ -1904,11 +1943,31 @@ ${nextJobs.map((x, idx) => renderDistrictJob(x, idx + 1)).join('')}
               let lat = gps?.lat || group.lat;
               let lng = gps?.lng || group.lng;
               let gmapUrl = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
-              return `<details class="map-job-box"><summary>${
-                job['Priority'] || '-'
-              } | ${
-                job['Job ID'] || '-'
-              }</summary><div style="margin-top:8px"><b>Title</b><br>${
+              let jobId = job['Job ID'] || '-';
+
+              return `<details class="map-job-box"><summary style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+  <span>
+    ${job['Priority'] || '-'} | ${jobId}
+  </span>
+
+  <button
+    onclick="event.preventDefault();event.stopPropagation();window.copyJobId('${safeAttr(
+      jobId
+    )}')"
+    style="
+      background:#2563eb;
+      color:#fff;
+      border:none;
+      border-radius:8px;
+      padding:3px 8px;
+      font-size:11px;
+      font-weight:bold;
+      cursor:pointer;
+    "
+  >
+    📋 Copy
+  </button>
+</summary><div style="margin-top:8px"><b>Title</b><br>${
                 job['Job Title'] || '-'
               }<br><br><b>Status</b><br>${getStatusIcon(
                 job['Status']
