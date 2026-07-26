@@ -17,121 +17,119 @@
 
     <style>
       .tools-item.mode-tool::before {
-  content: "☐";
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 16px;
-  min-width: 16px;
-  height: 16px;
-  border-radius: 4px;
-  color: #94a3b8;
-  font-size: 13px;
-  font-weight: 900;
-}
+        content: '☐';
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 16px;
+        min-width: 16px;
+        height: 16px;
+        border-radius: 4px;
+        color: #94a3b8;
+        font-size: 13px;
+        font-weight: 900;
+      }
 
-.tools-item.mode-tool.active::before {
-  content: "☑";
-  color: #ffffff;
-}
+      .tools-item.mode-tool.active::before {
+        content: '☑';
+        color: #ffffff;
+      }
 
-.tools-item.mode-tool.active {
-  background: linear-gradient(135deg, #7c3aed, #9333ea);
-  color: #ffffff;
-  box-shadow:
-    0 0 10px rgba(124, 58, 237, 0.8),
-    0 0 18px rgba(124, 58, 237, 0.35);
-}
+      .tools-item.mode-tool.active {
+        background: linear-gradient(135deg, #7c3aed, #9333ea);
+        color: #ffffff;
+        box-shadow: 0 0 10px rgba(124, 58, 237, 0.8),
+          0 0 18px rgba(124, 58, 237, 0.35);
+      }
       .tools-wrap {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-}
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+      }
 
-.btn-tools {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  padding: 9px 15px;
-  border-radius: 13px;
-  border: 1px solid rgba(124, 58, 237, 0.45);
-  background: linear-gradient(135deg, #312e81, #7c3aed);
-  color: #fff;
-  font-weight: 800;
-  font-size: 13px;
-  cursor: pointer;
-  box-shadow: 0 0 12px rgba(124, 58, 237, 0.4);
-  transition: all 0.25s ease;
-}
+      .btn-tools {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 9px 15px;
+        border-radius: 13px;
+        border: 1px solid rgba(124, 58, 237, 0.45);
+        background: linear-gradient(135deg, #312e81, #7c3aed);
+        color: #fff;
+        font-weight: 800;
+        font-size: 13px;
+        cursor: pointer;
+        box-shadow: 0 0 12px rgba(124, 58, 237, 0.4);
+        transition: all 0.25s ease;
+      }
 
-.btn-tools:hover {
-  transform: translateY(-2px);
-  box-shadow:
-    0 0 12px rgba(124, 58, 237, 0.8),
-    0 0 22px rgba(124, 58, 237, 0.45);
-}
+      .btn-tools:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0 12px rgba(124, 58, 237, 0.8),
+          0 0 22px rgba(124, 58, 237, 0.45);
+      }
 
-.tools-menu {
-  position: absolute;
-  top: 46px;
-  right: 0;
-  min-width: 240px;
-  max-height: 72vh;
-  overflow-y: auto;
-  background: #020617;
-  border: 1px solid #334155;
-  border-radius: 14px;
-  padding: 8px;
-  display: none;
-  z-index: 99999;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.55);
-}
+      .tools-menu {
+        position: absolute;
+        top: 46px;
+        right: 0;
+        min-width: 240px;
+        max-height: 72vh;
+        overflow-y: auto;
+        background: #020617;
+        border: 1px solid #334155;
+        border-radius: 14px;
+        padding: 8px;
+        display: none;
+        z-index: 99999;
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.55);
+      }
 
-.tools-menu.show {
-  display: block;
-}
+      .tools-menu.show {
+        display: block;
+      }
 
-.tools-group-title {
-  color: #38bdf8;
-  font-weight: 900;
-  font-size: 12px;
-  padding: 8px 10px 5px;
-  letter-spacing: 0.3px;
-}
+      .tools-group-title {
+        color: #38bdf8;
+        font-weight: 900;
+        font-size: 12px;
+        padding: 8px 10px 5px;
+        letter-spacing: 0.3px;
+      }
 
-.tools-item {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  padding: 10px 12px;
-  border: none;
-  border-radius: 11px;
-  background: transparent;
-  color: #e2e8f0;
-  font-weight: 800;
-  font-size: 13px;
-  cursor: pointer;
-  text-align: left;
-  transition: all 0.2s ease;
-}
+      .tools-item {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        padding: 10px 12px;
+        border: none;
+        border-radius: 11px;
+        background: transparent;
+        color: #e2e8f0;
+        font-weight: 800;
+        font-size: 13px;
+        cursor: pointer;
+        text-align: left;
+        transition: all 0.2s ease;
+      }
 
-.tools-item:hover {
-  background: #1e293b;
-  color: #fff;
-}
+      .tools-item:hover {
+        background: #1e293b;
+        color: #fff;
+      }
 
-.tools-item.active {
-  background: #7c3aed;
-  color: #fff;
-  box-shadow: 0 0 10px rgba(124, 58, 237, 0.65);
-}
+      .tools-item.active {
+        background: #7c3aed;
+        color: #fff;
+        box-shadow: 0 0 10px rgba(124, 58, 237, 0.65);
+      }
 
-.tools-divider {
-  height: 1px;
-  background: #334155;
-  margin: 8px 4px;
-}
+      .tools-divider {
+        height: 1px;
+        background: #334155;
+        margin: 8px 4px;
+      }
       .btn-reset-pro {
         display: inline-flex;
         align-items: center;
@@ -261,20 +259,82 @@
         color: #022c22;
         box-shadow: 0 0 10px #22c55e, 0 0 20px #22c55e;
       }
+      .card {
+        margin: 15px auto;
+        padding: 12px;
+        border-radius: 12px;
+        width: 95%;
+        max-width: 1600px;
+        background: #111827;
+        border: 1px solid #334155;
+        box-shadow: 0 0 12px rgba(0, 0, 0, 0.25);
+        overflow-x: auto;
+      }
+
       table {
         width: 100%;
         min-width: 1200px;
+        table-layout: fixed;
         border-collapse: collapse;
       }
+
       th {
         background: #334155;
         padding: 8px;
+        white-space: nowrap;
       }
+
       td {
         padding: 8px;
         font-size: 13px;
         vertical-align: middle;
         border-bottom: 1px solid rgba(148, 163, 184, 0.15);
+        overflow-wrap: anywhere;
+        word-break: break-word;
+      }
+      table th:nth-child(1),
+      table td:nth-child(1) {
+        width: 75px;
+      }
+
+      table th:nth-child(2),
+      table td:nth-child(2) {
+        width: 125px;
+      }
+
+      table th:nth-child(3),
+      table td:nth-child(3) {
+        width: 75px;
+      }
+
+      table th:nth-child(4),
+      table td:nth-child(4) {
+        width: 160px;
+      }
+
+      table th:nth-child(5),
+      table td:nth-child(5) {
+        width: auto;
+      }
+
+      table th:nth-child(6),
+      table td:nth-child(6) {
+        width: 110px;
+      }
+
+      table th:nth-child(7),
+      table td:nth-child(7) {
+        width: 120px;
+      }
+
+      table th:nth-child(8),
+      table td:nth-child(8) {
+        width: 120px;
+      }
+
+      table th:nth-child(9),
+      table td:nth-child(9) {
+        width: 120px;
       }
       .badge {
         display: inline-block;
@@ -385,6 +445,30 @@
       }
       .title-text {
         padding-right: 20px;
+        white-space: normal;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+        line-height: 1.35;
+
+        display: -webkit-box;
+        -webkit-line-clamp: 6;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+      .assign-box {
+        text-align: center;
+        color: #22c55e;
+        font-weight: bold;
+        white-space: normal;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+      }
+      .prov-name,
+      .dist,
+      .assign-box,
+      .sla-text {
+        overflow-wrap: anywhere;
+        word-break: break-word;
       }
       .remark-btn {
         position: absolute;
@@ -637,174 +721,168 @@
         📄 Open Sheet
       </button>
       <div class="tools-wrap">
+        <button class="btn-tools" onclick="toggleToolsMenu()">⚙️ Tools</button>
 
-        <button class="btn-tools" onclick="toggleToolsMenu()">
-          ⚙️ Tools
-        </button>
-      
         <div class="tools-menu" id="toolsMenu">
-      
           <div class="tools-group-title">🛠️ Work</div>
 
-<button
-  class="tools-item mode-tool"
-  data-group="work"
-  data-value="all"
-  onclick="toggleToolMultiFilter('work','all',0,this)"
->
-  📋 All Work
-</button>
+          <button
+            class="tools-item mode-tool"
+            data-group="work"
+            data-value="all"
+            onclick="toggleToolMultiFilter('work','all',0,this)"
+          >
+            📋 All Work
+          </button>
 
-<button
-  class="tools-item mode-tool"
-  data-group="work"
-  data-value="Access Down"
-  onclick="toggleToolMultiFilter('work','Access Down',0,this)"
->
-  🔗 Access Down
-</button>
+          <button
+            class="tools-item mode-tool"
+            data-group="work"
+            data-value="Access Down"
+            onclick="toggleToolMultiFilter('work','Access Down',0,this)"
+          >
+            🔗 Access Down
+          </button>
 
-<button
-  class="tools-item mode-tool"
-  data-group="work"
-  data-value="Link Down"
-  onclick="toggleToolMultiFilter('work','Link Down',0,this)"
->
-  🚫 Link Down
-</button>
+          <button
+            class="tools-item mode-tool"
+            data-group="work"
+            data-value="Link Down"
+            onclick="toggleToolMultiFilter('work','Link Down',0,this)"
+          >
+            🚫 Link Down
+          </button>
 
-<button
-  class="tools-item mode-tool"
-  data-group="work"
-  data-value="Access Power Fail"
-  onclick="toggleToolMultiFilter('work','Access Power Fail',0,this)"
->
-  ⚡ Access Power Fail
-</button>
+          <button
+            class="tools-item mode-tool"
+            data-group="work"
+            data-value="Access Power Fail"
+            onclick="toggleToolMultiFilter('work','Access Power Fail',0,this)"
+          >
+            ⚡ Access Power Fail
+          </button>
 
-<button
-  class="tools-item mode-tool"
-  data-group="work"
-  data-value="Signal Loss"
-  onclick="toggleToolMultiFilter('work','Signal Loss',0,this)"
->
-  📉 Signal Loss
-</button>
+          <button
+            class="tools-item mode-tool"
+            data-group="work"
+            data-value="Signal Loss"
+            onclick="toggleToolMultiFilter('work','Signal Loss',0,this)"
+          >
+            📉 Signal Loss
+          </button>
 
-<button
-  class="tools-item mode-tool"
-  data-group="work"
-  data-value="Business Circuit"
-  onclick="toggleToolMultiFilter('work','Business Circuit',0,this)"
->
-  🏢 Business Circuit
-</button>
+          <button
+            class="tools-item mode-tool"
+            data-group="work"
+            data-value="Business Circuit"
+            onclick="toggleToolMultiFilter('work','Business Circuit',0,this)"
+          >
+            🏢 Business Circuit
+          </button>
 
-<button
-  class="tools-item mode-tool"
-  data-group="work"
-  data-value="Transmission Error"
-  onclick="toggleToolMultiFilter('work','Transmission Error',0,this)"
->
-  📡 Transmission Error
-</button>
+          <button
+            class="tools-item mode-tool"
+            data-group="work"
+            data-value="Transmission Error"
+            onclick="toggleToolMultiFilter('work','Transmission Error',0,this)"
+          >
+            📡 Transmission Error
+          </button>
 
-<button
-  class="tools-item mode-tool"
-  data-group="work"
-  data-value="Power Failure"
-  onclick="toggleToolMultiFilter('work','Power Failure',0,this)"
->
-  🔌 Power Failure
-</button>
+          <button
+            class="tools-item mode-tool"
+            data-group="work"
+            data-value="Power Failure"
+            onclick="toggleToolMultiFilter('work','Power Failure',0,this)"
+          >
+            🔌 Power Failure
+          </button>
 
-<button
-  class="tools-item mode-tool"
-  data-group="work"
-  data-value="Loop Broken"
-  onclick="toggleToolMultiFilter('work','Loop Broken',0,this)"
->
-  🔁 Loop Broken
-</button>
-      
-<div class="tools-divider"></div>
+          <button
+            class="tools-item mode-tool"
+            data-group="work"
+            data-value="Loop Broken"
+            onclick="toggleToolMultiFilter('work','Loop Broken',0,this)"
+          >
+            🔁 Loop Broken
+          </button>
 
-<div class="tools-group-title">📊 Status</div>
+          <div class="tools-divider"></div>
 
-<button
-  class="tools-item mode-tool"
-  data-group="status"
-  data-value="all"
-  onclick="toggleToolMultiFilter('status','all',1,this)"
->
-  📋 All Status
-</button>
+          <div class="tools-group-title">📊 Status</div>
 
-<button
-  class="tools-item mode-tool"
-  data-group="status"
-  data-value="on-site"
-  onclick="toggleToolMultiFilter('status','on-site',1,this)"
->
-  🧑‍🔧 On-site
-</button>
+          <button
+            class="tools-item mode-tool"
+            data-group="status"
+            data-value="all"
+            onclick="toggleToolMultiFilter('status','all',1,this)"
+          >
+            📋 All Status
+          </button>
 
-<button
-  class="tools-item mode-tool"
-  data-group="status"
-  data-value="departed"
-  onclick="toggleToolMultiFilter('status','departed',1,this)"
->
-  🚗 Departed
-</button>
+          <button
+            class="tools-item mode-tool"
+            data-group="status"
+            data-value="on-site"
+            onclick="toggleToolMultiFilter('status','on-site',1,this)"
+          >
+            🧑‍🔧 On-site
+          </button>
 
-<button
-  class="tools-item mode-tool"
-  data-group="status"
-  data-value="assigned"
-  onclick="toggleToolMultiFilter('status','assigned',1,this)"
->
-  📋 Assigned
-</button>
+          <button
+            class="tools-item mode-tool"
+            data-group="status"
+            data-value="departed"
+            onclick="toggleToolMultiFilter('status','departed',1,this)"
+          >
+            🚗 Departed
+          </button>
 
-<button
-  class="tools-item mode-tool"
-  data-group="status"
-  data-value="done"
-  onclick="toggleToolMultiFilter('status','done',1,this)"
->
-  ✅ Done
-</button>
+          <button
+            class="tools-item mode-tool"
+            data-group="status"
+            data-value="assigned"
+            onclick="toggleToolMultiFilter('status','assigned',1,this)"
+          >
+            📋 Assigned
+          </button>
 
-<button
-  class="tools-item mode-tool"
-  data-group="status"
-  data-value="accepted"
-  onclick="toggleToolMultiFilter('status','accepted',1,this)"
->
-  📥 Accepted
-</button>
+          <button
+            class="tools-item mode-tool"
+            data-group="status"
+            data-value="done"
+            onclick="toggleToolMultiFilter('status','done',1,this)"
+          >
+            ✅ Done
+          </button>
 
-<button
-  class="tools-item mode-tool"
-  data-group="status"
-  data-value="held"
-  onclick="toggleToolMultiFilter('status','held',1,this)"
->
-  💤 Held
-</button>
+          <button
+            class="tools-item mode-tool"
+            data-group="status"
+            data-value="accepted"
+            onclick="toggleToolMultiFilter('status','accepted',1,this)"
+          >
+            📥 Accepted
+          </button>
 
-<button
-  class="tools-item mode-tool"
-  data-group="status"
-  data-value="cancel"
-  onclick="toggleToolMultiFilter('status','cancel',1,this)"
->
-  ❌ Cancel
-</button>
+          <button
+            class="tools-item mode-tool"
+            data-group="status"
+            data-value="held"
+            onclick="toggleToolMultiFilter('status','held',1,this)"
+          >
+            💤 Held
+          </button>
 
+          <button
+            class="tools-item mode-tool"
+            data-group="status"
+            data-value="cancel"
+            onclick="toggleToolMultiFilter('status','cancel',1,this)"
+          >
+            ❌ Cancel
+          </button>
         </div>
-      
       </div>
     </div>
 
@@ -830,20 +908,19 @@
 
     <script>
       let data = [],
-  selected = [];
-let viewMode = 0;
+        selected = [];
+      let viewMode = 0;
 
-let workSubFilters = [];
-let statusSubFilters = [];
+      let workSubFilters = [];
+      let statusSubFilters = [];
 
-      
       let shiftDailyText = '';
       const APPS_SCRIPT_URL =
         'https://script.google.com/macros/s/AKfycbyKED88K86X4eu2ycnl1ib0VY74iheDAWInvrRrQU7zarDu2fB_zNKTaW_TN6DGvAkxzw/exec';
 
       const SHEET_URL =
         'https://docs.google.com/spreadsheets/d/1XSR52b9wrzsBDys3PZUQTCYexOOZFa6J-bz-jR-6jaM/edit?gid=365350498#gid=365350498';
-        function checkFactoryAuth() {
+      function checkFactoryAuth() {
         const auth = JSON.parse(localStorage.getItem('factoryAuth'));
 
         if (!auth) {
@@ -911,7 +988,6 @@ let statusSubFilters = [];
       window.addEventListener('load', function () {
         applyExtraButtonPermission();
       });
-      
 
       function openAIActionBoard() {
         if (!isApproved('AIActionBoard')) {
@@ -973,16 +1049,13 @@ let statusSubFilters = [];
           .filter(Boolean);
       }
 
-      window.addEventListener("load", () => {
+      window.addEventListener('load', () => {
+        shiftDailyText = localStorage.getItem('shiftDaily') || '';
 
-shiftDailyText =
-  localStorage.getItem("shiftDaily") || "";
-
-setTimeout(() => {
-  initToolDefaultAll();
-}, 100);
-
-});
+        setTimeout(() => {
+          initToolDefaultAll();
+        }, 100);
+      });
       function mapCol(r, k) {
         for (let x of k) {
           if (r[x] != undefined) return r[x];
@@ -2933,291 +3006,223 @@ ${nextJobs.map((x, idx) => renderDistrictJob(x, idx + 1)).join('')}
         };
       }
       function toggleToolsMenu() {
+        let menu = document.getElementById('toolsMenu');
 
-let menu =
-  document.getElementById("toolsMenu");
+        if (!menu) return;
 
-if (!menu)
-  return;
-
-menu.classList.toggle("show");
-}
-
-function closeToolsMenu() {
-
-let menu =
-  document.getElementById("toolsMenu");
-
-if (!menu)
-  return;
-
-menu.classList.remove("show");
-}
-
-document.addEventListener("click", function(e) {
-
-let wrap =
-  document.querySelector(".tools-wrap");
-
-if (!wrap)
-  return;
-
-if (!wrap.contains(e.target)) {
-  closeToolsMenu();
-}
-});
-function initToolDefaultAll() {
-
-let allWorkButtons =
-  document.querySelectorAll(
-    '.mode-tool[data-group="work"]:not([data-value="all"])'
-  );
-
-let allStatusButtons =
-  document.querySelectorAll(
-    '.mode-tool[data-group="status"]:not([data-value="all"])'
-  );
-
-workSubFilters =
-  Array.from(allWorkButtons)
-    .map(b => b.dataset.value);
-
-statusSubFilters =
-  Array.from(allStatusButtons)
-    .map(b => b.dataset.value);
-
-// Work + Status ถูกเลือกพร้อมกัน = Both
-viewMode = 2;
-
-updateToolsActiveState();
-
-render();
-}
-function toggleToolMultiFilter(type, value, mode, btn) {
-
-if (type === "work") {
-
-  if (value === "all") {
-
-    let allWorkButtons =
-      document.querySelectorAll(
-        '.mode-tool[data-group="work"]:not([data-value="all"])'
-      );
-
-    let allValues =
-      Array.from(allWorkButtons)
-        .map(b => b.dataset.value);
-
-    let isAllSelected =
-      allValues.length > 0 &&
-      allValues.every(v => workSubFilters.includes(v));
-
-    workSubFilters =
-      isAllSelected ? [] : allValues;
-
-  } else {
-
-    if (workSubFilters.includes(value)) {
-      workSubFilters =
-        workSubFilters.filter(v => v !== value);
-    } else {
-      workSubFilters.push(value);
-    }
-  }
-}
-
-if (type === "status") {
-
-  if (value === "all") {
-
-    let allStatusButtons =
-      document.querySelectorAll(
-        '.mode-tool[data-group="status"]:not([data-value="all"])'
-      );
-
-    let allValues =
-      Array.from(allStatusButtons)
-        .map(b => b.dataset.value);
-
-    let isAllSelected =
-      allValues.length > 0 &&
-      allValues.every(v => statusSubFilters.includes(v));
-
-    statusSubFilters =
-      isAllSelected ? [] : allValues;
-
-  } else {
-
-    if (statusSubFilters.includes(value)) {
-      statusSubFilters =
-        statusSubFilters.filter(v => v !== value);
-    } else {
-      statusSubFilters.push(value);
-    }
-  }
-}
-
-// Auto Mode
-if (
-  workSubFilters.length > 0 &&
-  statusSubFilters.length > 0
-) {
-  viewMode = 2; // Both
-}
-else if (statusSubFilters.length > 0) {
-  viewMode = 1; // Status
-}
-else {
-  viewMode = 0; // Work
-}
-
-updateToolsActiveState();
-
-render();
-}
-function updateToolsActiveState() {
-
-document
-  .querySelectorAll(".mode-tool")
-  .forEach(btn => {
-
-    let group =
-      btn.dataset.group;
-
-    let value =
-      btn.dataset.value;
-
-    btn.classList.remove("active");
-
-    if (group === "work") {
-
-      if (value === "all") {
-
-        let allWorkButtons =
-          document.querySelectorAll(
-            '.mode-tool[data-group="work"]:not([data-value="all"])'
-          );
-
-        let allValues =
-          Array.from(allWorkButtons)
-            .map(b => b.dataset.value);
-
-        if (
-          allValues.length > 0 &&
-          allValues.every(v => workSubFilters.includes(v))
-        ) {
-          btn.classList.add("active");
-        }
-
-      } else if (workSubFilters.includes(value)) {
-        btn.classList.add("active");
+        menu.classList.toggle('show');
       }
-    }
 
-    if (group === "status") {
+      function closeToolsMenu() {
+        let menu = document.getElementById('toolsMenu');
 
-      if (value === "all") {
+        if (!menu) return;
 
-        let allStatusButtons =
-          document.querySelectorAll(
-            '.mode-tool[data-group="status"]:not([data-value="all"])'
-          );
-
-        let allValues =
-          Array.from(allStatusButtons)
-            .map(b => b.dataset.value);
-
-        if (
-          allValues.length > 0 &&
-          allValues.every(v => statusSubFilters.includes(v))
-        ) {
-          btn.classList.add("active");
-        }
-
-      } else if (statusSubFilters.includes(value)) {
-        btn.classList.add("active");
+        menu.classList.remove('show');
       }
-    }
 
-  });
-}
+      document.addEventListener('click', function (e) {
+        let wrap = document.querySelector('.tools-wrap');
 
-function passToolSubFilter(r) {
+        if (!wrap) return;
 
-let title =
-  r["Job Title"] || "";
-
-let status =
-  (r["Status"] || "")
-  .toLowerCase();
-
-let work =
-  getWorkType(title).text;
-
-let allWorkButtons =
-  document.querySelectorAll(
-    '.mode-tool[data-group="work"]:not([data-value="all"])'
-  );
-
-let allWorkValues =
-  Array.from(allWorkButtons)
-    .map(b => b.dataset.value);
-
-let allStatusButtons =
-  document.querySelectorAll(
-    '.mode-tool[data-group="status"]:not([data-value="all"])'
-  );
-
-let allStatusValues =
-  Array.from(allStatusButtons)
-    .map(b => b.dataset.value);
-
-let isAllWorkSelected =
-  allWorkValues.length > 0 &&
-  allWorkValues.every(v => workSubFilters.includes(v));
-
-let isAllStatusSelected =
-  allStatusValues.length > 0 &&
-  allStatusValues.every(v => statusSubFilters.includes(v));
-
-// Work filter
-// ถ้า All Work ถูกเลือกครบ = ไม่กรอง Work
-if (
-  workSubFilters.length > 0 &&
-  !isAllWorkSelected
-) {
-  if (!workSubFilters.includes(work)) {
-    return false;
-  }
-}
-
-// Status filter
-// ถ้า All Status ถูกเลือกครบ = ไม่กรอง Status
-if (
-  statusSubFilters.length > 0 &&
-  !isAllStatusSelected
-) {
-
-  let matchedStatus =
-    statusSubFilters.some(filter => {
-
-      if (filter === "on-site") {
-        return (
-          status.includes("on-site") ||
-          status.includes("onsite")
+        if (!wrap.contains(e.target)) {
+          closeToolsMenu();
+        }
+      });
+      function initToolDefaultAll() {
+        let allWorkButtons = document.querySelectorAll(
+          '.mode-tool[data-group="work"]:not([data-value="all"])'
         );
+
+        let allStatusButtons = document.querySelectorAll(
+          '.mode-tool[data-group="status"]:not([data-value="all"])'
+        );
+
+        workSubFilters = Array.from(allWorkButtons).map((b) => b.dataset.value);
+
+        statusSubFilters = Array.from(allStatusButtons).map(
+          (b) => b.dataset.value
+        );
+
+        // Work + Status ถูกเลือกพร้อมกัน = Both
+        viewMode = 2;
+
+        updateToolsActiveState();
+
+        render();
+      }
+      function toggleToolMultiFilter(type, value, mode, btn) {
+        if (type === 'work') {
+          if (value === 'all') {
+            let allWorkButtons = document.querySelectorAll(
+              '.mode-tool[data-group="work"]:not([data-value="all"])'
+            );
+
+            let allValues = Array.from(allWorkButtons).map(
+              (b) => b.dataset.value
+            );
+
+            let isAllSelected =
+              allValues.length > 0 &&
+              allValues.every((v) => workSubFilters.includes(v));
+
+            workSubFilters = isAllSelected ? [] : allValues;
+          } else {
+            if (workSubFilters.includes(value)) {
+              workSubFilters = workSubFilters.filter((v) => v !== value);
+            } else {
+              workSubFilters.push(value);
+            }
+          }
+        }
+
+        if (type === 'status') {
+          if (value === 'all') {
+            let allStatusButtons = document.querySelectorAll(
+              '.mode-tool[data-group="status"]:not([data-value="all"])'
+            );
+
+            let allValues = Array.from(allStatusButtons).map(
+              (b) => b.dataset.value
+            );
+
+            let isAllSelected =
+              allValues.length > 0 &&
+              allValues.every((v) => statusSubFilters.includes(v));
+
+            statusSubFilters = isAllSelected ? [] : allValues;
+          } else {
+            if (statusSubFilters.includes(value)) {
+              statusSubFilters = statusSubFilters.filter((v) => v !== value);
+            } else {
+              statusSubFilters.push(value);
+            }
+          }
+        }
+
+        // Auto Mode
+        if (workSubFilters.length > 0 && statusSubFilters.length > 0) {
+          viewMode = 2; // Both
+        } else if (statusSubFilters.length > 0) {
+          viewMode = 1; // Status
+        } else {
+          viewMode = 0; // Work
+        }
+
+        updateToolsActiveState();
+
+        render();
+      }
+      function updateToolsActiveState() {
+        document.querySelectorAll('.mode-tool').forEach((btn) => {
+          let group = btn.dataset.group;
+
+          let value = btn.dataset.value;
+
+          btn.classList.remove('active');
+
+          if (group === 'work') {
+            if (value === 'all') {
+              let allWorkButtons = document.querySelectorAll(
+                '.mode-tool[data-group="work"]:not([data-value="all"])'
+              );
+
+              let allValues = Array.from(allWorkButtons).map(
+                (b) => b.dataset.value
+              );
+
+              if (
+                allValues.length > 0 &&
+                allValues.every((v) => workSubFilters.includes(v))
+              ) {
+                btn.classList.add('active');
+              }
+            } else if (workSubFilters.includes(value)) {
+              btn.classList.add('active');
+            }
+          }
+
+          if (group === 'status') {
+            if (value === 'all') {
+              let allStatusButtons = document.querySelectorAll(
+                '.mode-tool[data-group="status"]:not([data-value="all"])'
+              );
+
+              let allValues = Array.from(allStatusButtons).map(
+                (b) => b.dataset.value
+              );
+
+              if (
+                allValues.length > 0 &&
+                allValues.every((v) => statusSubFilters.includes(v))
+              ) {
+                btn.classList.add('active');
+              }
+            } else if (statusSubFilters.includes(value)) {
+              btn.classList.add('active');
+            }
+          }
+        });
       }
 
-      return status.includes(filter);
-    });
+      function passToolSubFilter(r) {
+        let title = r['Job Title'] || '';
 
-  if (!matchedStatus) {
-    return false;
-  }
-}
+        let status = (r['Status'] || '').toLowerCase();
 
-return true;
-}
+        let work = getWorkType(title).text;
+
+        let allWorkButtons = document.querySelectorAll(
+          '.mode-tool[data-group="work"]:not([data-value="all"])'
+        );
+
+        let allWorkValues = Array.from(allWorkButtons).map(
+          (b) => b.dataset.value
+        );
+
+        let allStatusButtons = document.querySelectorAll(
+          '.mode-tool[data-group="status"]:not([data-value="all"])'
+        );
+
+        let allStatusValues = Array.from(allStatusButtons).map(
+          (b) => b.dataset.value
+        );
+
+        let isAllWorkSelected =
+          allWorkValues.length > 0 &&
+          allWorkValues.every((v) => workSubFilters.includes(v));
+
+        let isAllStatusSelected =
+          allStatusValues.length > 0 &&
+          allStatusValues.every((v) => statusSubFilters.includes(v));
+
+        // Work filter
+        // ถ้า All Work ถูกเลือกครบ = ไม่กรอง Work
+        if (workSubFilters.length > 0 && !isAllWorkSelected) {
+          if (!workSubFilters.includes(work)) {
+            return false;
+          }
+        }
+
+        // Status filter
+        // ถ้า All Status ถูกเลือกครบ = ไม่กรอง Status
+        if (statusSubFilters.length > 0 && !isAllStatusSelected) {
+          let matchedStatus = statusSubFilters.some((filter) => {
+            if (filter === 'on-site') {
+              return status.includes('on-site') || status.includes('onsite');
+            }
+
+            return status.includes(filter);
+          });
+
+          if (!matchedStatus) {
+            return false;
+          }
+        }
+
+        return true;
+      }
       function render() {
         let prov = $('#provinceFilter').val();
         let map = {},
