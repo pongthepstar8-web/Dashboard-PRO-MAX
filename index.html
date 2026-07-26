@@ -16,6 +16,122 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
     <style>
+      .tools-item.mode-tool::before {
+  content: "☐";
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  min-width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  color: #94a3b8;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.tools-item.mode-tool.active::before {
+  content: "☑";
+  color: #ffffff;
+}
+
+.tools-item.mode-tool.active {
+  background: linear-gradient(135deg, #7c3aed, #9333ea);
+  color: #ffffff;
+  box-shadow:
+    0 0 10px rgba(124, 58, 237, 0.8),
+    0 0 18px rgba(124, 58, 237, 0.35);
+}
+      .tools-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.btn-tools {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 15px;
+  border-radius: 13px;
+  border: 1px solid rgba(124, 58, 237, 0.45);
+  background: linear-gradient(135deg, #312e81, #7c3aed);
+  color: #fff;
+  font-weight: 800;
+  font-size: 13px;
+  cursor: pointer;
+  box-shadow: 0 0 12px rgba(124, 58, 237, 0.4);
+  transition: all 0.25s ease;
+}
+
+.btn-tools:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 0 12px rgba(124, 58, 237, 0.8),
+    0 0 22px rgba(124, 58, 237, 0.45);
+}
+
+.tools-menu {
+  position: absolute;
+  top: 46px;
+  right: 0;
+  min-width: 240px;
+  max-height: 72vh;
+  overflow-y: auto;
+  background: #020617;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 8px;
+  display: none;
+  z-index: 99999;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.55);
+}
+
+.tools-menu.show {
+  display: block;
+}
+
+.tools-group-title {
+  color: #38bdf8;
+  font-weight: 900;
+  font-size: 12px;
+  padding: 8px 10px 5px;
+  letter-spacing: 0.3px;
+}
+
+.tools-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 10px 12px;
+  border: none;
+  border-radius: 11px;
+  background: transparent;
+  color: #e2e8f0;
+  font-weight: 800;
+  font-size: 13px;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s ease;
+}
+
+.tools-item:hover {
+  background: #1e293b;
+  color: #fff;
+}
+
+.tools-item.active {
+  background: #7c3aed;
+  color: #fff;
+  box-shadow: 0 0 10px rgba(124, 58, 237, 0.65);
+}
+
+.tools-divider {
+  height: 1px;
+  background: #334155;
+  margin: 8px 4px;
+}
       .btn-reset-pro {
         display: inline-flex;
         align-items: center;
@@ -520,6 +636,176 @@
       >
         📄 Open Sheet
       </button>
+      <div class="tools-wrap">
+
+        <button class="btn-tools" onclick="toggleToolsMenu()">
+          ⚙️ Tools
+        </button>
+      
+        <div class="tools-menu" id="toolsMenu">
+      
+          <div class="tools-group-title">🛠️ Work</div>
+
+<button
+  class="tools-item mode-tool"
+  data-group="work"
+  data-value="all"
+  onclick="toggleToolMultiFilter('work','all',0,this)"
+>
+  📋 All Work
+</button>
+
+<button
+  class="tools-item mode-tool"
+  data-group="work"
+  data-value="Access Down"
+  onclick="toggleToolMultiFilter('work','Access Down',0,this)"
+>
+  🔗 Access Down
+</button>
+
+<button
+  class="tools-item mode-tool"
+  data-group="work"
+  data-value="Link Down"
+  onclick="toggleToolMultiFilter('work','Link Down',0,this)"
+>
+  🚫 Link Down
+</button>
+
+<button
+  class="tools-item mode-tool"
+  data-group="work"
+  data-value="Access Power Fail"
+  onclick="toggleToolMultiFilter('work','Access Power Fail',0,this)"
+>
+  ⚡ Access Power Fail
+</button>
+
+<button
+  class="tools-item mode-tool"
+  data-group="work"
+  data-value="Signal Loss"
+  onclick="toggleToolMultiFilter('work','Signal Loss',0,this)"
+>
+  📉 Signal Loss
+</button>
+
+<button
+  class="tools-item mode-tool"
+  data-group="work"
+  data-value="Business Circuit"
+  onclick="toggleToolMultiFilter('work','Business Circuit',0,this)"
+>
+  🏢 Business Circuit
+</button>
+
+<button
+  class="tools-item mode-tool"
+  data-group="work"
+  data-value="Transmission Error"
+  onclick="toggleToolMultiFilter('work','Transmission Error',0,this)"
+>
+  📡 Transmission Error
+</button>
+
+<button
+  class="tools-item mode-tool"
+  data-group="work"
+  data-value="Power Failure"
+  onclick="toggleToolMultiFilter('work','Power Failure',0,this)"
+>
+  🔌 Power Failure
+</button>
+
+<button
+  class="tools-item mode-tool"
+  data-group="work"
+  data-value="Loop Broken"
+  onclick="toggleToolMultiFilter('work','Loop Broken',0,this)"
+>
+  🔁 Loop Broken
+</button>
+      
+<div class="tools-divider"></div>
+
+<div class="tools-group-title">📊 Status</div>
+
+<button
+  class="tools-item mode-tool"
+  data-group="status"
+  data-value="all"
+  onclick="toggleToolMultiFilter('status','all',1,this)"
+>
+  📋 All Status
+</button>
+
+<button
+  class="tools-item mode-tool"
+  data-group="status"
+  data-value="on-site"
+  onclick="toggleToolMultiFilter('status','on-site',1,this)"
+>
+  🧑‍🔧 On-site
+</button>
+
+<button
+  class="tools-item mode-tool"
+  data-group="status"
+  data-value="departed"
+  onclick="toggleToolMultiFilter('status','departed',1,this)"
+>
+  🚗 Departed
+</button>
+
+<button
+  class="tools-item mode-tool"
+  data-group="status"
+  data-value="assigned"
+  onclick="toggleToolMultiFilter('status','assigned',1,this)"
+>
+  📋 Assigned
+</button>
+
+<button
+  class="tools-item mode-tool"
+  data-group="status"
+  data-value="done"
+  onclick="toggleToolMultiFilter('status','done',1,this)"
+>
+  ✅ Done
+</button>
+
+<button
+  class="tools-item mode-tool"
+  data-group="status"
+  data-value="accepted"
+  onclick="toggleToolMultiFilter('status','accepted',1,this)"
+>
+  📥 Accepted
+</button>
+
+<button
+  class="tools-item mode-tool"
+  data-group="status"
+  data-value="held"
+  onclick="toggleToolMultiFilter('status','held',1,this)"
+>
+  💤 Held
+</button>
+
+<button
+  class="tools-item mode-tool"
+  data-group="status"
+  data-value="cancel"
+  onclick="toggleToolMultiFilter('status','cancel',1,this)"
+>
+  ❌ Cancel
+</button>
+
+        </div>
+      
+      </div>
     </div>
 
     <div class="kpi-row" id="kpiBar">
@@ -544,14 +830,44 @@
 
     <script>
       let data = [],
-        selected = [];
-      let viewMode = 0;
+  selected = [];
+let viewMode = 0;
+
+let workSubFilters = [];
+let statusSubFilters = [];
+
+      
       let shiftDailyText = '';
       const APPS_SCRIPT_URL =
         'https://script.google.com/macros/s/AKfycbyKED88K86X4eu2ycnl1ib0VY74iheDAWInvrRrQU7zarDu2fB_zNKTaW_TN6DGvAkxzw/exec';
 
       const SHEET_URL =
         'https://docs.google.com/spreadsheets/d/1XSR52b9wrzsBDys3PZUQTCYexOOZFa6J-bz-jR-6jaM/edit?gid=365350498#gid=365350498';
+        function checkFactoryAuth() {
+        const auth = JSON.parse(localStorage.getItem('factoryAuth'));
+
+        if (!auth) {
+          location.replace(
+            'https://pongthepstar8-web.github.io/tool-launcher/'
+          );
+          return false;
+        }
+
+        const expireTime = 8 * 60 * 60 * 1000; // 8 ชั่วโมง
+
+        if (Date.now() - auth.loginTime > expireTime) {
+          localStorage.clear();
+
+          location.replace(
+            'https://pongthepstar8-web.github.io/tool-launcher/'
+          );
+          return false;
+        }
+
+        return true;
+      }
+
+      checkFactoryAuth();
       function getPermission() {
         return JSON.parse(localStorage.getItem('permission') || '{}');
       }
@@ -595,31 +911,7 @@
       window.addEventListener('load', function () {
         applyExtraButtonPermission();
       });
-      function checkFactoryAuth() {
-        const auth = JSON.parse(localStorage.getItem('factoryAuth'));
-
-        if (!auth) {
-          location.replace(
-            'https://pongthepstar8-web.github.io/tool-launcher/'
-          );
-          return false;
-        }
-
-        const expireTime = 8 * 60 * 60 * 1000; // 8 ชั่วโมง
-
-        if (Date.now() - auth.loginTime > expireTime) {
-          localStorage.clear();
-
-          location.replace(
-            'https://pongthepstar8-web.github.io/tool-launcher/'
-          );
-          return false;
-        }
-
-        return true;
-      }
-
-      checkFactoryAuth();
+      
 
       function openAIActionBoard() {
         if (!isApproved('AIActionBoard')) {
@@ -681,11 +973,16 @@
           .filter(Boolean);
       }
 
-      window.addEventListener('load', () => {
-        shiftDailyText = localStorage.getItem('shiftDaily') || '';
+      window.addEventListener("load", () => {
 
-        loadDataFromAppsScript();
-      });
+shiftDailyText =
+  localStorage.getItem("shiftDaily") || "";
+
+setTimeout(() => {
+  initToolDefaultAll();
+}, 100);
+
+});
       function mapCol(r, k) {
         for (let x of k) {
           if (r[x] != undefined) return r[x];
@@ -2635,7 +2932,292 @@ ${nextJobs.map((x, idx) => renderDistrictJob(x, idx + 1)).join('')}
             });
         };
       }
+      function toggleToolsMenu() {
 
+let menu =
+  document.getElementById("toolsMenu");
+
+if (!menu)
+  return;
+
+menu.classList.toggle("show");
+}
+
+function closeToolsMenu() {
+
+let menu =
+  document.getElementById("toolsMenu");
+
+if (!menu)
+  return;
+
+menu.classList.remove("show");
+}
+
+document.addEventListener("click", function(e) {
+
+let wrap =
+  document.querySelector(".tools-wrap");
+
+if (!wrap)
+  return;
+
+if (!wrap.contains(e.target)) {
+  closeToolsMenu();
+}
+});
+function initToolDefaultAll() {
+
+let allWorkButtons =
+  document.querySelectorAll(
+    '.mode-tool[data-group="work"]:not([data-value="all"])'
+  );
+
+let allStatusButtons =
+  document.querySelectorAll(
+    '.mode-tool[data-group="status"]:not([data-value="all"])'
+  );
+
+workSubFilters =
+  Array.from(allWorkButtons)
+    .map(b => b.dataset.value);
+
+statusSubFilters =
+  Array.from(allStatusButtons)
+    .map(b => b.dataset.value);
+
+// Work + Status ถูกเลือกพร้อมกัน = Both
+viewMode = 2;
+
+updateToolsActiveState();
+
+render();
+}
+function toggleToolMultiFilter(type, value, mode, btn) {
+
+if (type === "work") {
+
+  if (value === "all") {
+
+    let allWorkButtons =
+      document.querySelectorAll(
+        '.mode-tool[data-group="work"]:not([data-value="all"])'
+      );
+
+    let allValues =
+      Array.from(allWorkButtons)
+        .map(b => b.dataset.value);
+
+    let isAllSelected =
+      allValues.length > 0 &&
+      allValues.every(v => workSubFilters.includes(v));
+
+    workSubFilters =
+      isAllSelected ? [] : allValues;
+
+  } else {
+
+    if (workSubFilters.includes(value)) {
+      workSubFilters =
+        workSubFilters.filter(v => v !== value);
+    } else {
+      workSubFilters.push(value);
+    }
+  }
+}
+
+if (type === "status") {
+
+  if (value === "all") {
+
+    let allStatusButtons =
+      document.querySelectorAll(
+        '.mode-tool[data-group="status"]:not([data-value="all"])'
+      );
+
+    let allValues =
+      Array.from(allStatusButtons)
+        .map(b => b.dataset.value);
+
+    let isAllSelected =
+      allValues.length > 0 &&
+      allValues.every(v => statusSubFilters.includes(v));
+
+    statusSubFilters =
+      isAllSelected ? [] : allValues;
+
+  } else {
+
+    if (statusSubFilters.includes(value)) {
+      statusSubFilters =
+        statusSubFilters.filter(v => v !== value);
+    } else {
+      statusSubFilters.push(value);
+    }
+  }
+}
+
+// Auto Mode
+if (
+  workSubFilters.length > 0 &&
+  statusSubFilters.length > 0
+) {
+  viewMode = 2; // Both
+}
+else if (statusSubFilters.length > 0) {
+  viewMode = 1; // Status
+}
+else {
+  viewMode = 0; // Work
+}
+
+updateToolsActiveState();
+
+render();
+}
+function updateToolsActiveState() {
+
+document
+  .querySelectorAll(".mode-tool")
+  .forEach(btn => {
+
+    let group =
+      btn.dataset.group;
+
+    let value =
+      btn.dataset.value;
+
+    btn.classList.remove("active");
+
+    if (group === "work") {
+
+      if (value === "all") {
+
+        let allWorkButtons =
+          document.querySelectorAll(
+            '.mode-tool[data-group="work"]:not([data-value="all"])'
+          );
+
+        let allValues =
+          Array.from(allWorkButtons)
+            .map(b => b.dataset.value);
+
+        if (
+          allValues.length > 0 &&
+          allValues.every(v => workSubFilters.includes(v))
+        ) {
+          btn.classList.add("active");
+        }
+
+      } else if (workSubFilters.includes(value)) {
+        btn.classList.add("active");
+      }
+    }
+
+    if (group === "status") {
+
+      if (value === "all") {
+
+        let allStatusButtons =
+          document.querySelectorAll(
+            '.mode-tool[data-group="status"]:not([data-value="all"])'
+          );
+
+        let allValues =
+          Array.from(allStatusButtons)
+            .map(b => b.dataset.value);
+
+        if (
+          allValues.length > 0 &&
+          allValues.every(v => statusSubFilters.includes(v))
+        ) {
+          btn.classList.add("active");
+        }
+
+      } else if (statusSubFilters.includes(value)) {
+        btn.classList.add("active");
+      }
+    }
+
+  });
+}
+
+function passToolSubFilter(r) {
+
+let title =
+  r["Job Title"] || "";
+
+let status =
+  (r["Status"] || "")
+  .toLowerCase();
+
+let work =
+  getWorkType(title).text;
+
+let allWorkButtons =
+  document.querySelectorAll(
+    '.mode-tool[data-group="work"]:not([data-value="all"])'
+  );
+
+let allWorkValues =
+  Array.from(allWorkButtons)
+    .map(b => b.dataset.value);
+
+let allStatusButtons =
+  document.querySelectorAll(
+    '.mode-tool[data-group="status"]:not([data-value="all"])'
+  );
+
+let allStatusValues =
+  Array.from(allStatusButtons)
+    .map(b => b.dataset.value);
+
+let isAllWorkSelected =
+  allWorkValues.length > 0 &&
+  allWorkValues.every(v => workSubFilters.includes(v));
+
+let isAllStatusSelected =
+  allStatusValues.length > 0 &&
+  allStatusValues.every(v => statusSubFilters.includes(v));
+
+// Work filter
+// ถ้า All Work ถูกเลือกครบ = ไม่กรอง Work
+if (
+  workSubFilters.length > 0 &&
+  !isAllWorkSelected
+) {
+  if (!workSubFilters.includes(work)) {
+    return false;
+  }
+}
+
+// Status filter
+// ถ้า All Status ถูกเลือกครบ = ไม่กรอง Status
+if (
+  statusSubFilters.length > 0 &&
+  !isAllStatusSelected
+) {
+
+  let matchedStatus =
+    statusSubFilters.some(filter => {
+
+      if (filter === "on-site") {
+        return (
+          status.includes("on-site") ||
+          status.includes("onsite")
+        );
+      }
+
+      return status.includes(filter);
+    });
+
+  if (!matchedStatus) {
+    return false;
+  }
+}
+
+return true;
+}
       function render() {
         let prov = $('#provinceFilter').val();
         let map = {},
@@ -2681,6 +3263,7 @@ ${nextJobs.map((x, idx) => renderDistrictJob(x, idx + 1)).join('')}
             if (key !== 'overdue' && !text.includes(key)) return;
           }
           if (prov && p !== prov) return;
+          if (!passToolSubFilter(r)) return;
           if (pr === 'CRITICAL') c++;
           else if (pr === 'MAJOR') m++;
           else n++;
@@ -2710,13 +3293,7 @@ ${nextJobs.map((x, idx) => renderDistrictJob(x, idx + 1)).join('')}
               (p) =>
                 `<div class="card" id="${p}"><div class="card-header"><h3>📍 ${
                   PROV_CODE[p] ? `(${PROV_CODE[p]}) ` : ''
-                }${p}</h3><button class="btn-export" onclick="exportJPG('${p}')"><span>📸</span><span>Export</span></button></div><table><tr><th>Job</th><th>Priority</th><th>Create</th><th>Mode <span onclick="toggleAllStatus()" style="cursor:pointer;margin-left:6px">${
-                  viewMode === 0
-                    ? '👁 Work'
-                    : viewMode === 1
-                    ? '📊 Status'
-                    : '🔄 Both'
-                }</span></th><th>Title</th><th>Province</th><th>Assign</th><th>Elapsed</th><th>Remain</th></tr>${map[
+                }${p}</h3><button class="btn-export" onclick="exportJPG('${p}')"><span>📸</span><span>Export</span></button></div><table><tr><th>Job</th><th>Priority</th><th>Create</th><th>Mode</th><th>Title</th><th>Province</th><th>Assign</th><th>Elapsed</th><th>Remain</th></tr>${map[
                   p
                 ]
                   .map(
