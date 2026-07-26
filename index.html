@@ -925,7 +925,31 @@
 
       const SHEET_URL =
         'https://docs.google.com/spreadsheets/d/1XSR52b9wrzsBDys3PZUQTCYexOOZFa6J-bz-jR-6jaM/edit?gid=365350498#gid=365350498';
+      function checkFactoryAuth() {
+        const auth = JSON.parse(localStorage.getItem('factoryAuth'));
 
+        if (!auth) {
+          location.replace(
+            'https://pongthepstar8-web.github.io/tool-launcher/'
+          );
+          return false;
+        }
+
+        const expireTime = 8 * 60 * 60 * 1000; // 8 ชั่วโมง
+
+        if (Date.now() - auth.loginTime > expireTime) {
+          localStorage.clear();
+
+          location.replace(
+            'https://pongthepstar8-web.github.io/tool-launcher/'
+          );
+          return false;
+        }
+
+        return true;
+      }
+
+      checkFactoryAuth();
       function getPermission() {
         return JSON.parse(localStorage.getItem('permission') || '{}');
       }
@@ -966,9 +990,9 @@
         }
       }
 
-      ///window.addEventListener('load', function () {
-      ///  applyExtraButtonPermission();
-      ///});
+      window.addEventListener('load', function () {
+        applyExtraButtonPermission();
+      });
 
       function openAIActionBoard() {
         if (!isApproved('AIActionBoard')) {
