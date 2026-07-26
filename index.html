@@ -2386,57 +2386,24 @@ ${nextJobs.map((x, idx) => renderDistrictJob(x, idx + 1)).join('')}
           for (const job of jobs) {
             let title = job['Job Title'] || '';
 
-            let gps = extractGPS(title);
-
             let province = job['Province Name'] || '';
 
             let district = job['District Name'] || '';
 
-            // ✅ ถ้า GPS อยู่นอกพื้นที่ Job ให้ใช้พิกัดอำเภอแทน
-            if (gps && !isCoordNearJobArea(gps, province, district)) {
-              console.warn(
-                'GPS ignored - outside job area:',
-                job['Job ID'],
-                province,
-                district,
-                gps
-              );
-
-              gps = null;
-            }
-
             let lat, lng, key;
 
-            if (gps) {
-              // 1 Title ที่มีพิกัด = 1 หมุด
-              let gpsKey = title.trim().toLowerCase();
+            let coord = await getJobCoord(job);
 
-              if (titleGPSSet.has(gpsKey)) continue;
+            if (!coord) {
+              console.warn('No coordinate:', job['Job ID'], province, district);
 
-              titleGPSSet.add(gpsKey);
-
-              lat = gps.lat;
-              lng = gps.lng;
-
-              key = `GPS|${gpsKey}`;
-            } else {
-              let coord = getAreaCoord(province, district);
-
-              if (!coord) {
-                coord = await geocodeArea(province, district);
-              }
-
-              if (!coord) {
-                console.warn('No coordinate:', province, district);
-
-                continue;
-              }
-
-              lat = coord[0];
-              lng = coord[1];
-
-              key = `DISTRICT|${province}|${district}`;
+              continue;
             }
+
+            lat = coord[0];
+            lng = coord[1];
+
+            key = `AREA|${province}|${district}`;
 
             if (!groups[key]) {
               groups[key] = {
@@ -2451,7 +2418,6 @@ ${nextJobs.map((x, idx) => renderDistrictJob(x, idx + 1)).join('')}
 
           let groupList = Object.values(groups);
 
-          // ✅ รวมหมุดที่อยู่ใกล้กันมาก ๆ ให้อยู่ bucket เดียว
           let buckets = {};
 
           groupList.forEach((group) => {
@@ -2464,16 +2430,13 @@ ${nextJobs.map((x, idx) => renderDistrictJob(x, idx + 1)).join('')}
             buckets[key].push(group);
           });
 
-          // ✅ ใส่ index ให้หมุดที่ซ้อนกัน
           Object.values(buckets).forEach((bucket) => {
             bucket.forEach((group, idx) => {
               group._offsetIndex = idx;
-
               group._offsetTotal = bucket.length;
             });
           });
 
-          // ✅ วาดหมุดแบบกระจาย ไม่ให้ซ้อนกัน
           groupList.forEach((group) => {
             let mainJob = getHighestPriorityJob(group.jobs);
 
@@ -2507,17 +2470,25 @@ ${nextJobs.map((x, idx) => renderDistrictJob(x, idx + 1)).join('')}
 
           let district = job['District Name'] || '';
 
-          if (gps && isCoordNearJobArea(gps, province, district)) {
+          let areaCoord = getAreaCoord(province, district);
+
+          if (!areaCoord) {
+            areaCoord = await geocodeArea(province, district);
+          }
+
+          if (
+            gps &&
+            areaCoord &&
+            distanceKm(gps.lat, gps.lng, areaCoord[0], areaCoord[1]) <= 35
+          ) {
             return [gps.lat, gps.lng];
           }
 
-          let coord = getAreaCoord(province, district);
-
-          if (!coord) {
-            coord = await geocodeArea(province, district);
+          if (areaCoord) {
+            return areaCoord;
           }
 
-          return coord;
+          return null;
         }
 
         function getLatestOnsiteJob() {
