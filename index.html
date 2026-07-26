@@ -1443,12 +1443,15 @@
         return null;
       }
       function markerColor(job) {
-        let pr = (job['Priority'] || '').toUpperCase();
-        if (job.overdue > 0) return '#dc2626';
-        if (pr === 'CRITICAL') return '#ef4444';
-        if (pr === 'MAJOR') return '#f59e0b';
-        if (pr === 'MINOR') return '#22c55e';
-        return '#64748b';
+        let pr = (job['Priority'] || 'NONE').toUpperCase();
+
+        if (pr === 'CRITICAL') return '#ef4444'; // แดง
+
+        if (pr === 'MAJOR') return '#f59e0b'; // ส้ม
+
+        if (pr === 'MINOR') return '#22c55e'; // เขียว
+
+        return '#64748b'; // เทา
       }
 
       function showAIBoard() {
@@ -1945,7 +1948,6 @@ ${nextJobs.map((x, idx) => renderDistrictJob(x, idx + 1)).join('')}
           }
 
           // ใกล้ SLA
-          // Critical/Major ใช้จริง, Minor limit 1000 แทบไม่ติด
           if (pct >= 80 || remain <= 2) {
             return {
               cls: 'sla-ring-near',
@@ -1953,7 +1955,6 @@ ${nextJobs.map((x, idx) => renderDistrictJob(x, idx + 1)).join('')}
             };
           }
 
-          // ปกติ
           return {
             cls: '',
             border: '#ffffff',
@@ -1961,13 +1962,13 @@ ${nextJobs.map((x, idx) => renderDistrictJob(x, idx + 1)).join('')}
         }
 
         function makeMapIcon(job) {
-          // Priority สีเดิม
+          // สีด้านใน = Priority เท่านั้น
           let color = markerColor(job);
 
-          // Status icon
+          // ไอคอนกลางวง = Status
           let icon = getMapStatusIcon(job['Status']);
 
-          // SLA รอบวง
+          // เส้นรอบวง = SLA
           let ring = getMapSlaRingInfo(job);
 
           return w.L.divIcon({
