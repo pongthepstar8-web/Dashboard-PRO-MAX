@@ -8,10 +8,12 @@
     <!-- ✅ LIB -->
     <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+
     <link
       href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css"
       rel="stylesheet"
     />
+
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
@@ -914,37 +916,16 @@
       let workSubFilters = [];
       let statusSubFilters = [];
 
+      let DISTRICT_COORD = {};
+      let PROVINCE_COORD_REMOTE = {};
+
       let shiftDailyText = '';
       const APPS_SCRIPT_URL =
         'https://script.google.com/macros/s/AKfycbyKED88K86X4eu2ycnl1ib0VY74iheDAWInvrRrQU7zarDu2fB_zNKTaW_TN6DGvAkxzw/exec';
 
       const SHEET_URL =
         'https://docs.google.com/spreadsheets/d/1XSR52b9wrzsBDys3PZUQTCYexOOZFa6J-bz-jR-6jaM/edit?gid=365350498#gid=365350498';
-      function checkFactoryAuth() {
-        const auth = JSON.parse(localStorage.getItem('factoryAuth'));
 
-        if (!auth) {
-          location.replace(
-            'https://pongthepstar8-web.github.io/tool-launcher/'
-          );
-          return false;
-        }
-
-        const expireTime = 8 * 60 * 60 * 1000; // 8 ชั่วโมง
-
-        if (Date.now() - auth.loginTime > expireTime) {
-          localStorage.clear();
-
-          location.replace(
-            'https://pongthepstar8-web.github.io/tool-launcher/'
-          );
-          return false;
-        }
-
-        return true;
-      }
-
-      checkFactoryAuth();
       function getPermission() {
         return JSON.parse(localStorage.getItem('permission') || '{}');
       }
@@ -985,9 +966,9 @@
         }
       }
 
-      window.addEventListener('load', function () {
-        applyExtraButtonPermission();
-      });
+      ///window.addEventListener('load', function () {
+      ///  applyExtraButtonPermission();
+      ///});
 
       function openAIActionBoard() {
         if (!isApproved('AIActionBoard')) {
@@ -1017,18 +998,17 @@
             return;
           }
 
-          data = json.jobs || [];
-
           shiftDailyText = json.shiftText || '';
 
           localStorage.setItem('shiftDaily', shiftDailyText);
 
-          initProvince();
+          DISTRICT_COORD = json.districtCoords || {};
+          PROVINCE_COORD_REMOTE = json.provinceCoords || {};
+
           render();
         } catch (err) {
           console.error(err);
-
-          alert('ไม่สามารถโหลดข้อมูลจาก Google Sheet ได้');
+          alert('ไม่สามารถโหลดข้อมูลจาก Apps Script ได้');
         }
       }
       function getShiftNames() {
@@ -1051,6 +1031,7 @@
 
       window.addEventListener('load', () => {
         shiftDailyText = localStorage.getItem('shiftDaily') || '';
+        loadDataFromAppsScript();
 
         setTimeout(() => {
           initToolDefaultAll();
@@ -1548,171 +1529,6 @@
       function normalizeMapKey(v) {
         return (v || '').toString().trim().toLowerCase().replace(/\s+/g, ' ');
       }
-      const DISTRICT_COORD = {
-        // Maha Sarakham
-        'มหาสารคาม|เมืองมหาสารคาม': [16.1851, 103.3026],
-        'มหาสารคาม|โกสุมพิสัย': [16.248, 103.067],
-        'มหาสารคาม|กันทรวิชัย': [16.33, 103.3],
-
-        // Bueng Kan
-        'บึงกาฬ|เมืองบึงกาฬ': [18.3609, 103.6467],
-        'บึงกาฬ|เซกา': [17.928, 103.955],
-        'บึงกาฬ|โซ่พิสัย': [18.083, 103.443],
-        'บึงกาฬ|พรเจริญ': [18.05, 103.7],
-        'บึงกาฬ|ศรีวิไล': [18.18, 103.75],
-        // Bueng Kan / บึงกาฬ
-        'บึงกาฬ|เมืองบึงกาฬ': [18.3609, 103.6467],
-        'บึงกาฬ|เซกา': [17.928, 103.955],
-        'บึงกาฬ|โซ่พิสัย': [18.083, 103.443],
-        'บึงกาฬ|บุ่งคล้า': [18.302, 103.974],
-        'บึงกาฬ|พรเจริญ': [18.05, 103.7],
-        'บึงกาฬ|ศรีวิไล': [18.18, 103.75],
-        'บึงกาฬ|ปากคาด': [18.3, 103.3],
-        'บึงกาฬ|บึงโขงหลง': [17.965, 104.04],
-
-        // English fallback
-        'Bueng Kan|Mueang Bueng Kan': [18.3609, 103.6467],
-        'Bueng Kan|Seka': [17.928, 103.955],
-        'Bueng Kan|So Phisai': [18.083, 103.443],
-        'Bueng Kan|Bung Khla': [18.302, 103.974],
-        'Bueng Kan|Phon Charoen': [18.05, 103.7],
-        'Bueng Kan|Si Wilai': [18.18, 103.75],
-        'Bueng Kan|Pak Khat': [18.3, 103.3],
-        'Bueng Kan|Bueng Khong Long': [17.965, 104.04],
-
-        // Nakhon Ratchasima
-        'นครราชสีมา|เมืองนครราชสีมา': [14.9799, 102.0977],
-        'นครราชสีมา|โชคชัย': [14.728, 102.165],
-        'นครราชสีมา|ชุมพวง': [15.348, 102.741],
-        'นครราชสีมา|โนนสูง': [15.18, 102.257],
-        'นครราชสีมา|โนนแดง': [15.411, 102.54],
-        'นครราชสีมา|โนนไทย': [15.195, 102.073],
-        'นครราชสีมา|วังน้ำเขียว': [14.4195, 101.8618],
-        'นครราชสีมา|ปากช่อง': [14.708, 101.416],
-        'นครราชสีมา|ปักธงชัย': [14.722, 102.025],
-        'นครราชสีมา|พิมาย': [15.221, 102.494],
-        'นครราชสีมา|ประทาย': [15.532, 102.722],
-        'นครราชสีมา|บัวใหญ่': [15.585, 102.425],
-        'นครราชสีมา|สีคิ้ว': [14.899, 101.723],
-
-        // Nong Khai
-        'หนองคาย|เมืองหนองคาย': [17.8783, 102.7413],
-        'หนองคาย|โพนพิสัย': [18.024, 103.078],
-        'หนองคาย|ท่าบ่อ': [17.85, 102.59],
-        'หนองคาย|ศรีเชียงใหม่': [17.96, 102.58],
-
-        // Udon Thani
-        'อุดรธานี|เมืองอุดรธานี': [17.4138, 102.7872],
-        'อุดรธานี|ไชยวาน': [17.294, 103.233],
-        'อุดรธานี|โนนสะอาด': [16.973, 102.893],
-        'อุดรธานี|กุมภวาปี': [17.108, 103.014],
-        'อุดรธานี|บ้านผือ': [17.7, 102.48],
-        'อุดรธานี|หนองหาน': [17.36, 103.105],
-
-        // Khon Kaen
-        'ขอนแก่น|เมืองขอนแก่น': [16.4322, 102.8236],
-        'ขอนแก่น|บ้านไผ่': [16.06, 102.729],
-        'ขอนแก่น|ชุมแพ': [16.5443, 102.0992],
-        'ขอนแก่น|พล': [15.816, 102.599],
-        'ขอนแก่น|น้ำพอง': [16.703, 102.855],
-        'ขอนแก่น|ภูเวียง': [16.65, 102.38],
-        'ขอนแก่น|กระนวน': [16.706, 103.086],
-        'ขอนแก่น|มัญจาคีรี': [16.13, 102.53],
-
-        // Roi Et
-        'ร้อยเอ็ด|เมืองร้อยเอ็ด': [16.0567, 103.6531],
-        'ร้อยเอ็ด|เกษตรวิสัย': [15.6552, 103.5855],
-        'ร้อยเอ็ด|จตุรพักตรพิมาน': [15.844, 103.557],
-        'ร้อยเอ็ด|เสลภูมิ': [16.029, 103.938],
-        'ร้อยเอ็ด|โพนทอง': [16.303, 103.975],
-        'ร้อยเอ็ด|สุวรรณภูมิ': [15.603, 103.802],
-        'ร้อยเอ็ด|ธวัชบุรี': [16.038, 103.746],
-        'ร้อยเอ็ด|อาจสามารถ': [15.85, 103.88],
-
-        // Sakon Nakhon
-        'สกลนคร|เมืองสกลนคร': [17.1546, 104.1348],
-        'สกลนคร|สว่างแดนดิน': [17.475, 103.457],
-        'สกลนคร|วานรนิวาส': [17.635, 103.751],
-        'สกลนคร|พรรณานิคม': [17.35, 103.85],
-        'สกลนคร|พังโคน': [17.39, 103.72],
-        'สกลนคร|กุสุมาลย์': [17.33, 104.33],
-        'สกลนคร|อากาศอำนวย': [17.6, 103.96],
-
-        // Nakhon Phanom
-        'นครพนม|เมืองนครพนม': [17.4108, 104.7784],
-        'นครพนม|นาแก': [16.946, 104.501],
-        'นครพนม|ธาตุพนม': [16.936, 104.724],
-        'นครพนม|เรณูนคร': [17.05, 104.677],
-        'นครพนม|ท่าอุเทน': [17.58, 104.6],
-        'นครพนม|บ้านแพง': [17.965, 104.215],
-        'นครพนม|ศรีสงคราม': [17.627, 104.25],
-
-        // Kalasin
-        'กาฬสินธุ์|เมืองกาฬสินธุ์': [16.4314, 103.5059],
-        'กาฬสินธุ์|ยางตลาด': [16.399, 103.367],
-        'กาฬสินธุ์|กุฉินารายณ์': [16.541, 104.05],
-        'กาฬสินธุ์|สมเด็จ': [16.705, 103.75],
-        'กาฬสินธุ์|สหัสขันธ์': [16.715, 103.53],
-
-        // Mukdahan
-        'มุกดาหาร|เมืองมุกดาหาร': [16.5453, 104.7235],
-        'มุกดาหาร|คำชะอี': [16.577, 104.421],
-        'มุกดาหาร|ดอนตาล': [16.316, 104.92],
-        'มุกดาหาร|นิคมคำสร้อย': [16.37, 104.55],
-
-        // Ubon Ratchathani
-        'อุบลราชธานี|เมืองอุบลราชธานี': [15.2447, 104.8473],
-        'อุบลราชธานี|วารินชำราบ': [15.193, 104.862],
-        'อุบลราชธานี|เดชอุดม': [14.905, 105.078],
-        'อุบลราชธานี|ตระการพืชผล': [15.61, 105.02],
-        'อุบลราชธานี|พิบูลมังสาหาร': [15.244, 105.229],
-
-        // Si Sa Ket
-        'ศรีสะเกษ|เมืองศรีสะเกษ': [15.1186, 104.322],
-        'ศรีสะเกษ|กันทรลักษ์': [14.64, 104.65],
-        'ศรีสะเกษ|ขุขันธ์': [14.713, 104.199],
-        'ศรีสะเกษ|อุทุมพรพิสัย': [15.11, 104.14],
-
-        // Surin
-        'สุรินทร์|เมืองสุรินทร์': [14.8818, 103.4937],
-        'สุรินทร์|ปราสาท': [14.64, 103.4],
-        'สุรินทร์|สังขะ': [14.636, 103.85],
-        'สุรินทร์|รัตนบุรี': [15.318, 103.85],
-
-        // Buriram
-        'บุรีรัมย์|เมืองบุรีรัมย์': [14.993, 103.1029],
-        'บุรีรัมย์|นางรอง': [14.637, 102.792],
-        'บุรีรัมย์|ประโคนชัย': [14.61, 103.08],
-        'บุรีรัมย์|พุทไธสง': [15.547, 103.03],
-        'บุรีรัมย์|ละหานทราย': [14.41, 102.86],
-
-        // Chaiyaphum
-        'ชัยภูมิ|เมืองชัยภูมิ': [15.8068, 102.0315],
-        'ชัยภูมิ|ภูเขียว': [16.376, 102.128],
-        'ชัยภูมิ|บำเหน็จณรงค์': [15.501, 101.69],
-        'ชัยภูมิ|จัตุรัส': [15.565, 101.845],
-        'ชัยภูมิ|แก้งคร้อ': [16.108, 102.258],
-
-        // Yasothon
-        'ยโสธร|เมืองยโสธร': [15.7926, 104.1453],
-        'ยโสธร|เลิงนกทา': [16.207, 104.556],
-        'ยโสธร|คำเขื่อนแก้ว': [15.66, 104.3],
-
-        // Amnat Charoen
-        'อำนาจเจริญ|เมืองอำนาจเจริญ': [15.8657, 104.6258],
-        'อำนาจเจริญ|ปทุมราชวงศา': [15.89, 104.905],
-
-        // English / local group names
-        'nakhon phanom|na kae': [16.946, 104.501],
-        'bueng kan|seka': [17.928, 103.955],
-        'roi et|mueang roi et': [16.0567, 103.6531],
-        'khon kaen|mueang khon kaen': [16.4322, 102.8236],
-        'sakon nakhon|mueang sakon nakhon': [17.1546, 104.1348],
-        'udonthani|mueang udon thani': [17.4138, 102.7872],
-        'nma 1|เมืองนครราชสีมา': [14.9799, 102.0977],
-        'nma 3|วังน้ำเขียว': [14.4195, 101.8618],
-        'ubn|เมืองอุบลราชธานี': [15.2447, 104.8473],
-      };
 
       const PROVINCE_COORD = {
         ขอนแก่น: [16.4322, 102.8236],
@@ -1748,66 +1564,94 @@
         'NMA 2': [14.9799, 102.0977],
         'NMA 3': [14.4195, 101.8618],
       };
+      function normalizeThaiAreaName(v) {
+        return (v || '')
+          .toString()
+          .trim()
+          .replace(/^อำเภอ/g, '')
+          .replace(/^อ\./g, '')
+          .replace(/^จ\./g, '')
+          .replace(/\s+/g, ' ')
+          .toLowerCase();
+      }
+
       function getAreaCoord(province, district) {
-        let key1 = `${province}|${district}`;
-        let key2 = `${normalizeMapKey(province)}|${normalizeMapKey(district)}`;
-        if (DISTRICT_COORD[key1]) return DISTRICT_COORD[key1];
-        if (DISTRICT_COORD[key2]) return DISTRICT_COORD[key2];
-        // If district coordinate is unknown, fallback to province center only.
-        // This avoids plotting outside Thailand but may be approximate.
-        if (PROVINCE_COORD[province]) return PROVINCE_COORD[province];
-        let pkey = Object.keys(PROVINCE_COORD).find(
-          (k) => normalizeMapKey(k) === normalizeMapKey(province)
-        );
-        if (pkey) return PROVINCE_COORD[pkey];
+        let p = (province || '').toString().trim();
+        let d = (district || '').toString().trim();
+
+        let key = `${p}|${d}`;
+
+        // 1. ใช้พิกัดอำเภอจาก ISAN_COORD ก่อน
+        if (DISTRICT_COORD && DISTRICT_COORD[key]) {
+          return DISTRICT_COORD[key];
+        }
+
+        // 2. match แบบ normalize
+        let np = normalizeThaiAreaName(p);
+        let nd = normalizeThaiAreaName(d);
+
+        let matchedKey = Object.keys(DISTRICT_COORD || {}).find((k) => {
+          let parts = k.split('|');
+
+          if (parts.length !== 2) {
+            return false;
+          }
+
+          return (
+            normalizeThaiAreaName(parts[0]) === np &&
+            normalizeThaiAreaName(parts[1]) === nd
+          );
+        });
+
+        if (matchedKey) {
+          return DISTRICT_COORD[matchedKey];
+        }
+
+        // 3. fallback จังหวัดจาก Apps Script
+        if (PROVINCE_COORD_REMOTE && PROVINCE_COORD_REMOTE[p]) {
+          return PROVINCE_COORD_REMOTE[p];
+        }
+
+        // 4. fallback จังหวัด local เดิม
+        if (typeof PROVINCE_COORD !== 'undefined' && PROVINCE_COORD[p]) {
+          return PROVINCE_COORD[p];
+        }
+
         return null;
       }
       async function geocodeArea(province, district) {
-        if (!province && !district) return null;
-
-        let cacheKey =
-          'geo_' + normalizeMapKey(province) + '_' + normalizeMapKey(district);
-
-        let cached = localStorage.getItem(cacheKey);
-
-        if (cached) {
-          try {
-            return JSON.parse(cached);
-          } catch (e) {}
+        if (!province || !district) {
+          return null;
         }
 
-        let q = district
-          ? `${district} ${province} Thailand`
-          : `${province} Thailand`;
+        let key = `${province}|${district}`;
+
+        if (DISTRICT_COORD && DISTRICT_COORD[key]) {
+          return DISTRICT_COORD[key];
+        }
 
         let url =
-          'https://nominatim.openstreetmap.org/search' +
-          '?format=json' +
-          '&limit=1' +
-          '&countrycodes=th' +
-          '&q=' +
-          encodeURIComponent(q);
+          APPS_SCRIPT_URL +
+          '?action=geocode' +
+          '&province=' +
+          encodeURIComponent(province) +
+          '&district=' +
+          encodeURIComponent(district);
 
         try {
           let res = await fetch(url);
 
           let json = await res.json();
 
-          if (json && json.length) {
-            let lat = parseFloat(json[0].lat);
+          if (json.ok && json.result && json.result.lat && json.result.lng) {
+            let coord = [json.result.lat, json.result.lng];
 
-            let lng = parseFloat(json[0].lon);
+            DISTRICT_COORD[key] = coord;
 
-            if (isThailandCoord(lat, lng)) {
-              let coord = [lat, lng];
-
-              localStorage.setItem(cacheKey, JSON.stringify(coord));
-
-              return coord;
-            }
+            return coord;
           }
-        } catch (e) {
-          console.warn('Geocode failed:', province, district, e);
+        } catch (err) {
+          console.warn('Geocode failed:', province, district, err);
         }
 
         return null;
@@ -1954,7 +1798,16 @@
           /<\/script/gi,
           '<\\/script'
         );
-        let html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>🧠 AI Action Board</title><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"><\/script><style>
+        let html = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>🧠 AI Action Board</title>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"><\/script>
+
+<style>
           
 
 
@@ -2847,7 +2700,6 @@ ${nextJobs.map((x, idx) => renderDistrictJob(x, idx + 1)).join('')}
             padding: [50, 50],
           });
         };
-
         w.openGoogleRoute = async function () {
           if (aiRoutePoints.length < 1) {
             let routeJobs = await buildSmartRouteJobs();
@@ -2855,7 +2707,9 @@ ${nextJobs.map((x, idx) => renderDistrictJob(x, idx + 1)).join('')}
             aiRoutePoints = routeJobs.map((x) => x.coord);
           }
 
-          if (aiRoutePoints.length < 1) return;
+          if (aiRoutePoints.length < 1) {
+            return;
+          }
 
           if (aiRoutePoints.length === 1) {
             let only = aiRoutePoints[0];
