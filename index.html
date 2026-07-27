@@ -1730,10 +1730,12 @@
         data.forEach((r) => {
           let p = mapCol(r, ['Province Name']);
           if (prov && p !== prov) return;
+          if (!passToolSubFilter(r)) return;
           let pr = (r['Priority'] || 'NONE').toUpperCase();
           let hr = getHr(r['Create Time']);
           let limit = pr === 'CRITICAL' ? 3 : pr === 'MAJOR' ? 10 : 1000;
           let overdue = Math.max(0, hr - limit);
+          if (!pass(pr, overdue > 0)) return;
           let score = 0;
           if (pr === 'CRITICAL') score += 100;
           else if (pr === 'MAJOR') score += 60;
