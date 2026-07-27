@@ -1756,7 +1756,13 @@
 
         return R * c;
       }
+      function isSameCoord(a, b) {
+        if (!a || !b) return false;
 
+        return (
+          Math.abs(a[0] - b.lat) < 0.00001 && Math.abs(a[1] - b.lng) < 0.00001
+        );
+      }
       function isCoordNearJobArea(gps, province, district) {
         if (!gps) return false;
 
@@ -2605,7 +2611,6 @@ ${nextJobs.map((x, idx) => renderDistrictJob(x, idx + 1)).join('')}
         }
         async function buildAIMapMarkers() {
           let groups = {};
-          let titleGPSSet = new Set();
 
           for (const job of jobs) {
             let title = job['Job Title'] || '';
@@ -2613,8 +2618,6 @@ ${nextJobs.map((x, idx) => renderDistrictJob(x, idx + 1)).join('')}
             let province = job['Province Name'] || '';
 
             let district = job['District Name'] || '';
-
-            let lat, lng, key;
 
             let coord = await getJobCoord(job);
 
@@ -2624,16 +2627,27 @@ ${nextJobs.map((x, idx) => renderDistrictJob(x, idx + 1)).join('')}
               continue;
             }
 
-            lat = coord[0];
-            lng = coord[1];
+            let lat = coord[0];
+            let lng = coord[1];
 
-            key = `AREA|${province}|${district}`;
+            let gps = extractGPS(title);
+
+            let useGpsKey = gps && isSameCoord(coord, gps);
+
+            let key = '';
+
+            if (useGpsKey) {
+              key = `GPS|${lat.toFixed(5)}|${lng.toFixed(5)}`;
+            } else {
+              key = `AREA|${province}|${district}`;
+            }
 
             if (!groups[key]) {
               groups[key] = {
                 lat,
                 lng,
                 jobs: [],
+                source: useGpsKey ? 'GPS_TITLE' : 'AREA_COORD',
               };
             }
 
@@ -2645,7 +2659,7 @@ ${nextJobs.map((x, idx) => renderDistrictJob(x, idx + 1)).join('')}
           let buckets = {};
 
           groupList.forEach((group) => {
-            let key = group.lat.toFixed(4) + '|' + group.lng.toFixed(4);
+            let key = group.lat.toFixed(5) + '|' + group.lng.toFixed(5);
 
             if (!buckets[key]) {
               buckets[key] = [];
