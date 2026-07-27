@@ -3147,7 +3147,7 @@ ${nextJobs.map((x, idx) => renderDistrictJob(x, idx + 1)).join('')}
               (p) =>
                 `<div class="card" id="${p}"><div class="card-header"><h3>📍 ${
                   PROV_CODE[p] ? `(${PROV_CODE[p]}) ` : ''
-                }${p}</h3><button class="btn-export" onclick="exportJPG('${p}')"><span>📸</span><span>Export</span></button></div><table><tr><th>Job</th><th>Priority</th><th>Create</th><th>Mode</th><th>Title</th><th>Province</th><th>Assign</th><th>Elapsed</th><th>Remain</th></tr>${map[
+                }${p}</h3><button class="btn-export" onclick="exportJPG('${p}')"><span>📸</span><span>Export</span></button></div><table><tr><th>Job</th><th>Priority</th><th>Create</th><th>Work / Status</th><th>Title</th><th>Province</th><th>Assign</th><th>Elapsed</th><th>Remain</th></tr>${map[
                   p
                 ]
                   .map(
