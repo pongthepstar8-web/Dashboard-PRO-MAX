@@ -281,9 +281,18 @@
       }
 
       th {
+        position: sticky;
+        top: 0;
+        z-index: 5;
         background: #334155;
-        padding: 8px;
-        white-space: nowrap;
+      }
+      tr.overdue {
+        background: linear-gradient(
+          90deg,
+          rgba(127, 29, 29, 0.95),
+          rgba(127, 29, 29, 0.78)
+        );
+        border-left: 5px solid #ef4444;
       }
 
       td {
@@ -331,12 +340,7 @@
 
       table th:nth-child(8),
       table td:nth-child(8) {
-        width: 120px;
-      }
-
-      table th:nth-child(9),
-      table td:nth-child(9) {
-        width: 120px;
+        width: 150px;
       }
       .badge {
         display: inline-block;
@@ -489,17 +493,47 @@
         color: #facc15;
         opacity: 0.9;
       }
+      .sla-box {
+        background: rgba(15, 23, 42, 0.38);
+        border: 1px solid rgba(148, 163, 184, 0.12);
+        border-radius: 12px;
+        padding: 7px 8px;
+      }
+
       .sla-bar {
-        width: 120px;
-        height: 12px;
-        background: #1e293b;
+        width: 100%;
+        max-width: 155px;
+        height: 14px;
+        background: #020617;
         border-radius: 10px;
         overflow: hidden;
         position: relative;
       }
+
       .sla-fill {
         height: 100%;
         border-radius: 10px;
+      }
+
+      .sla-percent {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 10px;
+        font-weight: 900;
+        color: #ffffff;
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+        z-index: 2;
+        pointer-events: none;
+      }
+
+      .sla-overdue-text {
+        color: #fecaca;
+        font-weight: 900;
+        text-shadow: 0 0 6px rgba(239, 68, 68, 0.9),
+          0 0 14px rgba(239, 68, 68, 0.45);
       }
       .sla-green {
         background: #22c55e;
@@ -515,13 +549,7 @@
         margin-top: 4px;
         text-align: center;
       }
-      .sla-box {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 4px;
-        min-height: 36px;
-      }
+
       .select2-container--default .select2-selection--single {
         background: #1e293b;
         border: 1px solid #334155;
@@ -3147,7 +3175,7 @@ ${nextJobs.map((x, idx) => renderDistrictJob(x, idx + 1)).join('')}
               (p) =>
                 `<div class="card" id="${p}"><div class="card-header"><h3>📍 ${
                   PROV_CODE[p] ? `(${PROV_CODE[p]}) ` : ''
-                }${p}</h3><button class="btn-export" onclick="exportJPG('${p}')"><span>📸</span><span>Export</span></button></div><table><tr><th>Job</th><th>Priority</th><th>Create</th><th>Work / Status</th><th>Title</th><th>Province</th><th>Assign</th><th>Elapsed</th><th>Remain</th></tr>${map[
+                }${p}</h3><button class="btn-export" onclick="exportJPG('${p}')"><span>📸</span><span>Export</span></button></div><table><tr><th>Job</th><th>Priority</th><th>Create</th><th>Work / Status</th><th>Title</th><th>Province</th><th>Assign</th><th>สถานะ SLA</th></tr>${map[
                   p
                 ]
                   .map(
@@ -3184,29 +3212,27 @@ ${nextJobs.map((x, idx) => renderDistrictJob(x, idx + 1)).join('')}
                         r.district || ''
                       }</div></td><td><div class="assign-box">${
                         r.assign
-                      }</div></td><td>${(() => {
+                      }<td>${(() => {
                         let s = getSLA(r.hr, r.limit);
-                        return `<div class="sla-box"><div class="sla-bar"><div class="sla-fill ${
-                          s.color
-                        }" style="width:${
+
+                        let remainText = r.od
+                          ? '<span class="sla-overdue-text">🔥 เกิน SLA 🔥</span>'
+                          : 'เหลือ: ' + formatTime(r.limit - r.hr);
+
+                        return `
+    <div class="sla-box">
+      <div class="sla-bar">
+        <div class="sla-fill ${r.od ? 'sla-red' : s.color}" style="width:${
                           s.pct
-                        }%"></div></div><div class="sla-text">${s.pct.toFixed(
-                          0
-                        )}%</div><div class="sla-text">${formatTime(
-                          r.hr
-                        )}</div></div>`;
-                      })()}</td><td>${(() => {
-                        let s = getSLA(r.hr, r.limit);
-                        return `<div class="sla-box"><div class="sla-bar"><div class="sla-fill ${
-                          r.od ? 'sla-red' : s.color
-                        }" style="width:${
-                          s.pct
-                        }%"></div></div><div class="sla-text">${s.pct.toFixed(
-                          0
-                        )}%</div><div class="sla-text">${
-                          r.od ? '🔥OVERDUE🔥' : formatTime(r.limit - r.hr)
-                        }</div></div>`;
-                      })()}</td></tr>`
+                        }%"></div>
+        <div class="sla-percent">${s.pct.toFixed(0)}%</div>
+      </div>
+      <div class="sla-text">ใช้ไป: ${formatTime(r.hr)}</div>
+      <div class="sla-text">${remainText}</div>
+    </div>
+  `;
+                      })()}</td>
+</tr>`
                   )
                   .join('')}</table></div>`
             )
