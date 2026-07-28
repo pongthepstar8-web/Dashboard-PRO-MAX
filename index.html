@@ -1116,929 +1116,929 @@
     </div>
 
     <script>
-            let data = [],
-              selected = [];
-            let viewMode = 0;
-            let prioritySortMode = 'none';
+      let data = [],
+        selected = [];
+      let viewMode = 0;
+      let prioritySortMode = 'none';
 
-            let workSubFilters = [];
-            let statusSubFilters = [];
+      let workSubFilters = [];
+      let statusSubFilters = [];
 
-            let DISTRICT_COORD = {};
-            let PROVINCE_COORD_REMOTE = {};
+      let DISTRICT_COORD = {};
+      let PROVINCE_COORD_REMOTE = {};
 
-            let shiftDailyText = '';
-            const APPS_SCRIPT_URL =
-              'https://script.google.com/macros/s/AKfycbyKED88K86X4eu2ycnl1ib0VY74iheDAWInvrRrQU7zarDu2fB_zNKTaW_TN6DGvAkxzw/exec';
+      let shiftDailyText = '';
+      const APPS_SCRIPT_URL =
+        'https://script.google.com/macros/s/AKfycbyKED88K86X4eu2ycnl1ib0VY74iheDAWInvrRrQU7zarDu2fB_zNKTaW_TN6DGvAkxzw/exec';
 
-            const SHEET_URL =
-              'https://docs.google.com/spreadsheets/d/1XSR52b9wrzsBDys3PZUQTCYexOOZFa6J-bz-jR-6jaM/edit?gid=365350498#gid=365350498';
-            function checkFactoryAuth() {
-              const auth = JSON.parse(localStorage.getItem('factoryAuth'));
+      const SHEET_URL =
+        'https://docs.google.com/spreadsheets/d/1XSR52b9wrzsBDys3PZUQTCYexOOZFa6J-bz-jR-6jaM/edit?gid=365350498#gid=365350498';
+      function checkFactoryAuth() {
+        const auth = JSON.parse(localStorage.getItem('factoryAuth'));
 
-              if (!auth) {
-                location.replace(
-                  'https://pongthepstar8-web.github.io/tool-launcher/'
-                );
-                return false;
-              }
+        if (!auth) {
+          location.replace(
+            'https://pongthepstar8-web.github.io/tool-launcher/'
+          );
+          return false;
+        }
 
-              const expireTime = 8 * 60 * 60 * 1000; // 8 ชั่วโมง
+        const expireTime = 8 * 60 * 60 * 1000; // 8 ชั่วโมง
 
-              if (Date.now() - auth.loginTime > expireTime) {
-                localStorage.clear();
+        if (Date.now() - auth.loginTime > expireTime) {
+          localStorage.clear();
 
-                location.replace(
-                  'https://pongthepstar8-web.github.io/tool-launcher/'
-                );
-                return false;
-              }
+          location.replace(
+            'https://pongthepstar8-web.github.io/tool-launcher/'
+          );
+          return false;
+        }
 
-              return true;
+        return true;
+      }
+
+      checkFactoryAuth();
+      function getPermission() {
+        return JSON.parse(localStorage.getItem('permission') || '{}');
+      }
+
+      function normalizeStatus(value) {
+        const v = String(value || '').trim();
+
+        if (v === 'Y') return 'Approved';
+        if (v === 'N') return '';
+
+        return v;
+      }
+
+      function isApproved(key) {
+        const permission = getPermission();
+
+        if (permission.role === 'Admin') {
+          return true;
+        }
+
+        return normalizeStatus(permission[key]) === 'Approved';
+      }
+
+      function applyExtraButtonPermission() {
+        const aiBtn = document.getElementById('aiActionBtn');
+        const sheetBtn = document.getElementById('openSheetBtn');
+
+        if (aiBtn && !isApproved('AIActionBoard')) {
+          aiBtn.classList.add('locked-btn');
+          aiBtn.disabled = true;
+          aiBtn.title = 'รออนุมัติใช้งาน AI Action Board';
+        }
+
+        if (sheetBtn && !isApproved('OpenSheet')) {
+          sheetBtn.classList.add('locked-btn');
+          sheetBtn.disabled = true;
+          sheetBtn.title = 'รออนุมัติเปิด Google Sheet';
+        }
+      }
+
+      window.addEventListener('load', function () {
+        applyExtraButtonPermission();
+      });
+
+      function openAIActionBoard() {
+        if (!isApproved('AIActionBoard')) {
+          alert('คุณยังไม่มีสิทธิ์ใช้งาน AI Action Board');
+          return;
+        }
+
+        // โค้ดเปิด AI Action Board เดิมของคุณ
+      }
+
+      function openGoogleSheet() {
+        if (!isApproved('OpenSheet')) {
+          alert('คุณยังไม่มีสิทธิ์เปิด Google Sheet');
+          return;
+        }
+
+        window.open(SHEET_URL, '_blank');
+      }
+      async function loadDataFromAppsScript() {
+        try {
+          let res = await fetch(APPS_SCRIPT_URL + '?action=all');
+
+          let json = await res.json();
+
+          if (!json.ok) {
+            alert('โหลดข้อมูลจาก Apps Script ไม่สำเร็จ');
+            return;
+          }
+
+          shiftDailyText = json.shiftText || '';
+
+          localStorage.setItem('shiftDaily', shiftDailyText);
+
+          DISTRICT_COORD = json.districtCoords || {};
+          PROVINCE_COORD_REMOTE = json.provinceCoords || {};
+
+          render();
+        } catch (err) {
+          console.error(err);
+          alert('ไม่สามารถโหลดข้อมูลจาก Apps Script ได้');
+        }
+      }
+      function getShiftNames() {
+        let txt = shiftDailyText || localStorage.getItem('shiftDaily') || '';
+
+        return txt
+          .split('\n')
+          .map((line) => {
+            let parts = line.split('|').map((x) => x.trim());
+
+            // SHIFT | PROVINCE | LOCAL | NAME | MOBILE
+            if (parts.length >= 4) {
+              return parts[3];
             }
 
-            checkFactoryAuth();
-            function getPermission() {
-              return JSON.parse(localStorage.getItem('permission') || '{}');
-            }
+            return '';
+          })
+          .filter(Boolean);
+      }
 
-            function normalizeStatus(value) {
-              const v = String(value || '').trim();
+      window.addEventListener('load', () => {
+        shiftDailyText = localStorage.getItem('shiftDaily') || '';
+        loadDataFromAppsScript();
 
-              if (v === 'Y') return 'Approved';
-              if (v === 'N') return '';
+        setTimeout(() => {
+          initToolDefaultAll();
+        }, 100);
+      });
+      function mapCol(r, k) {
+        for (let x of k) {
+          if (r[x] != undefined) return r[x];
+        }
+        return '';
+      }
+      const getHr = (t) => {
+        let d = new Date(t);
+        return isNaN(d) ? 0 : (new Date() - d) / 3600000;
+      };
+      function formatTime(hr) {
+        let h = Math.floor(hr);
+        let m = Math.round((hr - h) * 60);
+        return h > 0 ? (m > 0 ? `${h}h ${m}m` : `${h}h`) : `${m}m`;
+      }
+      function getSLA(hr, limit) {
+        let pct = Math.min((hr / limit) * 100, 100);
+        let color = 'sla-green';
+        if (pct > 70) color = 'sla-yellow';
+        if (pct > 90) color = 'sla-red';
+        return { pct, color };
+      }
+      const PROV_CODE = {
+        ขอนแก่น: 'KKN',
+        ร้อยเอ็ด: 'RET',
+        มหาสารคาม: 'MKM',
+        สกลนคร: 'SNK',
+        นครพนม: 'NPM',
+        มุกดาหาร: 'MDH',
+        กาฬสินธุ์: 'KSN',
+        อุดรธานี: 'UDN',
+        เลย: 'LEI',
+        หนองคาย: 'NKI',
+        บึงกาฬ: 'BKN',
+        หนองบัวลำภู: 'NLP',
+        นครราชสีมา: 'NMA',
+        ชัยภูมิ: 'CPM',
+        ศรีสะเกษ: 'SSK',
+        บุรีรัมย์: 'BRM',
+        อุบลราชธานี: 'UBN',
+        สุรินทร์: 'SRN',
+        ยโสธร: 'YST',
+        อำนาจเจริญ: 'ACR',
+      };
+      function getStatusInfo(s) {
+        let t = (s || '').toLowerCase();
+        if (t.includes('on-site') || t.includes('onsite'))
+          return { cls: 'onsite', icon: '🧑‍🔧', text: 'On-site' };
+        if (t.includes('assigned'))
+          return { cls: 'assigned', icon: '📋', text: 'Assigned' };
+        if (t.includes('departed'))
+          return { cls: 'departed', icon: '🚗', text: 'Departed' };
+        if (t.includes('done')) return { cls: 'done', icon: '🎯', text: s };
+        if (t.includes('accepted'))
+          return { cls: 'accepted', icon: '📥', text: 'Accepted' };
+        if (t.includes('interupted') || t.includes('interrupted'))
+          return { cls: 'interrupted', icon: '⚠️', text: 'Interrupted' };
+        if (t.includes('held'))
+          return { cls: 'held', icon: '💤', text: 'Held' };
+        if (t.includes('cancel'))
+          return { cls: 'cancel', icon: '❌', text: 'Cancel' };
+        if (t.includes('transfer'))
+          return { cls: 'transfer', icon: '🔁', text: 'Transfer' };
+        return { cls: 'created', icon: '🆕', text: 'Created' };
+      }
+      function getStatusIcon(status) {
+        let s = (status || '').toLowerCase();
+        if (s.includes('done')) return '✅ Done';
+        if (s.includes('on-site') || s.includes('onsite')) return '🟢 On-Site';
+        if (s.includes('departed')) return '🔵 Departed';
+        if (s.includes('assigned')) return '🟡 Assigned';
+        if (s.includes('accepted')) return '📥 Accepted';
+        if (s.includes('held')) return '💤 Held';
+        if (s.includes('cancel')) return '❌ Cancel';
+        return '⚪ Created';
+      }
+      function getPriorityIcon(pr) {
+        pr = (pr || '').toUpperCase();
+        if (pr === 'CRITICAL') return '🚨 Critical';
+        if (pr === 'MAJOR') return '⚠️ Major';
+        if (pr === 'MINOR') return '🟢 Minor';
+        return '⚪ None';
+      }
+      function getWorkType(t) {
+        t = (t || '').toLowerCase();
+        if (
+          t.includes('high loss') ||
+          t.includes('loss') ||
+          (t.includes('pon') && t.includes('loss')) ||
+          (t.includes('splitter') && t.includes('l2'))
+        )
+          return {
+            icon: '📉',
+            text: 'Signal Loss',
+            full: '📉 Signal Loss (High loss)',
+            type: 'transmission',
+          };
+        if (
+          t.includes('bipv') ||
+          t.includes('inf') ||
+          t.includes('ipv') ||
+          t.includes('binl') ||
+          t.includes('inl')
+        )
+          return {
+            icon: '🏢',
+            text: 'Business Circuit',
+            full: '🏢 Business Circuit (BIPV / INF / IPV / INL)',
+            type: 'leased',
+          };
+        if (t.includes('splitter') || t.includes('pon'))
+          return {
+            icon: '🔗',
+            text: 'Access Down',
+            full: '🔗 Access Down (Splitter / PON)',
+            type: 'access',
+          };
+        if (t.includes('olt') || t.includes('ac fail'))
+          return {
+            icon: '⚡',
+            text: 'Access Power Fail',
+            full: '⚡ Access Power Fail (OLT AC Fail)',
+            type: 'access',
+          };
+        if (t.includes('crc'))
+          return {
+            icon: '📡',
+            text: 'Transmission Error',
+            full: '📡 Transmission Error (CRC)',
+            type: 'transmission',
+          };
+        if (t.includes('rectifier') || t.includes('power'))
+          return {
+            icon: '🔌',
+            text: 'Power Failure',
+            full: '🔌 Power Failure (Rectifier)',
+            type: 'power',
+          };
+        if (t.includes('loop broken'))
+          return {
+            icon: '🔁❌',
+            text: 'Loop Broken',
+            full: '🔁❌ ERPS Loop Broken',
+            type: 'access',
+          };
+        if (t.includes('link down') || t.includes('down'))
+          return {
+            icon: '🚫',
+            text: 'Link Down',
+            full: '🚫 Link Down',
+            type: 'access',
+          };
+        return {
+          icon: '❗',
+          text: 'Unknown',
+          full: '❗ Unknown',
+          type: 'other',
+        };
+      }
+      function getSite(title) {
+        let m = (title || '').match(/(ME|OX|AN)_[0-9_]+/i);
+        return m ? m[0] : 'Unknown';
+      }
+      function toggleAllStatus() {
+        viewMode = (viewMode + 1) % 3;
+        render();
+      }
+      function pick(t) {
+        selected = [t];
+        $('.kpi').removeClass('active');
+        $(
+          '#' +
+            { critical: 'c', major: 'm', minor: 'n', total: 't', overdue: 'o' }[
+              t
+            ]
+        ).addClass('active');
+        render();
+      }
+      function pass(pr, od) {
+        if (!selected.length) return true;
+        let t = selected[0];
+        if (t === 'overdue') return od;
+        if (t === 'critical') return pr === 'CRITICAL';
+        if (t === 'major') return pr === 'MAJOR';
+        if (t === 'minor') return pr === 'MINOR' || pr === 'NONE';
+        return true;
+      }
+      function exportJPG(p) {
+        let box = document.createElement('div');
+        box.style.background = '#0f172a';
+        box.style.padding = '20px';
+        box.appendChild(document.getElementById('kpiBar').cloneNode(true));
+        box.appendChild(document.getElementById(p).cloneNode(true));
+        document.body.appendChild(box);
+        html2canvas(box, {
+          scale: 2,
+          useCORS: true,
+          width: box.scrollWidth,
+          height: box.scrollHeight,
+          windowWidth: box.scrollWidth,
+        }).then((c) => {
+          let a = document.createElement('a');
+          a.href = c.toDataURL('image/jpeg');
+          a.download = 'NOC_' + p + '.jpg';
+          a.click();
+          document.body.removeChild(box);
+        });
+      }
+      file.onchange = (e) => {
+        let r = new FileReader();
 
-              return v;
-            }
+        r.onload = (ev) => {
+          let wb = XLSX.read(new Uint8Array(ev.target.result), {
+            type: 'array',
+          });
 
-            function isApproved(key) {
-              const permission = getPermission();
+          // อ่าน Job จาก Sheet แรก
+          data = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
 
-              if (permission.role === 'Admin') {
-                return true;
-              }
+          // อ่าน Shift Daily จาก Sheet: CM FE3BB Shift Daily
+          loadShiftDailyFromCMFE3BBShiftDaily(wb);
 
-              return normalizeStatus(permission[key]) === 'Approved';
-            }
+          initProvince();
+          render();
+        };
 
-            function applyExtraButtonPermission() {
-              const aiBtn = document.getElementById('aiActionBtn');
-              const sheetBtn = document.getElementById('openSheetBtn');
+        r.readAsArrayBuffer(e.target.files[0]);
+      };
+      function loadShiftDailyFromCMFE3BBShiftDaily(wb) {
+        let sheetName = wb.SheetNames.find(
+          (name) => name.toLowerCase().trim() === 'cm fe3bb shift daily'
+        );
 
-              if (aiBtn && !isApproved('AIActionBoard')) {
-                aiBtn.classList.add('locked-btn');
-                aiBtn.disabled = true;
-                aiBtn.title = 'รออนุมัติใช้งาน AI Action Board';
-              }
+        if (!sheetName) {
+          console.warn('ไม่พบ Sheet: CM FE3BB Shift Daily');
+          return;
+        }
 
-              if (sheetBtn && !isApproved('OpenSheet')) {
-                sheetBtn.classList.add('locked-btn');
-                sheetBtn.disabled = true;
-                sheetBtn.title = 'รออนุมัติเปิด Google Sheet';
-              }
-            }
+        let rows = XLSX.utils.sheet_to_json(wb.Sheets[sheetName], {
+          defval: '',
+        });
 
-            window.addEventListener('load', function () {
-              applyExtraButtonPermission();
-            });
+        if (!rows.length) {
+          console.warn('Sheet CM FE3BB Shift Daily ไม่มีข้อมูล');
+          return;
+        }
 
-            function openAIActionBoard() {
-              if (!isApproved('AIActionBoard')) {
-                alert('คุณยังไม่มีสิทธิ์ใช้งาน AI Action Board');
-                return;
-              }
+        let lines = rows
+          .map((r) => {
+            let shift = r['SHIFT'] || '';
 
-              // โค้ดเปิด AI Action Board เดิมของคุณ
-            }
+            let province = r['PROVINCE'] || '';
 
-            function openGoogleSheet() {
-              if (!isApproved('OpenSheet')) {
-                alert('คุณยังไม่มีสิทธิ์เปิด Google Sheet');
-                return;
-              }
+            let local = r['LOCAL'] || '';
 
-              window.open(SHEET_URL, '_blank');
-            }
-            async function loadDataFromAppsScript() {
-              try {
-                let res = await fetch(APPS_SCRIPT_URL + '?action=all');
+            let name = r['NAME'] || '';
 
-                let json = await res.json();
+            let mobile = r['MOBILE'] || '';
 
-                if (!json.ok) {
-                  alert('โหลดข้อมูลจาก Apps Script ไม่สำเร็จ');
-                  return;
-                }
+            return [shift, province, local, name, mobile]
+              .filter(Boolean)
+              .join(' | ');
+          })
+          .filter(Boolean);
 
-                shiftDailyText = json.shiftText || '';
+        let text = lines.join('\n');
 
-                localStorage.setItem('shiftDaily', shiftDailyText);
+        let box = document.getElementById('shiftDaily');
 
-                DISTRICT_COORD = json.districtCoords || {};
-                PROVINCE_COORD_REMOTE = json.provinceCoords || {};
+        if (box) {
+          box.value = text;
 
-                render();
-              } catch (err) {
-                console.error(err);
-                alert('ไม่สามารถโหลดข้อมูลจาก Apps Script ได้');
-              }
-            }
-            function getShiftNames() {
-              let txt = shiftDailyText || localStorage.getItem('shiftDaily') || '';
+          localStorage.setItem('shiftDaily', text);
+        }
+      }
+      function initProvince() {
+        let s = {};
+        data.forEach((r) => {
+          let p = mapCol(r, ['Province Name']);
+          if (p) s[p] = 1;
+        });
+        let h = '<option value="">ทุกจังหวัด</option>';
+        Object.keys(s)
+          .sort()
+          .forEach((p) => (h += `<option>${p}</option>`));
+        $('#provinceFilter').html(h).select2();
+      }
+      $('#search,#provinceFilter').on('input change', render);
+      function resetAll() {
+        selected = [];
+        $('.kpi').removeClass('active');
+        $('#search').val('');
+        $('#provinceFilter').val('').trigger('change');
+        render();
+      }
+      function showRemark(jobId) {
+        let r = data.find((x) => x['Job ID'] == jobId);
+        if (!r) return;
+        let status = getStatusInfo(r['Status']);
+        let pr = (r['Priority'] || 'NONE').toLowerCase();
+        let hr = getHr(r['Create Time']);
+        let h = Math.floor(hr),
+          m = Math.round((hr - h) * 60);
+        let elapsedText = h > 0 ? `${h}h ${m}m` : `${m}m`;
+        document.getElementById('remarkContent').innerHTML = `<h2>${
+          r['Job ID']
+        }</h2><div class="popup-sub">${
+          r['Job Title'] || '-'
+        }</div><div class="popup-code" style="margin-top:6px">${
+          r['Province Name'] || ''
+        } ${r['District Name'] || ''}</div><div class="popup-code">${
+          r['Create Time'] || ''
+        }</div><div class="popup-remark"><b>REMARK:</b><br>${
+          r['Reason by WF'] || '-'
+        }</div><div class="popup-assign">ASSIGN BY - ${
+          r['Assign to'] || '-'
+        }</div><div style="margin-top:10px;display:flex;align-items:center;gap:8px"><span class="popup-status popup-${pr}">${pr.toUpperCase()}</span><span class="popup-status popup-${
+          status.cls
+        }">${status.icon} ${
+          status.text
+        }</span><span style="flex:1"></span><span class="popup-time">+${elapsedText}</span></div>`;
+        document.getElementById('remarkPopup').style.display = 'flex';
+      }
+      const popup = document.getElementById('remarkPopup');
+      popup.onclick = () => (popup.style.display = 'none');
+      document.querySelector('.popup-card').onclick = (e) =>
+        e.stopPropagation();
 
-              return txt
-                .split('\n')
-                .map((line) => {
-                  let parts = line.split('|').map((x) => x.trim());
+      /* ================= AI MAP HELPERS ================= */
+      function isThailandCoord(lat, lng) {
+        return lat >= 5 && lat <= 21 && lng >= 97 && lng <= 106.8;
+      }
+      function normalizeThaiCoord(a, b) {
+        let lat = parseFloat(a),
+          lng = parseFloat(b);
+        if (isNaN(lat) || isNaN(lng)) return null;
+        if (isThailandCoord(lat, lng)) return { lat, lng };
+        if (isThailandCoord(lng, lat)) return { lat: lng, lng: lat };
+        return null;
+      }
+      function isThailandCoord(lat, lng) {
+        return lat >= 5 && lat <= 21 && lng >= 97 && lng <= 106.8;
+      }
 
-                  // SHIFT | PROVINCE | LOCAL | NAME | MOBILE
-                  if (parts.length >= 4) {
-                    return parts[3];
-                  }
+      function normalizeThaiCoord(a, b) {
+        let lat = parseFloat(a);
+        let lng = parseFloat(b);
 
-                  return '';
-                })
-                .filter(Boolean);
-            }
+        if (isNaN(lat) || isNaN(lng)) return null;
 
-            window.addEventListener('load', () => {
-              shiftDailyText = localStorage.getItem('shiftDaily') || '';
-              loadDataFromAppsScript();
+        // ปกติ lat,lng
+        if (isThailandCoord(lat, lng)) {
+          return { lat, lng };
+        }
 
-              setTimeout(() => {
-                initToolDefaultAll();
-              }, 100);
-            });
-            function mapCol(r, k) {
-              for (let x of k) {
-                if (r[x] != undefined) return r[x];
-              }
-              return '';
-            }
-            const getHr = (t) => {
-              let d = new Date(t);
-              return isNaN(d) ? 0 : (new Date() - d) / 3600000;
+        // กรณีใส่สลับ lng,lat
+        if (isThailandCoord(lng, lat)) {
+          return {
+            lat: lng,
+            lng: lat,
+          };
+        }
+
+        // ถ้าไม่ใช่พิกัดประเทศไทย ไม่ใช้
+        return null;
+      }
+
+      function isThailandCoord(lat, lng) {
+        return lat >= 5 && lat <= 21 && lng >= 97 && lng <= 106.8;
+      }
+
+      function normalizeThaiCoord(a, b) {
+        let lat = parseFloat(a);
+        let lng = parseFloat(b);
+
+        if (isNaN(lat) || isNaN(lng)) return null;
+
+        // ปกติ lat,lng
+        if (isThailandCoord(lat, lng)) {
+          return { lat, lng };
+        }
+
+        // กรณีพิกัดสลับ lng,lat
+        if (isThailandCoord(lng, lat)) {
+          return {
+            lat: lng,
+            lng: lat,
+          };
+        }
+
+        return null;
+      }
+
+      function extractGPS(title) {
+        title = title || '';
+
+        // ต้องมี keyword บอกว่าเป็นพิกัด
+        // ลดการจับเลขจาก Title เช่น 3804_142 หรือ SitePriority
+        let hasGpsKeyword = /gps|coord|coordinate|พิกัด|lat|lon|lng/i.test(
+          title
+        );
+
+        // Lat:17.9805025 Lon:104.069824
+        let m = title.match(
+          /lat[:= ]\s*(-?\d{1,2}\.\d+).*?(lon|lng)[:= ]\s*(-?\d{1,3}\.\d+)/i
+        );
+
+        if (m) {
+          let c = normalizeThaiCoord(m[1], m[3]);
+
+          if (c) return c;
+        }
+
+        // Decimal comma: 17.9805025,104.069824
+        let re = /(-?\d{1,3}\.\d+)\s*,\s*(-?\d{1,3}\.\d+)/g;
+
+        while ((m = re.exec(title)) !== null) {
+          let c = normalizeThaiCoord(m[1], m[2]);
+
+          if (c) return c;
+        }
+
+        // Space decimal: GPS 17.9805025 104.069824
+        // จับเฉพาะมีคำว่า gps/พิกัด/coord เท่านั้น
+        if (hasGpsKeyword) {
+          re = /(-?\d{1,3}\.\d+)\s+(-?\d{1,3}\.\d+)/g;
+
+          while ((m = re.exec(title)) !== null) {
+            let c = normalizeThaiCoord(m[1], m[2]);
+
+            if (c) return c;
+          }
+        }
+
+        // DMS: 17°58'45.4"N 104°03'12.4"E
+        m = title.match(
+          /(\d{1,2})°(\d{1,2})'([\d.]+)"([NS])\s+(\d{1,3})°(\d{1,2})'([\d.]+)"([EW])/i
+        );
+
+        if (m) {
+          let lat = Number(m[1]) + Number(m[2]) / 60 + Number(m[3]) / 3600;
+
+          let lng = Number(m[5]) + Number(m[6]) / 60 + Number(m[7]) / 3600;
+
+          if (m[4].toUpperCase() === 'S') lat *= -1;
+
+          if (m[8].toUpperCase() === 'W') lng *= -1;
+
+          if (isThailandCoord(lat, lng)) {
+            return { lat, lng };
+          }
+        }
+
+        return null;
+      }
+      function distanceKm(lat1, lng1, lat2, lng2) {
+        const R = 6371;
+
+        let dLat = ((lat2 - lat1) * Math.PI) / 180;
+
+        let dLng = ((lng2 - lng1) * Math.PI) / 180;
+
+        let a =
+          Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+          Math.cos((lat1 * Math.PI) / 180) *
+            Math.cos((lat2 * Math.PI) / 180) *
+            Math.sin(dLng / 2) *
+            Math.sin(dLng / 2);
+
+        let c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+        return R * c;
+      }
+      function isSameCoord(a, b) {
+        if (!a || !b) return false;
+
+        return (
+          Math.abs(a[0] - b.lat) < 0.00001 && Math.abs(a[1] - b.lng) < 0.00001
+        );
+      }
+      function isCoordNearJobArea(gps, province, district) {
+        if (!gps) return false;
+
+        let areaCoord = getAreaCoord(province, district);
+
+        // ถ้าไม่มีฐานอำเภอ/จังหวัด ให้รับ GPS ได้ถ้าอยู่ในไทย
+        if (!areaCoord) {
+          return isThailandCoord(gps.lat, gps.lng);
+        }
+
+        let dist = distanceKm(gps.lat, gps.lng, areaCoord[0], areaCoord[1]);
+
+        // ถ้าห่างจากอำเภอ/จังหวัดเกิน 120 km ถือว่าผิดพื้นที่
+        return dist <= 120;
+      }
+      function normalizeMapKey(v) {
+        return (v || '').toString().trim().toLowerCase().replace(/\s+/g, ' ');
+      }
+
+      const PROVINCE_COORD = {
+        ขอนแก่น: [16.4322, 102.8236],
+        ร้อยเอ็ด: [16.0567, 103.6531],
+        มหาสารคาม: [16.1851, 103.3026],
+        สกลนคร: [17.1546, 104.1348],
+        นครพนม: [17.4108, 104.7784],
+        มุกดาหาร: [16.5453, 104.7235],
+        กาฬสินธุ์: [16.4314, 103.5059],
+        อุดรธานี: [17.4138, 102.7872],
+        เลย: [17.486, 101.7223],
+        หนองคาย: [17.8783, 102.7413],
+        บึงกาฬ: [18.3609, 103.6467],
+        บึงกาฬ: [18.3609, 103.6467],
+        'Bueng Kan': [18.3609, 103.6467],
+        หนองบัวลำภู: [17.2218, 102.426],
+        นครราชสีมา: [14.9799, 102.0977],
+        ชัยภูมิ: [15.8068, 102.0315],
+        ศรีสะเกษ: [15.1186, 104.322],
+        บุรีรัมย์: [14.993, 103.1029],
+        อุบลราชธานี: [15.2447, 104.8473],
+        สุรินทร์: [14.8818, 103.4937],
+        ยโสธร: [15.7926, 104.1453],
+        อำนาจเจริญ: [15.8657, 104.6258],
+        'Nakhon Phanom': [17.4108, 104.7784],
+        'Bueng Kan': [18.3609, 103.6467],
+        'Roi Et': [16.0567, 103.6531],
+        'Khon Kaen': [16.4322, 102.8236],
+        'Sakon Nakhon': [17.1546, 104.1348],
+        Udonthani: [17.4138, 102.7872],
+        UBN: [15.2447, 104.8473],
+        'NMA 1': [14.9799, 102.0977],
+        'NMA 2': [14.9799, 102.0977],
+        'NMA 3': [14.4195, 101.8618],
+      };
+      function normalizeThaiAreaName(v) {
+        return (v || '')
+          .toString()
+          .trim()
+          .replace(/^อำเภอ/g, '')
+          .replace(/^อ\./g, '')
+          .replace(/^จ\./g, '')
+          .replace(/\s+/g, ' ')
+          .toLowerCase();
+      }
+
+      function getAreaCoord(province, district) {
+        let p = (province || '').toString().trim();
+        let d = (district || '').toString().trim();
+
+        let key = `${p}|${d}`;
+
+        // 1. ใช้พิกัดอำเภอจาก ISAN_COORD ก่อน
+        if (DISTRICT_COORD && DISTRICT_COORD[key]) {
+          return DISTRICT_COORD[key];
+        }
+
+        // 2. match แบบ normalize
+        let np = normalizeThaiAreaName(p);
+        let nd = normalizeThaiAreaName(d);
+
+        let matchedKey = Object.keys(DISTRICT_COORD || {}).find((k) => {
+          let parts = k.split('|');
+
+          if (parts.length !== 2) {
+            return false;
+          }
+
+          return (
+            normalizeThaiAreaName(parts[0]) === np &&
+            normalizeThaiAreaName(parts[1]) === nd
+          );
+        });
+
+        if (matchedKey) {
+          return DISTRICT_COORD[matchedKey];
+        }
+
+        // 3. fallback จังหวัดจาก Apps Script
+        if (PROVINCE_COORD_REMOTE && PROVINCE_COORD_REMOTE[p]) {
+          return PROVINCE_COORD_REMOTE[p];
+        }
+
+        // 4. fallback จังหวัด local เดิม
+        if (typeof PROVINCE_COORD !== 'undefined' && PROVINCE_COORD[p]) {
+          return PROVINCE_COORD[p];
+        }
+
+        return null;
+      }
+      async function geocodeArea(province, district) {
+        if (!province || !district) {
+          return null;
+        }
+
+        let key = `${province}|${district}`;
+
+        if (DISTRICT_COORD && DISTRICT_COORD[key]) {
+          return DISTRICT_COORD[key];
+        }
+
+        let url =
+          APPS_SCRIPT_URL +
+          '?action=geocode' +
+          '&province=' +
+          encodeURIComponent(province) +
+          '&district=' +
+          encodeURIComponent(district);
+
+        try {
+          let res = await fetch(url);
+
+          let json = await res.json();
+
+          if (json.ok && json.result && json.result.lat && json.result.lng) {
+            let coord = [json.result.lat, json.result.lng];
+
+            DISTRICT_COORD[key] = coord;
+
+            return coord;
+          }
+        } catch (err) {
+          console.warn('Geocode failed:', province, district, err);
+        }
+
+        return null;
+      }
+      function markerColor(job) {
+        let pr = (job['Priority'] || 'NONE').toUpperCase();
+
+        if (pr === 'CRITICAL') return '#ef4444'; // แดง
+
+        if (pr === 'MAJOR') return '#f59e0b'; // ส้ม
+
+        if (pr === 'MINOR') return '#22c55e'; // เขียว
+
+        return '#64748b'; // เทา
+      }
+
+      function showAIBoard() {
+        if (!isApproved('AIActionBoard')) {
+          alert('คุณยังไม่มีสิทธิ์ใช้งาน AI Action Board');
+          return;
+        }
+        let prov = $('#provinceFilter').val();
+        let jobs = [];
+        data.forEach((r) => {
+          let p = mapCol(r, ['Province Name']);
+          if (prov && p !== prov) return;
+          if (!passToolSubFilter(r)) return;
+          let pr = (r['Priority'] || 'NONE').toUpperCase();
+          let hr = getHr(r['Create Time']);
+          let limit = pr === 'CRITICAL' ? 3 : pr === 'MAJOR' ? 10 : 1000;
+          let overdue = Math.max(0, hr - limit);
+          if (!pass(pr, overdue > 0)) return;
+          let score = 0;
+          if (pr === 'CRITICAL') score += 100;
+          else if (pr === 'MAJOR') score += 60;
+          else if (pr === 'MINOR') score += 30;
+          score += overdue * 5;
+          jobs.push({ ...r, score, overdue, limit });
+        });
+        jobs.sort((a, b) => b.score - a.score);
+        let engineerNames = [
+          ...new Set(
+            jobs.map((x) => (x['Assign to'] || '').trim()).filter(Boolean)
+          ),
+        ].sort();
+        let engineerButtons =
+          `  <button class="engineer-btn active"    onclick="window.filterEngineer('', this)">    👷 ทุกทีม  </button>  ` +
+          engineerNames
+            .map(
+              (eng) =>
+                `    <button class="engineer-btn"      onclick='window.filterEngineer(${JSON.stringify(
+                  eng
+                )}, this)'>      👷 ${eng}    </button>  `
+            )
+            .join('');
+        let districtMap = {};
+        jobs.forEach((r) => {
+          let district = r['District Name'] || 'Unknown';
+          if (!districtMap[district])
+            districtMap[district] = {
+              jobs: [],
+              critical: 0,
+              major: 0,
+              minor: 0,
+              overdue: 0,
+              score: 0,
             };
-            function formatTime(hr) {
-              let h = Math.floor(hr);
-              let m = Math.round((hr - h) * 60);
-              return h > 0 ? (m > 0 ? `${h}h ${m}m` : `${h}h`) : `${m}m`;
-            }
-            function getSLA(hr, limit) {
-              let pct = Math.min((hr / limit) * 100, 100);
-              let color = 'sla-green';
-              if (pct > 70) color = 'sla-yellow';
-              if (pct > 90) color = 'sla-red';
-              return { pct, color };
-            }
-            const PROV_CODE = {
-              ขอนแก่น: 'KKN',
-              ร้อยเอ็ด: 'RET',
-              มหาสารคาม: 'MKM',
-              สกลนคร: 'SNK',
-              นครพนม: 'NPM',
-              มุกดาหาร: 'MDH',
-              กาฬสินธุ์: 'KSN',
-              อุดรธานี: 'UDN',
-              เลย: 'LEI',
-              หนองคาย: 'NKI',
-              บึงกาฬ: 'BKN',
-              หนองบัวลำภู: 'NLP',
-              นครราชสีมา: 'NMA',
-              ชัยภูมิ: 'CPM',
-              ศรีสะเกษ: 'SSK',
-              บุรีรัมย์: 'BRM',
-              อุบลราชธานี: 'UBN',
-              สุรินทร์: 'SRN',
-              ยโสธร: 'YST',
-              อำนาจเจริญ: 'ACR',
-            };
-            function getStatusInfo(s) {
-              let t = (s || '').toLowerCase();
-              if (t.includes('on-site') || t.includes('onsite'))
-                return { cls: 'onsite', icon: '🧑‍🔧', text: 'On-site' };
-              if (t.includes('assigned'))
-                return { cls: 'assigned', icon: '📋', text: 'Assigned' };
-              if (t.includes('departed'))
-                return { cls: 'departed', icon: '🚗', text: 'Departed' };
-              if (t.includes('done')) return { cls: 'done', icon: '🎯', text: s };
-              if (t.includes('accepted'))
-                return { cls: 'accepted', icon: '📥', text: 'Accepted' };
-              if (t.includes('interupted') || t.includes('interrupted'))
-                return { cls: 'interrupted', icon: '⚠️', text: 'Interrupted' };
-              if (t.includes('held'))
-                return { cls: 'held', icon: '💤', text: 'Held' };
-              if (t.includes('cancel'))
-                return { cls: 'cancel', icon: '❌', text: 'Cancel' };
-              if (t.includes('transfer'))
-                return { cls: 'transfer', icon: '🔁', text: 'Transfer' };
-              return { cls: 'created', icon: '🆕', text: 'Created' };
-            }
-            function getStatusIcon(status) {
-              let s = (status || '').toLowerCase();
-              if (s.includes('done')) return '✅ Done';
-              if (s.includes('on-site') || s.includes('onsite')) return '🟢 On-Site';
-              if (s.includes('departed')) return '🔵 Departed';
-              if (s.includes('assigned')) return '🟡 Assigned';
-              if (s.includes('accepted')) return '📥 Accepted';
-              if (s.includes('held')) return '💤 Held';
-              if (s.includes('cancel')) return '❌ Cancel';
-              return '⚪ Created';
-            }
-            function getPriorityIcon(pr) {
-              pr = (pr || '').toUpperCase();
-              if (pr === 'CRITICAL') return '🚨 Critical';
-              if (pr === 'MAJOR') return '⚠️ Major';
-              if (pr === 'MINOR') return '🟢 Minor';
-              return '⚪ None';
-            }
-            function getWorkType(t) {
-              t = (t || '').toLowerCase();
-              if (
-                t.includes('high loss') ||
-                t.includes('loss') ||
-                (t.includes('pon') && t.includes('loss')) ||
-                (t.includes('splitter') && t.includes('l2'))
-              )
-                return {
-                  icon: '📉',
-                  text: 'Signal Loss',
-                  full: '📉 Signal Loss (High loss)',
-                  type: 'transmission',
-                };
-              if (
-                t.includes('bipv') ||
-                t.includes('inf') ||
-                t.includes('ipv') ||
-                t.includes('binl') ||
-                t.includes('inl')
-              )
-                return {
-                  icon: '🏢',
-                  text: 'Business Circuit',
-                  full: '🏢 Business Circuit (BIPV / INF / IPV / INL)',
-                  type: 'leased',
-                };
-              if (t.includes('splitter') || t.includes('pon'))
-                return {
-                  icon: '🔗',
-                  text: 'Access Down',
-                  full: '🔗 Access Down (Splitter / PON)',
-                  type: 'access',
-                };
-              if (t.includes('olt') || t.includes('ac fail'))
-                return {
-                  icon: '⚡',
-                  text: 'Access Power Fail',
-                  full: '⚡ Access Power Fail (OLT AC Fail)',
-                  type: 'access',
-                };
-              if (t.includes('crc'))
-                return {
-                  icon: '📡',
-                  text: 'Transmission Error',
-                  full: '📡 Transmission Error (CRC)',
-                  type: 'transmission',
-                };
-              if (t.includes('rectifier') || t.includes('power'))
-                return {
-                  icon: '🔌',
-                  text: 'Power Failure',
-                  full: '🔌 Power Failure (Rectifier)',
-                  type: 'power',
-                };
-              if (t.includes('loop broken'))
-                return {
-                  icon: '🔁❌',
-                  text: 'Loop Broken',
-                  full: '🔁❌ ERPS Loop Broken',
-                  type: 'access',
-                };
-              if (t.includes('link down') || t.includes('down'))
-                return {
-                  icon: '🚫',
-                  text: 'Link Down',
-                  full: '🚫 Link Down',
-                  type: 'access',
-                };
-              return {
-                icon: '❗',
-                text: 'Unknown',
-                full: '❗ Unknown',
-                type: 'other',
-              };
-            }
-            function getSite(title) {
-              let m = (title || '').match(/(ME|OX|AN)_[0-9_]+/i);
-              return m ? m[0] : 'Unknown';
-            }
-            function toggleAllStatus() {
-              viewMode = (viewMode + 1) % 3;
-              render();
-            }
-            function pick(t) {
-              selected = [t];
-              $('.kpi').removeClass('active');
-              $(
-                '#' +
-                  { critical: 'c', major: 'm', minor: 'n', total: 't', overdue: 'o' }[
-                    t
-                  ]
-              ).addClass('active');
-              render();
-            }
-            function pass(pr, od) {
-              if (!selected.length) return true;
-              let t = selected[0];
-              if (t === 'overdue') return od;
-              if (t === 'critical') return pr === 'CRITICAL';
-              if (t === 'major') return pr === 'MAJOR';
-              if (t === 'minor') return pr === 'MINOR' || pr === 'NONE';
-              return true;
-            }
-            function exportJPG(p) {
-              let box = document.createElement('div');
-              box.style.background = '#0f172a';
-              box.style.padding = '20px';
-              box.appendChild(document.getElementById('kpiBar').cloneNode(true));
-              box.appendChild(document.getElementById(p).cloneNode(true));
-              document.body.appendChild(box);
-              html2canvas(box, {
-                scale: 2,
-                useCORS: true,
-                width: box.scrollWidth,
-                height: box.scrollHeight,
-                windowWidth: box.scrollWidth,
-              }).then((c) => {
-                let a = document.createElement('a');
-                a.href = c.toDataURL('image/jpeg');
-                a.download = 'NOC_' + p + '.jpg';
-                a.click();
-                document.body.removeChild(box);
-              });
-            }
-            file.onchange = (e) => {
-              let r = new FileReader();
-
-              r.onload = (ev) => {
-                let wb = XLSX.read(new Uint8Array(ev.target.result), {
-                  type: 'array',
-                });
-
-                // อ่าน Job จาก Sheet แรก
-                data = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
-
-                // อ่าน Shift Daily จาก Sheet: CM FE3BB Shift Daily
-                loadShiftDailyFromCMFE3BBShiftDaily(wb);
-
-                initProvince();
-                render();
-              };
-
-              r.readAsArrayBuffer(e.target.files[0]);
-            };
-            function loadShiftDailyFromCMFE3BBShiftDaily(wb) {
-              let sheetName = wb.SheetNames.find(
-                (name) => name.toLowerCase().trim() === 'cm fe3bb shift daily'
-              );
-
-              if (!sheetName) {
-                console.warn('ไม่พบ Sheet: CM FE3BB Shift Daily');
-                return;
-              }
-
-              let rows = XLSX.utils.sheet_to_json(wb.Sheets[sheetName], {
-                defval: '',
-              });
-
-              if (!rows.length) {
-                console.warn('Sheet CM FE3BB Shift Daily ไม่มีข้อมูล');
-                return;
-              }
-
-              let lines = rows
-                .map((r) => {
-                  let shift = r['SHIFT'] || '';
-
-                  let province = r['PROVINCE'] || '';
-
-                  let local = r['LOCAL'] || '';
-
-                  let name = r['NAME'] || '';
-
-                  let mobile = r['MOBILE'] || '';
-
-                  return [shift, province, local, name, mobile]
-                    .filter(Boolean)
-                    .join(' | ');
-                })
-                .filter(Boolean);
-
-              let text = lines.join('\n');
-
-              let box = document.getElementById('shiftDaily');
-
-              if (box) {
-                box.value = text;
-
-                localStorage.setItem('shiftDaily', text);
-              }
-            }
-            function initProvince() {
-              let s = {};
-              data.forEach((r) => {
-                let p = mapCol(r, ['Province Name']);
-                if (p) s[p] = 1;
-              });
-              let h = '<option value="">ทุกจังหวัด</option>';
-              Object.keys(s)
-                .sort()
-                .forEach((p) => (h += `<option>${p}</option>`));
-              $('#provinceFilter').html(h).select2();
-            }
-            $('#search,#provinceFilter').on('input change', render);
-            function resetAll() {
-              selected = [];
-              $('.kpi').removeClass('active');
-              $('#search').val('');
-              $('#provinceFilter').val('').trigger('change');
-              render();
-            }
-            function showRemark(jobId) {
-              let r = data.find((x) => x['Job ID'] == jobId);
-              if (!r) return;
-              let status = getStatusInfo(r['Status']);
-              let pr = (r['Priority'] || 'NONE').toLowerCase();
-              let hr = getHr(r['Create Time']);
-              let h = Math.floor(hr),
-                m = Math.round((hr - h) * 60);
-              let elapsedText = h > 0 ? `${h}h ${m}m` : `${m}m`;
-              document.getElementById('remarkContent').innerHTML = `<h2>${
-                r['Job ID']
-              }</h2><div class="popup-sub">${
-                r['Job Title'] || '-'
-              }</div><div class="popup-code" style="margin-top:6px">${
-                r['Province Name'] || ''
-              } ${r['District Name'] || ''}</div><div class="popup-code">${
-                r['Create Time'] || ''
-              }</div><div class="popup-remark"><b>REMARK:</b><br>${
-                r['Reason by WF'] || '-'
-              }</div><div class="popup-assign">ASSIGN BY - ${
+          districtMap[district].jobs.push(r);
+          let pr = (r['Priority'] || '').toUpperCase();
+          if (pr === 'CRITICAL') districtMap[district].critical++;
+          else if (pr === 'MAJOR') districtMap[district].major++;
+          else districtMap[district].minor++;
+          if (r.overdue > 0) districtMap[district].overdue++;
+        });
+        let districtList = Object.entries(districtMap)
+          .map(([name, d]) => {
+            d.score =
+              d.critical * 100 +
+              d.major * 50 +
+              d.overdue * 30 +
+              d.jobs.length * 5;
+            return { district: name, ...d };
+          })
+          .sort((a, b) => b.score - a.score);
+        let districts = {};
+        jobs.forEach((r) => {
+          let d = r['District Name'] || '';
+          if (d) districts[d] = (districts[d] || 0) + 1;
+        });
+        let roots = {};
+        jobs.forEach((r) => {
+          let work = getWorkType(r['Job Title']).text;
+          if (!roots[work]) roots[work] = [];
+          roots[work].push(r);
+        });
+        let rootHtml = '';
+        Object.entries(roots)
+          .sort((a, b) => b[1].length - a[1].length)
+          .forEach(([root, list]) => {
+            let critical = list.filter(
+              (x) => (x['Priority'] || '').toUpperCase() === 'CRITICAL'
+            ).length;
+            let danger = critical >= 3 ? 'critical' : '';
+            rootHtml += `<div class="ai-card ${danger}"><div class="job">${
+              getWorkType(list[0]['Job Title']).icon
+            } ${root}</div><div class="detail">Total Jobs : ${
+              list.length
+            }</div><div class="detail">Critical : ${critical}</div><div class="reason"><b>AI Action</b><br>ตรวจ Root Cause นี้ก่อน</div><hr>`;
+            list.forEach((r) => {
+              rootHtml += `<details class="job-expand"><summary>${
+                r['Job ID'] || '-'
+              } | ${r['Priority'] || '-'} | ${
                 r['Assign to'] || '-'
-              }</div><div style="margin-top:10px;display:flex;align-items:center;gap:8px"><span class="popup-status popup-${pr}">${pr.toUpperCase()}</span><span class="popup-status popup-${
-                status.cls
-              }">${status.icon} ${
-                status.text
-              }</span><span style="flex:1"></span><span class="popup-time">+${elapsedText}</span></div>`;
-              document.getElementById('remarkPopup').style.display = 'flex';
-            }
-            const popup = document.getElementById('remarkPopup');
-            popup.onclick = () => (popup.style.display = 'none');
-            document.querySelector('.popup-card').onclick = (e) =>
-              e.stopPropagation();
-
-            /* ================= AI MAP HELPERS ================= */
-            function isThailandCoord(lat, lng) {
-              return lat >= 5 && lat <= 21 && lng >= 97 && lng <= 106.8;
-            }
-            function normalizeThaiCoord(a, b) {
-              let lat = parseFloat(a),
-                lng = parseFloat(b);
-              if (isNaN(lat) || isNaN(lng)) return null;
-              if (isThailandCoord(lat, lng)) return { lat, lng };
-              if (isThailandCoord(lng, lat)) return { lat: lng, lng: lat };
-              return null;
-            }
-            function isThailandCoord(lat, lng) {
-              return lat >= 5 && lat <= 21 && lng >= 97 && lng <= 106.8;
-            }
-
-            function normalizeThaiCoord(a, b) {
-              let lat = parseFloat(a);
-              let lng = parseFloat(b);
-
-              if (isNaN(lat) || isNaN(lng)) return null;
-
-              // ปกติ lat,lng
-              if (isThailandCoord(lat, lng)) {
-                return { lat, lng };
-              }
-
-              // กรณีใส่สลับ lng,lat
-              if (isThailandCoord(lng, lat)) {
-                return {
-                  lat: lng,
-                  lng: lat,
-                };
-              }
-
-              // ถ้าไม่ใช่พิกัดประเทศไทย ไม่ใช้
-              return null;
-            }
-
-            function isThailandCoord(lat, lng) {
-              return lat >= 5 && lat <= 21 && lng >= 97 && lng <= 106.8;
-            }
-
-            function normalizeThaiCoord(a, b) {
-              let lat = parseFloat(a);
-              let lng = parseFloat(b);
-
-              if (isNaN(lat) || isNaN(lng)) return null;
-
-              // ปกติ lat,lng
-              if (isThailandCoord(lat, lng)) {
-                return { lat, lng };
-              }
-
-              // กรณีพิกัดสลับ lng,lat
-              if (isThailandCoord(lng, lat)) {
-                return {
-                  lat: lng,
-                  lng: lat,
-                };
-              }
-
-              return null;
-            }
-
-            function extractGPS(title) {
-              title = title || '';
-
-              // ต้องมี keyword บอกว่าเป็นพิกัด
-              // ลดการจับเลขจาก Title เช่น 3804_142 หรือ SitePriority
-              let hasGpsKeyword = /gps|coord|coordinate|พิกัด|lat|lon|lng/i.test(
-                title
-              );
-
-              // Lat:17.9805025 Lon:104.069824
-              let m = title.match(
-                /lat[:= ]\s*(-?\d{1,2}\.\d+).*?(lon|lng)[:= ]\s*(-?\d{1,3}\.\d+)/i
-              );
-
-              if (m) {
-                let c = normalizeThaiCoord(m[1], m[3]);
-
-                if (c) return c;
-              }
-
-              // Decimal comma: 17.9805025,104.069824
-              let re = /(-?\d{1,3}\.\d+)\s*,\s*(-?\d{1,3}\.\d+)/g;
-
-              while ((m = re.exec(title)) !== null) {
-                let c = normalizeThaiCoord(m[1], m[2]);
-
-                if (c) return c;
-              }
-
-              // Space decimal: GPS 17.9805025 104.069824
-              // จับเฉพาะมีคำว่า gps/พิกัด/coord เท่านั้น
-              if (hasGpsKeyword) {
-                re = /(-?\d{1,3}\.\d+)\s+(-?\d{1,3}\.\d+)/g;
-
-                while ((m = re.exec(title)) !== null) {
-                  let c = normalizeThaiCoord(m[1], m[2]);
-
-                  if (c) return c;
-                }
-              }
-
-              // DMS: 17°58'45.4"N 104°03'12.4"E
-              m = title.match(
-                /(\d{1,2})°(\d{1,2})'([\d.]+)"([NS])\s+(\d{1,3})°(\d{1,2})'([\d.]+)"([EW])/i
-              );
-
-              if (m) {
-                let lat = Number(m[1]) + Number(m[2]) / 60 + Number(m[3]) / 3600;
-
-                let lng = Number(m[5]) + Number(m[6]) / 60 + Number(m[7]) / 3600;
-
-                if (m[4].toUpperCase() === 'S') lat *= -1;
-
-                if (m[8].toUpperCase() === 'W') lng *= -1;
-
-                if (isThailandCoord(lat, lng)) {
-                  return { lat, lng };
-                }
-              }
-
-              return null;
-            }
-            function distanceKm(lat1, lng1, lat2, lng2) {
-              const R = 6371;
-
-              let dLat = ((lat2 - lat1) * Math.PI) / 180;
-
-              let dLng = ((lng2 - lng1) * Math.PI) / 180;
-
-              let a =
-                Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-                Math.cos((lat1 * Math.PI) / 180) *
-                  Math.cos((lat2 * Math.PI) / 180) *
-                  Math.sin(dLng / 2) *
-                  Math.sin(dLng / 2);
-
-              let c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
-              return R * c;
-            }
-            function isSameCoord(a, b) {
-              if (!a || !b) return false;
-
-              return (
-                Math.abs(a[0] - b.lat) < 0.00001 && Math.abs(a[1] - b.lng) < 0.00001
-              );
-            }
-            function isCoordNearJobArea(gps, province, district) {
-              if (!gps) return false;
-
-              let areaCoord = getAreaCoord(province, district);
-
-              // ถ้าไม่มีฐานอำเภอ/จังหวัด ให้รับ GPS ได้ถ้าอยู่ในไทย
-              if (!areaCoord) {
-                return isThailandCoord(gps.lat, gps.lng);
-              }
-
-              let dist = distanceKm(gps.lat, gps.lng, areaCoord[0], areaCoord[1]);
-
-              // ถ้าห่างจากอำเภอ/จังหวัดเกิน 120 km ถือว่าผิดพื้นที่
-              return dist <= 120;
-            }
-            function normalizeMapKey(v) {
-              return (v || '').toString().trim().toLowerCase().replace(/\s+/g, ' ');
-            }
-
-            const PROVINCE_COORD = {
-              ขอนแก่น: [16.4322, 102.8236],
-              ร้อยเอ็ด: [16.0567, 103.6531],
-              มหาสารคาม: [16.1851, 103.3026],
-              สกลนคร: [17.1546, 104.1348],
-              นครพนม: [17.4108, 104.7784],
-              มุกดาหาร: [16.5453, 104.7235],
-              กาฬสินธุ์: [16.4314, 103.5059],
-              อุดรธานี: [17.4138, 102.7872],
-              เลย: [17.486, 101.7223],
-              หนองคาย: [17.8783, 102.7413],
-              บึงกาฬ: [18.3609, 103.6467],
-              บึงกาฬ: [18.3609, 103.6467],
-              'Bueng Kan': [18.3609, 103.6467],
-              หนองบัวลำภู: [17.2218, 102.426],
-              นครราชสีมา: [14.9799, 102.0977],
-              ชัยภูมิ: [15.8068, 102.0315],
-              ศรีสะเกษ: [15.1186, 104.322],
-              บุรีรัมย์: [14.993, 103.1029],
-              อุบลราชธานี: [15.2447, 104.8473],
-              สุรินทร์: [14.8818, 103.4937],
-              ยโสธร: [15.7926, 104.1453],
-              อำนาจเจริญ: [15.8657, 104.6258],
-              'Nakhon Phanom': [17.4108, 104.7784],
-              'Bueng Kan': [18.3609, 103.6467],
-              'Roi Et': [16.0567, 103.6531],
-              'Khon Kaen': [16.4322, 102.8236],
-              'Sakon Nakhon': [17.1546, 104.1348],
-              Udonthani: [17.4138, 102.7872],
-              UBN: [15.2447, 104.8473],
-              'NMA 1': [14.9799, 102.0977],
-              'NMA 2': [14.9799, 102.0977],
-              'NMA 3': [14.4195, 101.8618],
-            };
-            function normalizeThaiAreaName(v) {
-              return (v || '')
-                .toString()
-                .trim()
-                .replace(/^อำเภอ/g, '')
-                .replace(/^อ\./g, '')
-                .replace(/^จ\./g, '')
-                .replace(/\s+/g, ' ')
-                .toLowerCase();
-            }
-
-            function getAreaCoord(province, district) {
-              let p = (province || '').toString().trim();
-              let d = (district || '').toString().trim();
-
-              let key = `${p}|${d}`;
-
-              // 1. ใช้พิกัดอำเภอจาก ISAN_COORD ก่อน
-              if (DISTRICT_COORD && DISTRICT_COORD[key]) {
-                return DISTRICT_COORD[key];
-              }
-
-              // 2. match แบบ normalize
-              let np = normalizeThaiAreaName(p);
-              let nd = normalizeThaiAreaName(d);
-
-              let matchedKey = Object.keys(DISTRICT_COORD || {}).find((k) => {
-                let parts = k.split('|');
-
-                if (parts.length !== 2) {
-                  return false;
-                }
-
-                return (
-                  normalizeThaiAreaName(parts[0]) === np &&
-                  normalizeThaiAreaName(parts[1]) === nd
-                );
-              });
-
-              if (matchedKey) {
-                return DISTRICT_COORD[matchedKey];
-              }
-
-              // 3. fallback จังหวัดจาก Apps Script
-              if (PROVINCE_COORD_REMOTE && PROVINCE_COORD_REMOTE[p]) {
-                return PROVINCE_COORD_REMOTE[p];
-              }
-
-              // 4. fallback จังหวัด local เดิม
-              if (typeof PROVINCE_COORD !== 'undefined' && PROVINCE_COORD[p]) {
-                return PROVINCE_COORD[p];
-              }
-
-              return null;
-            }
-            async function geocodeArea(province, district) {
-              if (!province || !district) {
-                return null;
-              }
-
-              let key = `${province}|${district}`;
-
-              if (DISTRICT_COORD && DISTRICT_COORD[key]) {
-                return DISTRICT_COORD[key];
-              }
-
-              let url =
-                APPS_SCRIPT_URL +
-                '?action=geocode' +
-                '&province=' +
-                encodeURIComponent(province) +
-                '&district=' +
-                encodeURIComponent(district);
-
-              try {
-                let res = await fetch(url);
-
-                let json = await res.json();
-
-                if (json.ok && json.result && json.result.lat && json.result.lng) {
-                  let coord = [json.result.lat, json.result.lng];
-
-                  DISTRICT_COORD[key] = coord;
-
-                  return coord;
-                }
-              } catch (err) {
-                console.warn('Geocode failed:', province, district, err);
-              }
-
-              return null;
-            }
-            function markerColor(job) {
-              let pr = (job['Priority'] || 'NONE').toUpperCase();
-
-              if (pr === 'CRITICAL') return '#ef4444'; // แดง
-
-              if (pr === 'MAJOR') return '#f59e0b'; // ส้ม
-
-              if (pr === 'MINOR') return '#22c55e'; // เขียว
-
-              return '#64748b'; // เทา
-            }
-
-            function showAIBoard() {
-              if (!isApproved('AIActionBoard')) {
-                alert('คุณยังไม่มีสิทธิ์ใช้งาน AI Action Board');
-                return;
-              }
-              let prov = $('#provinceFilter').val();
-              let jobs = [];
-              data.forEach((r) => {
-                let p = mapCol(r, ['Province Name']);
-                if (prov && p !== prov) return;
-                if (!passToolSubFilter(r)) return;
-                let pr = (r['Priority'] || 'NONE').toUpperCase();
-                let hr = getHr(r['Create Time']);
-                let limit = pr === 'CRITICAL' ? 3 : pr === 'MAJOR' ? 10 : 1000;
-                let overdue = Math.max(0, hr - limit);
-                if (!pass(pr, overdue > 0)) return;
-                let score = 0;
-                if (pr === 'CRITICAL') score += 100;
-                else if (pr === 'MAJOR') score += 60;
-                else if (pr === 'MINOR') score += 30;
-                score += overdue * 5;
-                jobs.push({ ...r, score, overdue, limit });
-              });
-              jobs.sort((a, b) => b.score - a.score);
-              let engineerNames = [
-                ...new Set(
-                  jobs.map((x) => (x['Assign to'] || '').trim()).filter(Boolean)
-                ),
-              ].sort();
-              let engineerButtons =
-                `  <button class="engineer-btn active"    onclick="window.filterEngineer('', this)">    👷 ทุกทีม  </button>  ` +
-                engineerNames
-                  .map(
-                    (eng) =>
-                      `    <button class="engineer-btn"      onclick='window.filterEngineer(${JSON.stringify(
-                        eng
-                      )}, this)'>      👷 ${eng}    </button>  `
-                  )
-                  .join('');
-              let districtMap = {};
-              jobs.forEach((r) => {
-                let district = r['District Name'] || 'Unknown';
-                if (!districtMap[district])
-                  districtMap[district] = {
-                    jobs: [],
-                    critical: 0,
-                    major: 0,
-                    minor: 0,
-                    overdue: 0,
-                    score: 0,
-                  };
-                districtMap[district].jobs.push(r);
-                let pr = (r['Priority'] || '').toUpperCase();
-                if (pr === 'CRITICAL') districtMap[district].critical++;
-                else if (pr === 'MAJOR') districtMap[district].major++;
-                else districtMap[district].minor++;
-                if (r.overdue > 0) districtMap[district].overdue++;
-              });
-              let districtList = Object.entries(districtMap)
-                .map(([name, d]) => {
-                  d.score =
-                    d.critical * 100 +
-                    d.major * 50 +
-                    d.overdue * 30 +
-                    d.jobs.length * 5;
-                  return { district: name, ...d };
-                })
-                .sort((a, b) => b.score - a.score);
-              let districts = {};
-              jobs.forEach((r) => {
-                let d = r['District Name'] || '';
-                if (d) districts[d] = (districts[d] || 0) + 1;
-              });
-              let roots = {};
-              jobs.forEach((r) => {
-                let work = getWorkType(r['Job Title']).text;
-                if (!roots[work]) roots[work] = [];
-                roots[work].push(r);
-              });
-              let rootHtml = '';
-              Object.entries(roots)
-                .sort((a, b) => b[1].length - a[1].length)
-                .forEach(([root, list]) => {
-                  let critical = list.filter(
-                    (x) => (x['Priority'] || '').toUpperCase() === 'CRITICAL'
-                  ).length;
-                  let danger = critical >= 3 ? 'critical' : '';
-                  rootHtml += `<div class="ai-card ${danger}"><div class="job">${
-                    getWorkType(list[0]['Job Title']).icon
-                  } ${root}</div><div class="detail">Total Jobs : ${
-                    list.length
-                  }</div><div class="detail">Critical : ${critical}</div><div class="reason"><b>AI Action</b><br>ตรวจ Root Cause นี้ก่อน</div><hr>`;
-                  list.forEach((r) => {
-                    rootHtml += `<details class="job-expand"><summary>${
-                      r['Job ID'] || '-'
-                    } | ${r['Priority'] || '-'} | ${
-                      r['Assign to'] || '-'
-                    }</summary><div style="margin-top:10px;padding:10px;background:#111827;border-radius:8px"><b>Title</b><br>${
-                      r['Job Title'] || '-'
-                    }<br><br><b>Status</b><br>${
-                      r['Status'] || '-'
-                    }<br><br><b>Assign</b><br>${
-                      r['Assign to'] || '-'
-                    }<br><br><b>Remark</b><br>${
-                      r['Reason by WF'] || '-'
-                    }</div></details>`;
-                  });
-                  rootHtml += `</div>`;
-                });
-              let engineers = {};
-              jobs.forEach((r) => {
-                let eng = (r['Assign to'] || '').trim();
-                if (!eng) return;
-                if (!engineers[eng])
-                  engineers[eng] = { jobs: [], districts: new Set() };
-                if (r['District Name'])
-                  engineers[eng].districts.add(r['District Name']);
-                engineers[eng].jobs.push(r);
-              });
-              let districtButtons = Object.keys(districts)
-                .sort()
-                .map(
-                  (d) =>
-                    `<button class="district-btn" onclick="window.filterDistrict('${String(
-                      d
-                    ).replace(/'/g, "\\'")}', this)">${d} (${districts[d]})</button>`
-                )
-                .join('');
-              let safeJobsJson = JSON.stringify(jobs).replace(
-                /<\/script/gi,
-                '<\\/script'
-              );
-              let html = `<!DOCTYPE html>
+              }</summary><div style="margin-top:10px;padding:10px;background:#111827;border-radius:8px"><b>Title</b><br>${
+                r['Job Title'] || '-'
+              }<br><br><b>Status</b><br>${
+                r['Status'] || '-'
+              }<br><br><b>Assign</b><br>${
+                r['Assign to'] || '-'
+              }<br><br><b>Remark</b><br>${
+                r['Reason by WF'] || '-'
+              }</div></details>`;
+            });
+            rootHtml += `</div>`;
+          });
+        let engineers = {};
+        jobs.forEach((r) => {
+          let eng = (r['Assign to'] || '').trim();
+          if (!eng) return;
+          if (!engineers[eng])
+            engineers[eng] = { jobs: [], districts: new Set() };
+          if (r['District Name'])
+            engineers[eng].districts.add(r['District Name']);
+          engineers[eng].jobs.push(r);
+        });
+        let districtButtons = Object.keys(districts)
+          .sort()
+          .map(
+            (d) =>
+              `<button class="district-btn" onclick="window.filterDistrict('${String(
+                d
+              ).replace(/'/g, "\\'")}', this)">${d} (${districts[d]})</button>`
+          )
+          .join('');
+        let safeJobsJson = JSON.stringify(jobs).replace(
+          /<\/script/gi,
+          '<\\/script'
+        );
+        let html = `<!DOCTYPE html>
       <html>
       <head>
       <meta charset="UTF-8">
@@ -2160,28 +2160,28 @@
       </div>
 
       </div><div id="districtView" class="board">`;
-              districtList.forEach((d, i) => {
-                let rank =
-                  i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `#${i + 1}`;
-                let cardClass = d.critical > 0 ? 'critical' : '';
-                let nextJobs = [...d.jobs].sort((a, b) => {
-                  let ar = a.limit - getHr(a['Create Time']),
-                    br = b.limit - getHr(b['Create Time']);
-                  if (a.overdue > 0 && b.overdue <= 0) return -1;
-                  if (b.overdue > 0 && a.overdue <= 0) return 1;
-                  if (ar !== br) return ar - br;
-                  let p = { CRITICAL: 1, MAJOR: 2, MINOR: 3, NONE: 4 };
-                  return (
-                    p[(a['Priority'] || '').toUpperCase()] -
-                    p[(b['Priority'] || '').toUpperCase()]
-                  );
-                });
-                function renderDistrictJob(x, no) {
-                  let pr = (x['Priority'] || 'NONE').toUpperCase();
+        districtList.forEach((d, i) => {
+          let rank =
+            i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `#${i + 1}`;
+          let cardClass = d.critical > 0 ? 'critical' : '';
+          let nextJobs = [...d.jobs].sort((a, b) => {
+            let ar = a.limit - getHr(a['Create Time']),
+              br = b.limit - getHr(b['Create Time']);
+            if (a.overdue > 0 && b.overdue <= 0) return -1;
+            if (b.overdue > 0 && a.overdue <= 0) return 1;
+            if (ar !== br) return ar - br;
+            let p = { CRITICAL: 1, MAJOR: 2, MINOR: 3, NONE: 4 };
+            return (
+              p[(a['Priority'] || '').toUpperCase()] -
+              p[(b['Priority'] || '').toUpperCase()]
+            );
+          });
+          function renderDistrictJob(x, no) {
+            let pr = (x['Priority'] || 'NONE').toUpperCase();
 
-                  let isOverdue = x.overdue > 0;
+            let isOverdue = x.overdue > 0;
 
-                  return `
+            return `
 
                   <div class="dist-job"
            data-priority="${pr}"
@@ -2228,12 +2228,12 @@
         </div>
 
       `;
-                }
-                html += `<div class="ai-card ${cardClass}" data-district="${
-                  d.district
-                }"><div class="job">${rank} 📍 ${
-                  d.district
-                }</div><div class="district-summary">
+          }
+          html += `<div class="ai-card ${cardClass}" data-district="${
+            d.district
+          }"><div class="job">${rank} 📍 ${
+            d.district
+          }</div><div class="district-summary">
 
       <span class="summary-chip"
             onclick="window.filterCardJobs(this,'critical')">
@@ -2267,139 +2267,134 @@
 
       </details>
       </div>`;
-              });
-              let shiftNames = getShiftNames().map((x) => x.toLowerCase().trim());
-              let engineerHtml = '';
-              Object.entries(engineers)
-                .sort((a, b) => {
-                  if (a[0] === 'Workforce NER Pool') return -1;
-                  if (b[0] === 'Workforce NER Pool') return 1;
-                  let aOn = shiftNames.includes(a[0].toLowerCase().trim()),
-                    bOn = shiftNames.includes(b[0].toLowerCase().trim());
-                  if (aOn && !bOn) return -1;
-                  if (!aOn && bOn) return 1;
-                  return b[1].jobs.length - a[1].jobs.length;
-                })
-                .forEach(([eng, obj]) => {
-                  let isPool = eng === 'Workforce NER Pool';
-                  let onDuty = shiftNames.includes(eng.toLowerCase().trim());
-                  if (!isPool && obj.jobs.length === 0) return;
-                  let currentJob = [...obj.jobs].sort(
-                    (a, b) =>
-                      a.limit -
-                      getHr(a['Create Time']) -
-                      (b.limit - getHr(b['Create Time']))
-                  )[0];
-                  let cardClass = isPool ? 'pool' : onDuty ? 'duty-on' : 'duty-off';
-                  let critical = obj.jobs.filter(
-                    (x) => (x['Priority'] || '').toUpperCase() === 'CRITICAL'
-                  ).length;
-                  let major = obj.jobs.filter(
-                    (x) => (x['Priority'] || '').toUpperCase() === 'MAJOR'
-                  ).length;
-                  let overdue = obj.jobs.filter((x) => x.overdue > 0).length;
-                  let level =
-                    obj.jobs.length >= 8
-                      ? '🔴 HIGH'
-                      : obj.jobs.length >= 4
-                      ? '🟡 MEDIUM'
-                      : '🟢 LOW';
-                  engineerHtml += `<div class="ai-card ${cardClass}"><div class="job ${
-                    !onDuty && !isPool ? 'off-name' : ''
-                  }">${
-                    isPool ? '🛟' : '👨‍🔧'
-                  } ${eng}</div><div class="detail">📍 Current Area : ${
-                    currentJob?.['District Name'] || '-'
-                  }</div><div class="detail">🗺️ ${
-                    obj.districts.size
-                  } District(s)</div><div style="color:#93c5fd;margin-top:4px;font-size:13px">${[
-                    ...obj.districts,
-                  ].join(
-                    ' • '
-                  )}</div><details class="job-expand"><summary>📋 Jobs : ${
-                    obj.jobs.length
-                  }</summary>${obj.jobs
-                    .map((job) => {
-                      let remain =
-                        job.overdue > 0
-                          ? '🔥 OVERDUE'
-                          : `⏱ ${formatTime(job.limit - getHr(job['Create Time']))}`;
-                      return `<div style="margin-top:8px;padding:8px;background:#111827;border-radius:8px"><b>${
-                        job['Job ID']
-                      }</b><br>${getPriorityIcon(job['Priority'])} | ${getStatusIcon(
-                        job['Status']
-                      )}<br>${getWorkType(job['Job Title']).icon} ${
-                        getWorkType(job['Job Title']).text
-                      }<br>${remain}</div>`;
-                    })
-                    .join(
-                      ''
-                    )}</details><div class="detail">🚨 Critical : ${critical}</div><div class="detail">⚠️ Major : ${major}</div><div class="detail">🕒 Overdue : ${overdue}</div><div class="reason">Workload : ${level}</div></div>`;
-                });
-              html += `</div><div id="rootView" class="board" style="display:none">${rootHtml}</div><div id="engineerView" class="board" style="display:none">${engineerHtml}</div><div id="mapView"><div class="map-panel"><button class="map-btn" onclick="window.toggleMeasureDistance()">🛣️ วัดตามถนน</button><button class="map-btn" onclick="window.openGoogleRoute()">🧭 Open Google Maps</button><button class="map-btn" onclick="window.clearAIRoute()">🧹 Clear Route</button><button class="map-btn" onclick="window.fitAllMarkers()">📍 Fit All Jobs</button></div><div id="aiMap"></div></div><script>window.AI_JOBS=${safeJobsJson};<\/script></body></html>`;
-              let w = window.open();
-              w.document.write(html);
-              w.document.close();
-              let aiMapInited = false,
-                aiMap = null,
-                aiMarkers = [],
-                aiAllPoints = [],
-                aiRoutePoints = [],
-                aiRouteLine = null,
-                aiRouteMarkers = [],
-                measureMode = false,
-      measurePoints = [],
-      measureMarkers = [],
-      measureLine = null,
-      measureLabel = null;
-              w.initAIMap = function () {
-                if (aiMapInited) {
-                  setTimeout(() => aiMap && aiMap.invalidateSize(), 250);
-                  return;
-                }
+        });
+        let shiftNames = getShiftNames().map((x) => x.toLowerCase().trim());
+        let engineerHtml = '';
+        Object.entries(engineers)
+          .sort((a, b) => {
+            if (a[0] === 'Workforce NER Pool') return -1;
+            if (b[0] === 'Workforce NER Pool') return 1;
+            let aOn = shiftNames.includes(a[0].toLowerCase().trim()),
+              bOn = shiftNames.includes(b[0].toLowerCase().trim());
+            if (aOn && !bOn) return -1;
+            if (!aOn && bOn) return 1;
+            return b[1].jobs.length - a[1].jobs.length;
+          })
+          .forEach(([eng, obj]) => {
+            let isPool = eng === 'Workforce NER Pool';
+            let onDuty = shiftNames.includes(eng.toLowerCase().trim());
+            if (!isPool && obj.jobs.length === 0) return;
+            let currentJob = [...obj.jobs].sort(
+              (a, b) =>
+                a.limit -
+                getHr(a['Create Time']) -
+                (b.limit - getHr(b['Create Time']))
+            )[0];
+            let cardClass = isPool ? 'pool' : onDuty ? 'duty-on' : 'duty-off';
+            let critical = obj.jobs.filter(
+              (x) => (x['Priority'] || '').toUpperCase() === 'CRITICAL'
+            ).length;
+            let major = obj.jobs.filter(
+              (x) => (x['Priority'] || '').toUpperCase() === 'MAJOR'
+            ).length;
+            let overdue = obj.jobs.filter((x) => x.overdue > 0).length;
+            let level =
+              obj.jobs.length >= 8
+                ? '🔴 HIGH'
+                : obj.jobs.length >= 4
+                ? '🟡 MEDIUM'
+                : '🟢 LOW';
+            engineerHtml += `<div class="ai-card ${cardClass}"><div class="job ${
+              !onDuty && !isPool ? 'off-name' : ''
+            }">${
+              isPool ? '🛟' : '👨‍🔧'
+            } ${eng}</div><div class="detail">📍 Current Area : ${
+              currentJob?.['District Name'] || '-'
+            }</div><div class="detail">🗺️ ${
+              obj.districts.size
+            } District(s)</div><div style="color:#93c5fd;margin-top:4px;font-size:13px">${[
+              ...obj.districts,
+            ].join(
+              ' • '
+            )}</div><details class="job-expand"><summary>📋 Jobs : ${
+              obj.jobs.length
+            }</summary>${obj.jobs
+              .map((job) => {
+                let remain =
+                  job.overdue > 0
+                    ? '🔥 OVERDUE'
+                    : `⏱ ${formatTime(job.limit - getHr(job['Create Time']))}`;
+                return `<div style="margin-top:8px;padding:8px;background:#111827;border-radius:8px"><b>${
+                  job['Job ID']
+                }</b><br>${getPriorityIcon(job['Priority'])} | ${getStatusIcon(
+                  job['Status']
+                )}<br>${getWorkType(job['Job Title']).icon} ${
+                  getWorkType(job['Job Title']).text
+                }<br>${remain}</div>`;
+              })
+              .join(
+                ''
+              )}</details><div class="detail">🚨 Critical : ${critical}</div><div class="detail">⚠️ Major : ${major}</div><div class="detail">🕒 Overdue : ${overdue}</div><div class="reason">Workload : ${level}</div></div>`;
+          });
+        html += `</div><div id="rootView" class="board" style="display:none">${rootHtml}</div><div id="engineerView" class="board" style="display:none">${engineerHtml}</div><div id="mapView"><div class="map-panel"><button class="map-btn" onclick="window.toggleMeasureDistance()">🛣️ วัดตามถนน</button><button class="map-btn" onclick="window.openGoogleRoute()">🧭 Open Google Maps</button><button class="map-btn" onclick="window.clearAIRoute()">🧹 Clear Route</button><button class="map-btn" onclick="window.fitAllMarkers()">📍 Fit All Jobs</button></div><div id="aiMap"></div></div><script>window.AI_JOBS=${safeJobsJson};<\/script></body></html>`;
+        let w = window.open();
+        w.document.write(html);
+        w.document.close();
+        let aiMapInited = false,
+          aiMap = null,
+          aiMarkers = [],
+          aiAllPoints = [],
+          aiRoutePoints = [],
+          aiRouteLine = null,
+          aiRouteMarkers = [],
+          measureMode = false,
+          measurePoints = [],
+          measureMarkers = [],
+          measureLine = null,
+          measureLabel = null;
+        w.initAIMap = function () {
+          if (aiMapInited) {
+            setTimeout(() => aiMap && aiMap.invalidateSize(), 250);
+            return;
+          }
 
-                aiMapInited = true;
+          aiMapInited = true;
 
-                aiMap = w.L.map(w.document.getElementById('aiMap')).setView(
-                  [16.5, 103.5],
-                  7
-                );
+          aiMap = w.L.map(w.document.getElementById('aiMap')).setView(
+            [16.5, 103.5],
+            7
+          );
 
-                w.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                  maxZoom: 19,
-                  attribution: '© OpenStreetMap',
-                }).addTo(aiMap);
+          w.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© OpenStreetMap',
+          }).addTo(aiMap);
 
-                buildAIMapMarkers();
-                aiMap.on('click', function (e) {
-                  if (!measureMode) return;
+          buildAIMapMarkers();
+          aiMap.on('click', function (e) {
+            if (!measureMode) return;
 
-                  handleMeasureClick(e.latlng);
-                });
+            handleMeasureClick(e.latlng);
+          });
 
-                setTimeout(() => aiMap.invalidateSize(), 500);
-              };
-              w.toggleMeasureDistance = function () {
-                measureMode = !measureMode;
+          setTimeout(() => aiMap.invalidateSize(), 500);
+        };
+        w.toggleMeasureDistance = function () {
+          measureMode = !measureMode;
 
-                if (measureMode) {
-                  alert('โหมดวัดระยะทาง: คลิกบนแผนที่ 2 จุดเพื่อวัดระยะ');
-                } else {
-                  alert('ปิดโหมดวัดระยะทาง');
-                }
-              };
+          if (measureMode) {
+            alert('โหมดวัดระยะทาง: คลิกบนแผนที่ 2 จุดเพื่อวัดระยะ');
+          } else {
+            alert('ปิดโหมดวัดระยะทาง');
+          }
+        };
 
-              function handleMeasureClick(latlng) {
-        measurePoints.push([
-          latlng.lat,
-          latlng.lng
-        ]);
+        function handleMeasureClick(latlng) {
+          measurePoints.push([latlng.lat, latlng.lng]);
 
-        let pointNo =
-          measurePoints.length;
+          let pointNo = measurePoints.length;
 
-        let marker =
-          w.L.marker([latlng.lat, latlng.lng], {
+          let marker = w.L.marker([latlng.lat, latlng.lng], {
             icon: w.L.divIcon({
               className: '',
               html: `
@@ -2423,51 +2418,45 @@
               iconSize: [28, 28],
               iconAnchor: [14, 14],
             }),
-          })
-            .addTo(aiMap);
+          }).addTo(aiMap);
 
-        measureMarkers.push(marker);
+          measureMarkers.push(marker);
 
-        drawDistanceMeasure();
-      }
-              }
-
-              async function drawDistanceMeasure() {
-        if (measureLine) {
-          aiMap.removeLayer(measureLine);
-          measureLine = null;
+          drawDistanceMeasure();
         }
 
-        if (measureLabel) {
-          aiMap.removeLayer(measureLabel);
-          measureLabel = null;
-        }
+        async function drawDistanceMeasure() {
+          if (measureLine) {
+            aiMap.removeLayer(measureLine);
+            measureLine = null;
+          }
 
-        if (measurePoints.length < 2) {
-          return;
-        }
+          if (measureLabel) {
+            aiMap.removeLayer(measureLabel);
+            measureLabel = null;
+          }
 
-        try {
-          const route =
-            await getRoadRouteFromOSRM(measurePoints);
-
-          if (!route) {
-            alert('ไม่สามารถคำนวณเส้นทางตามถนนได้');
+          if (measurePoints.length < 2) {
             return;
           }
 
-          measureLine =
-            w.L.polyline(route.latlngs, {
+          try {
+            const route = await getRoadRouteFromOSRM(measurePoints);
+
+            if (!route) {
+              alert('ไม่สามารถคำนวณเส้นทางตามถนนได้');
+              return;
+            }
+
+            measureLine = w.L.polyline(route.latlngs, {
               color: '#38bdf8',
               weight: 6,
               opacity: 0.9,
             }).addTo(aiMap);
 
-          const lastPoint =
-            measurePoints[measurePoints.length - 1];
+            const lastPoint = measurePoints[measurePoints.length - 1];
 
-          measureLabel =
-            w.L.marker(lastPoint, {
+            measureLabel = w.L.marker(lastPoint, {
               icon: w.L.divIcon({
                 className: '',
                 html: `
@@ -2493,147 +2482,137 @@
               }),
             }).addTo(aiMap);
 
-          aiMap.fitBounds(measureLine.getBounds(), {
-            padding: [50, 50],
+            aiMap.fitBounds(measureLine.getBounds(), {
+              padding: [50, 50],
+            });
+          } catch (err) {
+            console.error(err);
+            alert('Routing error: ไม่สามารถดึงเส้นทางจาก OSRM ได้');
+          }
+        }
+        async function getRoadRouteFromOSRM(points) {
+          if (!points || points.length < 2) {
+            return null;
+          }
+
+          const coords = points.map((p) => `${p[1]},${p[0]}`).join(';');
+
+          const url =
+            `https://router.project-osrm.org/route/v1/driving/${coords}` +
+            `?overview=full&geometries=geojson&steps=false`;
+
+          const res = await fetch(url);
+
+          const json = await res.json();
+
+          if (
+            !json ||
+            json.code !== 'Ok' ||
+            !json.routes ||
+            !json.routes.length
+          ) {
+            console.warn('OSRM route failed:', json);
+            return null;
+          }
+
+          const route = json.routes[0];
+
+          const latlngs = route.geometry.coordinates.map((c) => [c[1], c[0]]);
+
+          return {
+            latlngs: latlngs,
+            distanceKm: route.distance / 1000,
+            durationMin: route.duration / 60,
+          };
+        }
+
+        function clearDistanceMeasure() {
+          if (measureLine) {
+            aiMap.removeLayer(measureLine);
+            measureLine = null;
+          }
+
+          if (measureLabel) {
+            aiMap.removeLayer(measureLabel);
+            measureLabel = null;
+          }
+
+          measureMarkers.forEach((m) => {
+            aiMap.removeLayer(m);
           });
-        } catch (err) {
-          console.error(err);
-          alert('Routing error: ไม่สามารถดึงเส้นทางจาก OSRM ได้');
-        }
-      }
-      async function getRoadRouteFromOSRM(points) {
-        if (!points || points.length < 2) {
-          return null;
-        }
 
-        const coords =
-          points
-            .map(p => `${p[1]},${p[0]}`)
-            .join(';');
-
-        const url =
-          `https://router.project-osrm.org/route/v1/driving/${coords}` +
-          `?overview=full&geometries=geojson&steps=false`;
-
-        const res =
-          await fetch(url);
-
-        const json =
-          await res.json();
-
-        if (
-          !json ||
-          json.code !== 'Ok' ||
-          !json.routes ||
-          !json.routes.length
-        ) {
-          console.warn('OSRM route failed:', json);
-          return null;
-        }
-
-        const route =
-          json.routes[0];
-
-        const latlngs =
-          route.geometry.coordinates.map(c => [
-            c[1],
-            c[0]
-          ]);
-
-        return {
-          latlngs: latlngs,
-          distanceKm: route.distance / 1000,
-          durationMin: route.duration / 60
-        };
-      }
-
-      function clearDistanceMeasure() {
-        if (measureLine) {
-          aiMap.removeLayer(measureLine);
-          measureLine = null;
-        }
-
-        if (measureLabel) {
-          aiMap.removeLayer(measureLabel);
+          measureMarkers = [];
+          measurePoints = [];
           measureLabel = null;
         }
+        function getMapStatusIcon(status) {
+          let s = (status || '').toLowerCase();
 
-        measureMarkers.forEach((m) => {
-          aiMap.removeLayer(m);
-        });
+          if (s.includes('on-site') || s.includes('onsite')) {
+            return '🧑‍🔧';
+          }
 
-        measureMarkers = [];
-        measurePoints = [];
-        measureLabel = null;
-      }
-              function getMapStatusIcon(status) {
-                let s = (status || '').toLowerCase();
+          if (s.includes('departed')) {
+            return '🚗';
+          }
 
-                if (s.includes('on-site') || s.includes('onsite')) {
-                  return '🧑‍🔧';
-                }
+          if (s.includes('assigned')) {
+            return '📋';
+          }
 
-                if (s.includes('departed')) {
-                  return '🚗';
-                }
+          if (s.includes('done')) {
+            return '✅';
+          }
 
-                if (s.includes('assigned')) {
-                  return '📋';
-                }
+          return '';
+        }
+        function getMapSlaRingInfo(job) {
+          let pr = (job['Priority'] || 'NONE').toUpperCase();
 
-                if (s.includes('done')) {
-                  return '✅';
-                }
+          let limit =
+            job.limit || (pr === 'CRITICAL' ? 3 : pr === 'MAJOR' ? 10 : 1000);
 
-                return '';
-              }
-              function getMapSlaRingInfo(job) {
-                let pr = (job['Priority'] || 'NONE').toUpperCase();
+          let hr = getHr(job['Create Time']);
 
-                let limit =
-                  job.limit || (pr === 'CRITICAL' ? 3 : pr === 'MAJOR' ? 10 : 1000);
+          let remain = limit - hr;
 
-                let hr = getHr(job['Create Time']);
+          let pct = limit > 0 ? (hr / limit) * 100 : 0;
 
-                let remain = limit - hr;
+          // เกิน SLA
+          if (job.overdue > 0 || remain <= 0 || pct >= 100) {
+            return {
+              cls: 'sla-ring-overdue',
+              border: '#ef4444',
+            };
+          }
 
-                let pct = limit > 0 ? (hr / limit) * 100 : 0;
+          // ใกล้ SLA
+          if (pct >= 80 || remain <= 2) {
+            return {
+              cls: 'sla-ring-near',
+              border: '#facc15',
+            };
+          }
 
-                // เกิน SLA
-                if (job.overdue > 0 || remain <= 0 || pct >= 100) {
-                  return {
-                    cls: 'sla-ring-overdue',
-                    border: '#ef4444',
-                  };
-                }
+          return {
+            cls: '',
+            border: '#ffffff',
+          };
+        }
 
-                // ใกล้ SLA
-                if (pct >= 80 || remain <= 2) {
-                  return {
-                    cls: 'sla-ring-near',
-                    border: '#facc15',
-                  };
-                }
+        function makeMapIcon(job) {
+          // สีด้านใน = Priority เท่านั้น
+          let color = markerColor(job);
 
-                return {
-                  cls: '',
-                  border: '#ffffff',
-                };
-              }
+          // ไอคอนกลางวง = Status
+          let icon = getMapStatusIcon(job['Status']);
 
-              function makeMapIcon(job) {
-                // สีด้านใน = Priority เท่านั้น
-                let color = markerColor(job);
+          // เส้นรอบวง = SLA
+          let ring = getMapSlaRingInfo(job);
 
-                // ไอคอนกลางวง = Status
-                let icon = getMapStatusIcon(job['Status']);
-
-                // เส้นรอบวง = SLA
-                let ring = getMapSlaRingInfo(job);
-
-                return w.L.divIcon({
-                  className: '',
-                  html: `
+          return w.L.divIcon({
+            className: '',
+            html: `
           <div
             class="${ring.cls}"
             style="
@@ -2654,67 +2633,67 @@
             ${icon}
           </div>
         `,
-                  iconSize: [38, 38],
-                  iconAnchor: [19, 19],
-                  popupAnchor: [0, -19],
-                });
-              }
-              w.copyJobId = function (jobId) {
-                if (!jobId) return;
+            iconSize: [38, 38],
+            iconAnchor: [19, 19],
+            popupAnchor: [0, -19],
+          });
+        }
+        w.copyJobId = function (jobId) {
+          if (!jobId) return;
 
-                if (navigator.clipboard) {
-                  navigator.clipboard
-                    .writeText(jobId)
-                    .then(() => {
-                      alert('คัดลอก Job ID แล้ว: ' + jobId);
-                    })
-                    .catch(() => {
-                      fallbackCopyJobId(jobId);
-                    });
-                } else {
-                  fallbackCopyJobId(jobId);
-                }
-              };
-
-              function fallbackCopyJobId(jobId) {
-                let temp = w.document.createElement('textarea');
-
-                temp.value = jobId;
-
-                w.document.body.appendChild(temp);
-
-                temp.select();
-
-                w.document.execCommand('copy');
-
-                w.document.body.removeChild(temp);
-
+          if (navigator.clipboard) {
+            navigator.clipboard
+              .writeText(jobId)
+              .then(() => {
                 alert('คัดลอก Job ID แล้ว: ' + jobId);
-              }
-              function safeAttr(v) {
-                return String(v || '')
-                  .replace(/&/g, '&amp;')
-                  .replace(/"/g, '&quot;')
-                  .replace(/</g, '&lt;')
-                  .replace(/>/g, '&gt;');
-              }
-              function buildMapPopup(group) {
-                let jobsHtml = group.jobs
-                  .map((job) => {
-                    let work = getWorkType(job['Job Title']);
-                    let remain =
-                      job.overdue > 0
-                        ? '🔥 OVERDUE'
-                        : `⏱ SLA เหลือ ${formatTime(
-                            job.limit - getHr(job['Create Time'])
-                          )}`;
-                    let gps = extractGPS(job['Job Title'] || '');
-                    let lat = gps?.lat || group.lat;
-                    let lng = gps?.lng || group.lng;
-                    let gmapUrl = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
-                    let jobId = job['Job ID'] || '-';
+              })
+              .catch(() => {
+                fallbackCopyJobId(jobId);
+              });
+          } else {
+            fallbackCopyJobId(jobId);
+          }
+        };
 
-                    return `<details class="map-job-box"><summary style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+        function fallbackCopyJobId(jobId) {
+          let temp = w.document.createElement('textarea');
+
+          temp.value = jobId;
+
+          w.document.body.appendChild(temp);
+
+          temp.select();
+
+          w.document.execCommand('copy');
+
+          w.document.body.removeChild(temp);
+
+          alert('คัดลอก Job ID แล้ว: ' + jobId);
+        }
+        function safeAttr(v) {
+          return String(v || '')
+            .replace(/&/g, '&amp;')
+            .replace(/"/g, '&quot;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
+        }
+        function buildMapPopup(group) {
+          let jobsHtml = group.jobs
+            .map((job) => {
+              let work = getWorkType(job['Job Title']);
+              let remain =
+                job.overdue > 0
+                  ? '🔥 OVERDUE'
+                  : `⏱ SLA เหลือ ${formatTime(
+                      job.limit - getHr(job['Create Time'])
+                    )}`;
+              let gps = extractGPS(job['Job Title'] || '');
+              let lat = gps?.lat || group.lat;
+              let lng = gps?.lng || group.lng;
+              let gmapUrl = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+              let jobId = job['Job ID'] || '-';
+
+              return `<details class="map-job-box"><summary style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
         <span>
           ${job['Priority'] || '-'} | ${jobId}
         </span>
@@ -2737,328 +2716,328 @@
           📋 Copy
         </button>
       </summary><div style="margin-top:8px"><b>Title</b><br>${
-                      job['Job Title'] || '-'
-                    }<br><br><b>Status</b><br>${getStatusIcon(
-                      job['Status']
-                    )}<br><br><b>Assign</b><br>${
-                      job['Assign to'] || '-'
-                    }<br><br><b>Area</b><br>${job['Province Name'] || '-'} / ${
-                      job['District Name'] || '-'
-                    }<br><br>${work.icon} ${
-                      work.text
-                    }<br>${remain}<br><a class="route-link" href="${gmapUrl}" target="_blank">🧭 Route to this Job</a></div></details>`;
-                  })
-                  .join('');
-                return `<div class="map-popup"><div class="map-popup-title">📍 Jobs on this marker : ${group.jobs.length}</div>${jobsHtml}</div>`;
-              }
-              function getPriorityRank(job) {
-                let pr = (job['Priority'] || 'NONE').toUpperCase();
+        job['Job Title'] || '-'
+      }<br><br><b>Status</b><br>${getStatusIcon(
+                job['Status']
+              )}<br><br><b>Assign</b><br>${
+                job['Assign to'] || '-'
+              }<br><br><b>Area</b><br>${job['Province Name'] || '-'} / ${
+                job['District Name'] || '-'
+              }<br><br>${work.icon} ${
+                work.text
+              }<br>${remain}<br><a class="route-link" href="${gmapUrl}" target="_blank">🧭 Route to this Job</a></div></details>`;
+            })
+            .join('');
+          return `<div class="map-popup"><div class="map-popup-title">📍 Jobs on this marker : ${group.jobs.length}</div>${jobsHtml}</div>`;
+        }
+        function getPriorityRank(job) {
+          let pr = (job['Priority'] || 'NONE').toUpperCase();
 
-                if (pr === 'CRITICAL') return 1;
+          if (pr === 'CRITICAL') return 1;
 
-                if (pr === 'MAJOR') return 2;
+          if (pr === 'MAJOR') return 2;
 
-                if (pr === 'MINOR') return 3;
+          if (pr === 'MINOR') return 3;
 
-                return 4;
-              }
+          return 4;
+        }
 
-              function getHighestPriorityJob(jobs) {
-                return [...jobs].sort(
-                  (a, b) => getPriorityRank(a) - getPriorityRank(b)
-                )[0];
-              }
+        function getHighestPriorityJob(jobs) {
+          return [...jobs].sort(
+            (a, b) => getPriorityRank(a) - getPriorityRank(b)
+          )[0];
+        }
 
-              function offsetMarkerCoord(lat, lng, index, total) {
-                if (total <= 1) {
-                  return [lat, lng];
-                }
+        function offsetMarkerCoord(lat, lng, index, total) {
+          if (total <= 1) {
+            return [lat, lng];
+          }
 
-                let radiusMeters = total <= 3 ? 35 : total <= 6 ? 50 : 70;
+          let radiusMeters = total <= 3 ? 35 : total <= 6 ? 50 : 70;
 
-                let angle = (2 * Math.PI * index) / total;
+          let angle = (2 * Math.PI * index) / total;
 
-                let earth = 6378137;
+          let earth = 6378137;
 
-                let dLat = (radiusMeters * Math.cos(angle)) / earth;
+          let dLat = (radiusMeters * Math.cos(angle)) / earth;
 
-                let dLng =
-                  (radiusMeters * Math.sin(angle)) /
-                  (earth * Math.cos((Math.PI * lat) / 180));
+          let dLng =
+            (radiusMeters * Math.sin(angle)) /
+            (earth * Math.cos((Math.PI * lat) / 180));
 
-                let newLat = lat + (dLat * 180) / Math.PI;
+          let newLat = lat + (dLat * 180) / Math.PI;
 
-                let newLng = lng + (dLng * 180) / Math.PI;
+          let newLng = lng + (dLng * 180) / Math.PI;
 
-                return [newLat, newLng];
-              }
-              async function buildAIMapMarkers() {
-                let groups = {};
+          return [newLat, newLng];
+        }
+        async function buildAIMapMarkers() {
+          let groups = {};
 
-                for (const job of jobs) {
-                  let title = job['Job Title'] || '';
+          for (const job of jobs) {
+            let title = job['Job Title'] || '';
 
-                  let province = job['Province Name'] || '';
+            let province = job['Province Name'] || '';
 
-                  let district = job['District Name'] || '';
+            let district = job['District Name'] || '';
 
-                  let coord = await getJobCoord(job);
+            let coord = await getJobCoord(job);
 
-                  if (!coord) {
-                    console.warn('No coordinate:', job['Job ID'], province, district);
+            if (!coord) {
+              console.warn('No coordinate:', job['Job ID'], province, district);
 
-                    continue;
-                  }
+              continue;
+            }
 
-                  let lat = coord[0];
-                  let lng = coord[1];
+            let lat = coord[0];
+            let lng = coord[1];
 
-                  let gps = extractGPS(title);
+            let gps = extractGPS(title);
 
-                  let useGpsKey = gps && isSameCoord(coord, gps);
+            let useGpsKey = gps && isSameCoord(coord, gps);
 
-                  let key = '';
+            let key = '';
 
-                  if (useGpsKey) {
-                    key = `GPS|${lat.toFixed(5)}|${lng.toFixed(5)}`;
-                  } else {
-                    key = `AREA|${province}|${district}`;
-                  }
+            if (useGpsKey) {
+              key = `GPS|${lat.toFixed(5)}|${lng.toFixed(5)}`;
+            } else {
+              key = `AREA|${province}|${district}`;
+            }
 
-                  if (!groups[key]) {
-                    groups[key] = {
-                      lat,
-                      lng,
-                      jobs: [],
-                      source: useGpsKey ? 'GPS_TITLE' : 'AREA_COORD',
-                    };
-                  }
+            if (!groups[key]) {
+              groups[key] = {
+                lat,
+                lng,
+                jobs: [],
+                source: useGpsKey ? 'GPS_TITLE' : 'AREA_COORD',
+              };
+            }
 
-                  groups[key].jobs.push(job);
-                }
+            groups[key].jobs.push(job);
+          }
 
-                let groupList = Object.values(groups);
+          let groupList = Object.values(groups);
 
-                let buckets = {};
+          let buckets = {};
 
-                groupList.forEach((group) => {
-                  let key = group.lat.toFixed(5) + '|' + group.lng.toFixed(5);
+          groupList.forEach((group) => {
+            let key = group.lat.toFixed(5) + '|' + group.lng.toFixed(5);
 
-                  if (!buckets[key]) {
-                    buckets[key] = [];
-                  }
+            if (!buckets[key]) {
+              buckets[key] = [];
+            }
 
-                  buckets[key].push(group);
-                });
+            buckets[key].push(group);
+          });
 
-                Object.values(buckets).forEach((bucket) => {
-                  bucket.forEach((group, idx) => {
-                    group._offsetIndex = idx;
-                    group._offsetTotal = bucket.length;
-                  });
-                });
+          Object.values(buckets).forEach((bucket) => {
+            bucket.forEach((group, idx) => {
+              group._offsetIndex = idx;
+              group._offsetTotal = bucket.length;
+            });
+          });
 
-                groupList.forEach((group) => {
-                  let mainJob = getHighestPriorityJob(group.jobs);
+          groupList.forEach((group) => {
+            let mainJob = getHighestPriorityJob(group.jobs);
 
-                  let displayCoord = offsetMarkerCoord(
-                    group.lat,
-                    group.lng,
-                    group._offsetIndex || 0,
-                    group._offsetTotal || 1
-                  );
+            let displayCoord = offsetMarkerCoord(
+              group.lat,
+              group.lng,
+              group._offsetIndex || 0,
+              group._offsetTotal || 1
+            );
 
-                  let marker = w.L.marker(displayCoord, {
-                    icon: makeMapIcon(mainJob),
-                  })
-                    .addTo(aiMap)
-                    .bindPopup(buildMapPopup(group));
+            let marker = w.L.marker(displayCoord, {
+              icon: makeMapIcon(mainJob),
+            })
+              .addTo(aiMap)
+              .bindPopup(buildMapPopup(group));
 
-                  aiMarkers.push(marker);
+            aiMarkers.push(marker);
 
-                  aiAllPoints.push(displayCoord);
-                });
+            aiAllPoints.push(displayCoord);
+          });
 
-                w.fitAllMarkers();
-              }
+          w.fitAllMarkers();
+        }
 
-              async function getJobCoord(job) {
-                let title = job['Job Title'] || '';
+        async function getJobCoord(job) {
+          let title = job['Job Title'] || '';
 
-                let gps = extractGPS(title);
+          let gps = extractGPS(title);
 
-                let province = job['Province Name'] || '';
+          let province = job['Province Name'] || '';
 
-                let district = job['District Name'] || '';
+          let district = job['District Name'] || '';
 
-                let areaCoord = getAreaCoord(province, district);
+          let areaCoord = getAreaCoord(province, district);
 
-                if (!areaCoord) {
-                  areaCoord = await geocodeArea(province, district);
-                }
+          if (!areaCoord) {
+            areaCoord = await geocodeArea(province, district);
+          }
 
-                if (
-                  gps &&
-                  areaCoord &&
-                  distanceKm(gps.lat, gps.lng, areaCoord[0], areaCoord[1]) <= 35
-                ) {
-                  return [gps.lat, gps.lng];
-                }
+          if (
+            gps &&
+            areaCoord &&
+            distanceKm(gps.lat, gps.lng, areaCoord[0], areaCoord[1]) <= 35
+          ) {
+            return [gps.lat, gps.lng];
+          }
 
-                if (areaCoord) {
-                  return areaCoord;
-                }
+          if (areaCoord) {
+            return areaCoord;
+          }
 
-                return null;
-              }
+          return null;
+        }
 
-              function getLatestOnsiteJob() {
-                let selected = (w.selectedEngineer || '').toLowerCase().trim();
+        function getLatestOnsiteJob() {
+          let selected = (w.selectedEngineer || '').toLowerCase().trim();
 
-                let onsites = jobs
-                  .filter((job) => {
-                    let s = (job['Status'] || '').toLowerCase();
+          let onsites = jobs
+            .filter((job) => {
+              let s = (job['Status'] || '').toLowerCase();
 
-                    let assign = (job['Assign to'] || '').toLowerCase().trim();
+              let assign = (job['Assign to'] || '').toLowerCase().trim();
 
-                    let isOnsite = s.includes('on-site') || s.includes('onsite');
+              let isOnsite = s.includes('on-site') || s.includes('onsite');
 
-                    if (!isOnsite) return false;
+              if (!isOnsite) return false;
 
-                    if (selected && assign !== selected) return false;
+              if (selected && assign !== selected) return false;
 
-                    return true;
-                  })
-                  .sort(
-                    (a, b) => new Date(b['Create Time']) - new Date(a['Create Time'])
-                  );
+              return true;
+            })
+            .sort(
+              (a, b) => new Date(b['Create Time']) - new Date(a['Create Time'])
+            );
 
-                return onsites[0] || null;
-              }
+          return onsites[0] || null;
+        }
 
-              async function buildSmartRouteJobs() {
-                let startJob = getLatestOnsiteJob();
+        async function buildSmartRouteJobs() {
+          let startJob = getLatestOnsiteJob();
 
-                if (!startJob) {
-                  alert('ไม่พบ Job สถานะ On-site สำหรับใช้เป็นจุดเริ่มต้น');
-                  return [];
-                }
+          if (!startJob) {
+            alert('ไม่พบ Job สถานะ On-site สำหรับใช้เป็นจุดเริ่มต้น');
+            return [];
+          }
 
-                let startCoord = await getJobCoord(startJob);
+          let startCoord = await getJobCoord(startJob);
 
-                if (!startCoord) {
-                  alert('ไม่พบพิกัดของ Job On-site ล่าสุด');
-                  return [];
-                }
+          if (!startCoord) {
+            alert('ไม่พบพิกัดของ Job On-site ล่าสุด');
+            return [];
+          }
 
-                let candidates = [];
+          let candidates = [];
 
-                for (const job of jobs) {
-                  if (job['Job ID'] === startJob['Job ID']) {
-                    continue;
-                  }
+          for (const job of jobs) {
+            if (job['Job ID'] === startJob['Job ID']) {
+              continue;
+            }
 
-                  let selected = (w.selectedEngineer || '').toLowerCase().trim();
+            let selected = (w.selectedEngineer || '').toLowerCase().trim();
 
-                  let assign = (job['Assign to'] || '').toLowerCase().trim();
+            let assign = (job['Assign to'] || '').toLowerCase().trim();
 
-                  if (selected && assign !== selected) {
-                    continue;
-                  }
+            if (selected && assign !== selected) {
+              continue;
+            }
 
-                  let status = (job['Status'] || '').toLowerCase();
+            let status = (job['Status'] || '').toLowerCase();
 
-                  if (status.includes('done') || status.includes('cancel')) {
-                    continue;
-                  }
+            if (status.includes('done') || status.includes('cancel')) {
+              continue;
+            }
 
-                  let coord = await getJobCoord(job);
+            let coord = await getJobCoord(job);
 
-                  if (!coord) continue;
+            if (!coord) continue;
 
-                  let pr = (job['Priority'] || 'NONE').toUpperCase();
+            let pr = (job['Priority'] || 'NONE').toUpperCase();
 
-                  let remain = job.limit - getHr(job['Create Time']);
+            let remain = job.limit - getHr(job['Create Time']);
 
-                  let dist = distanceKm(
-                    startCoord[0],
-                    startCoord[1],
-                    coord[0],
-                    coord[1]
-                  );
+            let dist = distanceKm(
+              startCoord[0],
+              startCoord[1],
+              coord[0],
+              coord[1]
+            );
 
-                  let priorityScore =
-                    pr === 'CRITICAL'
-                      ? 1000
-                      : pr === 'MAJOR'
-                      ? 600
-                      : pr === 'MINOR'
-                      ? 300
-                      : 100;
+            let priorityScore =
+              pr === 'CRITICAL'
+                ? 1000
+                : pr === 'MAJOR'
+                ? 600
+                : pr === 'MINOR'
+                ? 300
+                : 100;
 
-                  let overdueScore = job.overdue > 0 ? 800 : 0;
+            let overdueScore = job.overdue > 0 ? 800 : 0;
 
-                  let slaScore = remain <= 2 ? 300 : remain <= 4 ? 150 : 0;
+            let slaScore = remain <= 2 ? 300 : remain <= 4 ? 150 : 0;
 
-                  let distanceScore = Math.max(0, 200 - dist);
+            let distanceScore = Math.max(0, 200 - dist);
 
-                  let score = priorityScore + overdueScore + slaScore + distanceScore;
+            let score = priorityScore + overdueScore + slaScore + distanceScore;
 
-                  candidates.push({
-                    job,
-                    coord,
-                    score,
-                    dist,
-                  });
-                }
+            candidates.push({
+              job,
+              coord,
+              score,
+              dist,
+            });
+          }
 
-                candidates.sort((a, b) => b.score - a.score);
+          candidates.sort((a, b) => b.score - a.score);
 
-                let selectedJobs = candidates.slice(0, 4);
+          let selectedJobs = candidates.slice(0, 4);
 
-                return [
-                  {
-                    job: startJob,
-                    coord: startCoord,
-                    start: true,
-                  },
-                  ...selectedJobs,
-                ];
-              }
+          return [
+            {
+              job: startJob,
+              coord: startCoord,
+              start: true,
+            },
+            ...selectedJobs,
+          ];
+        }
 
-              w.drawAIRoute = async function () {
-                if (!aiMap) return;
+        w.drawAIRoute = async function () {
+          if (!aiMap) return;
 
-                let routeJobs = await buildSmartRouteJobs();
+          let routeJobs = await buildSmartRouteJobs();
 
-                if (routeJobs.length < 2) {
-                  alert('ไม่พบงานถัดไปสำหรับสร้าง Route');
-                  return;
-                }
+          if (routeJobs.length < 2) {
+            alert('ไม่พบงานถัดไปสำหรับสร้าง Route');
+            return;
+          }
 
-                if (aiRouteLine) {
-                  aiMap.removeLayer(aiRouteLine);
-                }
+          if (aiRouteLine) {
+            aiMap.removeLayer(aiRouteLine);
+          }
 
-                aiRouteMarkers.forEach((m) => {
-                  aiMap.removeLayer(m);
-                });
+          aiRouteMarkers.forEach((m) => {
+            aiMap.removeLayer(m);
+          });
 
-                aiRouteMarkers = [];
+          aiRouteMarkers = [];
 
-                aiRoutePoints = routeJobs.map((x) => x.coord);
+          aiRoutePoints = routeJobs.map((x) => x.coord);
 
-                aiRouteLine = w.L.polyline(aiRoutePoints, {
-                  color: '#22c55e',
-                  weight: 5,
-                  opacity: 0.9,
-                }).addTo(aiMap);
+          aiRouteLine = w.L.polyline(aiRoutePoints, {
+            color: '#22c55e',
+            weight: 5,
+            opacity: 0.9,
+          }).addTo(aiMap);
 
-                routeJobs.forEach((item, idx) => {
-                  let routeMarker = w.L.marker(item.coord, {
-                    icon: w.L.divIcon({
-                      className: '',
-                      html: `
+          routeJobs.forEach((item, idx) => {
+            let routeMarker = w.L.marker(item.coord, {
+              icon: w.L.divIcon({
+                className: '',
+                html: `
                     <div style="
                       background:${item.start ? '#2563eb' : '#22c55e'};
                       color:white;
@@ -3072,12 +3051,14 @@
                       ${item.start ? '🚩 START' : '✅ ' + idx}
                     </div>
                   `,
-                      iconSize: [90, 28],
-                      iconAnchor: [20, 14],
-                    }),
-                  }).addTo(aiMap).bindPopup(`
+                iconSize: [90, 28],
+                iconAnchor: [20, 14],
+              }),
+            }).addTo(aiMap).bindPopup(`
               <div style="color:#111">
-                <b>${item.start ? 'START - On-site ล่าสุด' : 'Route Job ' + idx}</b>
+                <b>${
+                  item.start ? 'START - On-site ล่าสุด' : 'Route Job ' + idx
+                }</b>
                 <br>
                 ${item.job['Job ID'] || '-'}
                 <br>
@@ -3087,598 +3068,586 @@
               </div>
             `);
 
-                  aiRouteMarkers.push(routeMarker);
-                });
+            aiRouteMarkers.push(routeMarker);
+          });
 
-                aiMap.fitBounds(aiRouteLine.getBounds(), {
-                  padding: [50, 50],
-                });
-              };
+          aiMap.fitBounds(aiRouteLine.getBounds(), {
+            padding: [50, 50],
+          });
+        };
 
-              w.clearAIRoute = function () {
-                if (aiRouteLine) {
-                  aiMap.removeLayer(aiRouteLine);
-                  aiRouteLine = null;
-                }
+        w.clearAIRoute = function () {
+          if (aiRouteLine) {
+            aiMap.removeLayer(aiRouteLine);
+            aiRouteLine = null;
+          }
 
-                aiRouteMarkers.forEach((m) => {
-                  aiMap.removeLayer(m);
-                });
+          aiRouteMarkers.forEach((m) => {
+            aiMap.removeLayer(m);
+          });
 
-                aiRouteMarkers = [];
-                aiRoutePoints = [];
+          aiRouteMarkers = [];
+          aiRoutePoints = [];
 
-                clearDistanceMeasure();
-              };
+          clearDistanceMeasure();
+        };
 
-              w.fitAllMarkers = function () {
-                if (!aiMap || aiAllPoints.length === 0) return;
+        w.fitAllMarkers = function () {
+          if (!aiMap || aiAllPoints.length === 0) return;
 
-                aiMap.fitBounds(aiAllPoints, {
-                  padding: [50, 50],
-                });
-              };
-              w.openGoogleRoute = async function () {
-                if (aiRoutePoints.length < 1) {
-                  let routeJobs = await buildSmartRouteJobs();
+          aiMap.fitBounds(aiAllPoints, {
+            padding: [50, 50],
+          });
+        };
+        w.openGoogleRoute = async function () {
+          if (aiRoutePoints.length < 1) {
+            let routeJobs = await buildSmartRouteJobs();
 
-                  aiRoutePoints = routeJobs.map((x) => x.coord);
-                }
+            aiRoutePoints = routeJobs.map((x) => x.coord);
+          }
 
-                if (aiRoutePoints.length < 1) {
-                  return;
-                }
+          if (aiRoutePoints.length < 1) {
+            return;
+          }
 
-                if (aiRoutePoints.length === 1) {
-                  let only = aiRoutePoints[0];
+          if (aiRoutePoints.length === 1) {
+            let only = aiRoutePoints[0];
 
-                  window.open(
-                    `https://www.google.com/maps/dir/?api=1&destination=${only[0]},${only[1]}`,
-                    '_blank'
-                  );
+            window.open(
+              `https://www.google.com/maps/dir/?api=1&destination=${only[0]},${only[1]}`,
+              '_blank'
+            );
 
-                  return;
-                }
+            return;
+          }
 
-                let start = aiRoutePoints[0];
+          let start = aiRoutePoints[0];
 
-                let end = aiRoutePoints[aiRoutePoints.length - 1];
+          let end = aiRoutePoints[aiRoutePoints.length - 1];
 
-                let middle = aiRoutePoints
-                  .slice(1, -1)
-                  .slice(0, 8)
-                  .map((p) => `${p[0]},${p[1]}`)
-                  .join('|');
+          let middle = aiRoutePoints
+            .slice(1, -1)
+            .slice(0, 8)
+            .map((p) => `${p[0]},${p[1]}`)
+            .join('|');
 
-                let url =
-                  `https://www.google.com/maps/dir/?api=1` +
-                  `&origin=${start[0]},${start[1]}` +
-                  `&destination=${end[0]},${end[1]}` +
-                  (middle ? `&waypoints=${middle}` : '');
+          let url =
+            `https://www.google.com/maps/dir/?api=1` +
+            `&origin=${start[0]},${start[1]}` +
+            `&destination=${end[0]},${end[1]}` +
+            (middle ? `&waypoints=${middle}` : '');
 
-                window.open(url, '_blank');
-              };
+          window.open(url, '_blank');
+        };
 
-              w.changeView = function (view, btn) {
-                w.document
-                  .querySelectorAll('.view-btn')
-                  .forEach((x) => x.classList.remove('active'));
-                btn.classList.add('active');
-                let engineerView = w.document.getElementById('engineerView'),
-                  districtView = w.document.getElementById('districtView'),
-                  rootView = w.document.getElementById('rootView'),
-                  mapView = w.document.getElementById('mapView'),
-                  districtFilterBar = w.document.getElementById('districtFilterBar');
-                if (engineerView) engineerView.style.display = 'none';
-                if (districtView) districtView.style.display = 'none';
-                if (rootView) rootView.style.display = 'none';
-                if (mapView) mapView.style.display = 'none';
-                if (districtFilterBar) districtFilterBar.style.display = 'none';
-                switch (view) {
-                  case 'engineer':
-                    if (engineerView) engineerView.style.display = 'flex';
-                    break;
-                  case 'district':
-                    if (districtView) districtView.style.display = 'flex';
-                    if (districtFilterBar) districtFilterBar.style.display = 'flex';
-                    break;
-                  case 'root':
-                    if (rootView) rootView.style.display = 'flex';
-                    break;
-                  case 'map':
-                    if (mapView) {
-                      mapView.style.display = 'block';
-                      setTimeout(() => w.initAIMap && w.initAIMap(), 300);
-                    }
-                    break;
-                }
-              };
-              w.selectedEngineer = '';
-
-              w.filterEngineer = function (assign, btn) {
-                w.selectedEngineer = (assign || '').toLowerCase().trim();
-
-                w.document
-                  .querySelectorAll('.engineer-btn')
-                  .forEach((x) => x.classList.remove('active'));
-
-                if (btn) {
-                  btn.classList.add('active');
-                }
-
-                w.document
-                  .querySelectorAll('#districtView .ai-card')
-                  .forEach((card) => {
-                    let visibleCount = 0;
-
-                    card.querySelectorAll('.dist-job').forEach((job) => {
-                      let jobAssign = (job.dataset.assign || '').toLowerCase().trim();
-
-                      let show =
-                        !w.selectedEngineer || jobAssign === w.selectedEngineer;
-
-                      job.classList.toggle('hide-by-engineer', !show);
-
-                      if (show) {
-                        visibleCount++;
-                      }
-                    });
-
-                    card.style.display = visibleCount > 0 ? '' : 'none';
-                  });
-              };
-              w.filterCardJobs = function (btn, type) {
-                let card = btn.closest('.ai-card');
-
-                if (!card) return;
-
-                card
-                  .querySelectorAll('.summary-chip')
-                  .forEach((x) => x.classList.remove('active'));
-
-                btn.classList.add('active');
-
-                let jobs = card.querySelectorAll('.dist-job');
-
-                jobs.forEach((job) => {
-                  let pr = job.dataset.priority || '';
-
-                  let overdue = job.dataset.overdue || 'no';
-
-                  let show = true;
-
-                  if (type === 'critical') {
-                    show = pr === 'CRITICAL';
-                  } else if (type === 'major') {
-                    show = pr === 'MAJOR';
-                  } else if (type === 'overdue') {
-                    show = overdue === 'yes';
-                  } else {
-                    show = true;
-                  }
-
-                  job.classList.toggle('hide', !show);
-                });
-              };
-              w.filterDistrict = function (district, btn) {
-                w.document
-                  .querySelectorAll('.district-btn')
-                  .forEach((x) => x.classList.remove('active'));
-                if (btn) btn.classList.add('active');
-                w.document
-                  .querySelectorAll('#districtView .ai-card')
-                  .forEach((card) => {
-                    let cardDistrict = (card.dataset.district || '')
-                      .trim()
-                      .toLowerCase();
-                    let targetDistrict = (district || '').trim().toLowerCase();
-                    card.style.display =
-                      !district || cardDistrict === targetDistrict ? '' : 'none';
-                  });
-              };
-            }
-            function toggleToolsMenu() {
-              let menu = document.getElementById('toolsMenu');
-
-              if (!menu) return;
-
-              menu.classList.toggle('show');
-            }
-
-            function closeToolsMenu() {
-              let menu = document.getElementById('toolsMenu');
-
-              if (!menu) return;
-
-              menu.classList.remove('show');
-            }
-
-            document.addEventListener('click', function (e) {
-              let wrap = document.querySelector('.tools-wrap');
-
-              if (!wrap) return;
-
-              if (!wrap.contains(e.target)) {
-                closeToolsMenu();
+        w.changeView = function (view, btn) {
+          w.document
+            .querySelectorAll('.view-btn')
+            .forEach((x) => x.classList.remove('active'));
+          btn.classList.add('active');
+          let engineerView = w.document.getElementById('engineerView'),
+            districtView = w.document.getElementById('districtView'),
+            rootView = w.document.getElementById('rootView'),
+            mapView = w.document.getElementById('mapView'),
+            districtFilterBar = w.document.getElementById('districtFilterBar');
+          if (engineerView) engineerView.style.display = 'none';
+          if (districtView) districtView.style.display = 'none';
+          if (rootView) rootView.style.display = 'none';
+          if (mapView) mapView.style.display = 'none';
+          if (districtFilterBar) districtFilterBar.style.display = 'none';
+          switch (view) {
+            case 'engineer':
+              if (engineerView) engineerView.style.display = 'flex';
+              break;
+            case 'district':
+              if (districtView) districtView.style.display = 'flex';
+              if (districtFilterBar) districtFilterBar.style.display = 'flex';
+              break;
+            case 'root':
+              if (rootView) rootView.style.display = 'flex';
+              break;
+            case 'map':
+              if (mapView) {
+                mapView.style.display = 'block';
+                setTimeout(() => w.initAIMap && w.initAIMap(), 300);
               }
+              break;
+          }
+        };
+        w.selectedEngineer = '';
+
+        w.filterEngineer = function (assign, btn) {
+          w.selectedEngineer = (assign || '').toLowerCase().trim();
+
+          w.document
+            .querySelectorAll('.engineer-btn')
+            .forEach((x) => x.classList.remove('active'));
+
+          if (btn) {
+            btn.classList.add('active');
+          }
+
+          w.document
+            .querySelectorAll('#districtView .ai-card')
+            .forEach((card) => {
+              let visibleCount = 0;
+
+              card.querySelectorAll('.dist-job').forEach((job) => {
+                let jobAssign = (job.dataset.assign || '').toLowerCase().trim();
+
+                let show =
+                  !w.selectedEngineer || jobAssign === w.selectedEngineer;
+
+                job.classList.toggle('hide-by-engineer', !show);
+
+                if (show) {
+                  visibleCount++;
+                }
+              });
+
+              card.style.display = visibleCount > 0 ? '' : 'none';
             });
-            function initToolDefaultAll() {
+        };
+        w.filterCardJobs = function (btn, type) {
+          let card = btn.closest('.ai-card');
+
+          if (!card) return;
+
+          card
+            .querySelectorAll('.summary-chip')
+            .forEach((x) => x.classList.remove('active'));
+
+          btn.classList.add('active');
+
+          let jobs = card.querySelectorAll('.dist-job');
+
+          jobs.forEach((job) => {
+            let pr = job.dataset.priority || '';
+
+            let overdue = job.dataset.overdue || 'no';
+
+            let show = true;
+
+            if (type === 'critical') {
+              show = pr === 'CRITICAL';
+            } else if (type === 'major') {
+              show = pr === 'MAJOR';
+            } else if (type === 'overdue') {
+              show = overdue === 'yes';
+            } else {
+              show = true;
+            }
+
+            job.classList.toggle('hide', !show);
+          });
+        };
+        w.filterDistrict = function (district, btn) {
+          w.document
+            .querySelectorAll('.district-btn')
+            .forEach((x) => x.classList.remove('active'));
+          if (btn) btn.classList.add('active');
+          w.document
+            .querySelectorAll('#districtView .ai-card')
+            .forEach((card) => {
+              let cardDistrict = (card.dataset.district || '')
+                .trim()
+                .toLowerCase();
+              let targetDistrict = (district || '').trim().toLowerCase();
+              card.style.display =
+                !district || cardDistrict === targetDistrict ? '' : 'none';
+            });
+        };
+      }
+      function toggleToolsMenu() {
+        let menu = document.getElementById('toolsMenu');
+
+        if (!menu) return;
+
+        menu.classList.toggle('show');
+      }
+
+      function closeToolsMenu() {
+        let menu = document.getElementById('toolsMenu');
+
+        if (!menu) return;
+
+        menu.classList.remove('show');
+      }
+
+      document.addEventListener('click', function (e) {
+        let wrap = document.querySelector('.tools-wrap');
+
+        if (!wrap) return;
+
+        if (!wrap.contains(e.target)) {
+          closeToolsMenu();
+        }
+      });
+      function initToolDefaultAll() {
+        let allWorkButtons = document.querySelectorAll(
+          '.mode-tool[data-group="work"]:not([data-value="all"])'
+        );
+
+        let allStatusButtons = document.querySelectorAll(
+          '.mode-tool[data-group="status"]:not([data-value="all"])'
+        );
+
+        workSubFilters = Array.from(allWorkButtons).map((b) => b.dataset.value);
+
+        statusSubFilters = Array.from(allStatusButtons).map(
+          (b) => b.dataset.value
+        );
+
+        // Work + Status ถูกเลือกพร้อมกัน = Both
+        viewMode = 2;
+
+        updateToolsActiveState();
+
+        render();
+      }
+      function toggleToolMultiFilter(type, value, mode, btn) {
+        if (type === 'work') {
+          if (value === 'all') {
+            let allWorkButtons = document.querySelectorAll(
+              '.mode-tool[data-group="work"]:not([data-value="all"])'
+            );
+
+            let allValues = Array.from(allWorkButtons).map(
+              (b) => b.dataset.value
+            );
+
+            let isAllSelected =
+              allValues.length > 0 &&
+              allValues.every((v) => workSubFilters.includes(v));
+
+            workSubFilters = isAllSelected ? [] : allValues;
+          } else {
+            if (workSubFilters.includes(value)) {
+              workSubFilters = workSubFilters.filter((v) => v !== value);
+            } else {
+              workSubFilters.push(value);
+            }
+          }
+        }
+
+        if (type === 'status') {
+          if (value === 'all') {
+            let allStatusButtons = document.querySelectorAll(
+              '.mode-tool[data-group="status"]:not([data-value="all"])'
+            );
+
+            let allValues = Array.from(allStatusButtons).map(
+              (b) => b.dataset.value
+            );
+
+            let isAllSelected =
+              allValues.length > 0 &&
+              allValues.every((v) => statusSubFilters.includes(v));
+
+            statusSubFilters = isAllSelected ? [] : allValues;
+          } else {
+            if (statusSubFilters.includes(value)) {
+              statusSubFilters = statusSubFilters.filter((v) => v !== value);
+            } else {
+              statusSubFilters.push(value);
+            }
+          }
+        }
+
+        // Auto Mode
+        if (workSubFilters.length > 0 && statusSubFilters.length > 0) {
+          viewMode = 2; // Both
+        } else if (statusSubFilters.length > 0) {
+          viewMode = 1; // Status
+        } else {
+          viewMode = 0; // Work
+        }
+
+        updateToolsActiveState();
+
+        render();
+      }
+      function updateToolsActiveState() {
+        document.querySelectorAll('.mode-tool').forEach((btn) => {
+          let group = btn.dataset.group;
+
+          let value = btn.dataset.value;
+
+          btn.classList.remove('active');
+
+          if (group === 'work') {
+            if (value === 'all') {
               let allWorkButtons = document.querySelectorAll(
                 '.mode-tool[data-group="work"]:not([data-value="all"])'
               );
 
+              let allValues = Array.from(allWorkButtons).map(
+                (b) => b.dataset.value
+              );
+
+              if (
+                allValues.length > 0 &&
+                allValues.every((v) => workSubFilters.includes(v))
+              ) {
+                btn.classList.add('active');
+              }
+            } else if (workSubFilters.includes(value)) {
+              btn.classList.add('active');
+            }
+          }
+
+          if (group === 'status') {
+            if (value === 'all') {
               let allStatusButtons = document.querySelectorAll(
                 '.mode-tool[data-group="status"]:not([data-value="all"])'
               );
 
-              workSubFilters = Array.from(allWorkButtons).map((b) => b.dataset.value);
-
-              statusSubFilters = Array.from(allStatusButtons).map(
+              let allValues = Array.from(allStatusButtons).map(
                 (b) => b.dataset.value
               );
 
-              // Work + Status ถูกเลือกพร้อมกัน = Both
-              viewMode = 2;
-
-              updateToolsActiveState();
-
-              render();
-            }
-            function toggleToolMultiFilter(type, value, mode, btn) {
-              if (type === 'work') {
-                if (value === 'all') {
-                  let allWorkButtons = document.querySelectorAll(
-                    '.mode-tool[data-group="work"]:not([data-value="all"])'
-                  );
-
-                  let allValues = Array.from(allWorkButtons).map(
-                    (b) => b.dataset.value
-                  );
-
-                  let isAllSelected =
-                    allValues.length > 0 &&
-                    allValues.every((v) => workSubFilters.includes(v));
-
-                  workSubFilters = isAllSelected ? [] : allValues;
-                } else {
-                  if (workSubFilters.includes(value)) {
-                    workSubFilters = workSubFilters.filter((v) => v !== value);
-                  } else {
-                    workSubFilters.push(value);
-                  }
-                }
+              if (
+                allValues.length > 0 &&
+                allValues.every((v) => statusSubFilters.includes(v))
+              ) {
+                btn.classList.add('active');
               }
-
-              if (type === 'status') {
-                if (value === 'all') {
-                  let allStatusButtons = document.querySelectorAll(
-                    '.mode-tool[data-group="status"]:not([data-value="all"])'
-                  );
-
-                  let allValues = Array.from(allStatusButtons).map(
-                    (b) => b.dataset.value
-                  );
-
-                  let isAllSelected =
-                    allValues.length > 0 &&
-                    allValues.every((v) => statusSubFilters.includes(v));
-
-                  statusSubFilters = isAllSelected ? [] : allValues;
-                } else {
-                  if (statusSubFilters.includes(value)) {
-                    statusSubFilters = statusSubFilters.filter((v) => v !== value);
-                  } else {
-                    statusSubFilters.push(value);
-                  }
-                }
-              }
-
-              // Auto Mode
-              if (workSubFilters.length > 0 && statusSubFilters.length > 0) {
-                viewMode = 2; // Both
-              } else if (statusSubFilters.length > 0) {
-                viewMode = 1; // Status
-              } else {
-                viewMode = 0; // Work
-              }
-
-              updateToolsActiveState();
-
-              render();
+            } else if (statusSubFilters.includes(value)) {
+              btn.classList.add('active');
             }
-            function updateToolsActiveState() {
-              document.querySelectorAll('.mode-tool').forEach((btn) => {
-                let group = btn.dataset.group;
+          }
+        });
+      }
 
-                let value = btn.dataset.value;
+      function passToolSubFilter(r) {
+        let title = r['Job Title'] || '';
 
-                btn.classList.remove('active');
+        let status = (r['Status'] || '').toLowerCase();
 
-                if (group === 'work') {
-                  if (value === 'all') {
-                    let allWorkButtons = document.querySelectorAll(
-                      '.mode-tool[data-group="work"]:not([data-value="all"])'
-                    );
+        let work = getWorkType(title).text;
 
-                    let allValues = Array.from(allWorkButtons).map(
-                      (b) => b.dataset.value
-                    );
+        let allWorkButtons = document.querySelectorAll(
+          '.mode-tool[data-group="work"]:not([data-value="all"])'
+        );
 
-                    if (
-                      allValues.length > 0 &&
-                      allValues.every((v) => workSubFilters.includes(v))
-                    ) {
-                      btn.classList.add('active');
-                    }
-                  } else if (workSubFilters.includes(value)) {
-                    btn.classList.add('active');
-                  }
-                }
+        let allWorkValues = Array.from(allWorkButtons).map(
+          (b) => b.dataset.value
+        );
 
-                if (group === 'status') {
-                  if (value === 'all') {
-                    let allStatusButtons = document.querySelectorAll(
-                      '.mode-tool[data-group="status"]:not([data-value="all"])'
-                    );
+        let allStatusButtons = document.querySelectorAll(
+          '.mode-tool[data-group="status"]:not([data-value="all"])'
+        );
 
-                    let allValues = Array.from(allStatusButtons).map(
-                      (b) => b.dataset.value
-                    );
+        let allStatusValues = Array.from(allStatusButtons).map(
+          (b) => b.dataset.value
+        );
 
-                    if (
-                      allValues.length > 0 &&
-                      allValues.every((v) => statusSubFilters.includes(v))
-                    ) {
-                      btn.classList.add('active');
-                    }
-                  } else if (statusSubFilters.includes(value)) {
-                    btn.classList.add('active');
-                  }
-                }
-              });
+        let isAllWorkSelected =
+          allWorkValues.length > 0 &&
+          allWorkValues.every((v) => workSubFilters.includes(v));
+
+        let isAllStatusSelected =
+          allStatusValues.length > 0 &&
+          allStatusValues.every((v) => statusSubFilters.includes(v));
+
+        // Work filter
+        // ถ้า All Work ถูกเลือกครบ = ไม่กรอง Work
+        if (workSubFilters.length > 0 && !isAllWorkSelected) {
+          if (!workSubFilters.includes(work)) {
+            return false;
+          }
+        }
+
+        // Status filter
+        // ถ้า All Status ถูกเลือกครบ = ไม่กรอง Status
+        if (statusSubFilters.length > 0 && !isAllStatusSelected) {
+          let matchedStatus = statusSubFilters.some((filter) => {
+            if (filter === 'on-site') {
+              return status.includes('on-site') || status.includes('onsite');
             }
 
-            function passToolSubFilter(r) {
-              let title = r['Job Title'] || '';
+            return status.includes(filter);
+          });
 
-              let status = (r['Status'] || '').toLowerCase();
+          if (!matchedStatus) {
+            return false;
+          }
+        }
 
-              let work = getWorkType(title).text;
+        return true;
+      }
+      function getPrioritySortValue(pr) {
+        pr = String(pr || 'NONE').toUpperCase();
 
-              let allWorkButtons = document.querySelectorAll(
-                '.mode-tool[data-group="work"]:not([data-value="all"])'
-              );
+        if (pr === 'CRITICAL') return 1;
+        if (pr === 'MAJOR') return 2;
+        if (pr === 'MINOR') return 3;
 
-              let allWorkValues = Array.from(allWorkButtons).map(
-                (b) => b.dataset.value
-              );
+        return 4;
+      }
 
-              let allStatusButtons = document.querySelectorAll(
-                '.mode-tool[data-group="status"]:not([data-value="all"])'
-              );
+      function togglePrioritySort() {
+        if (prioritySortMode === 'none') {
+          prioritySortMode = 'high';
+        } else if (prioritySortMode === 'high') {
+          prioritySortMode = 'low';
+        } else {
+          prioritySortMode = 'none';
+        }
 
-              let allStatusValues = Array.from(allStatusButtons).map(
-                (b) => b.dataset.value
-              );
+        render();
+      }
 
-              let isAllWorkSelected =
-                allWorkValues.length > 0 &&
-                allWorkValues.every((v) => workSubFilters.includes(v));
-
-              let isAllStatusSelected =
-                allStatusValues.length > 0 &&
-                allStatusValues.every((v) => statusSubFilters.includes(v));
-
-              // Work filter
-              // ถ้า All Work ถูกเลือกครบ = ไม่กรอง Work
-              if (workSubFilters.length > 0 && !isAllWorkSelected) {
-                if (!workSubFilters.includes(work)) {
-                  return false;
-                }
-              }
-
-              // Status filter
-              // ถ้า All Status ถูกเลือกครบ = ไม่กรอง Status
-              if (statusSubFilters.length > 0 && !isAllStatusSelected) {
-                let matchedStatus = statusSubFilters.some((filter) => {
-                  if (filter === 'on-site') {
-                    return status.includes('on-site') || status.includes('onsite');
-                  }
-
-                  return status.includes(filter);
-                });
-
-                if (!matchedStatus) {
-                  return false;
-                }
-              }
-
-              return true;
-            }
-            function getPrioritySortValue(pr) {
-              pr = String(pr || 'NONE').toUpperCase();
-
-              if (pr === 'CRITICAL') return 1;
-              if (pr === 'MAJOR') return 2;
-              if (pr === 'MINOR') return 3;
-
-              return 4;
-            }
-
-            function togglePrioritySort() {
-              if (prioritySortMode === 'none') {
-                prioritySortMode = 'high';
-              } else if (prioritySortMode === 'high') {
-                prioritySortMode = 'low';
-              } else {
-                prioritySortMode = 'none';
-              }
-
-              render();
-            }
-
-            function getPrioritySortIcon() {
-              if (prioritySortMode === 'high') return ' 🔽';
-              if (prioritySortMode === 'low') return ' 🔼';
-              return ' ↕';
-            }
-            function render() {
-              let prov = $('#provinceFilter').val();
-              let map = {},
-                c = 0,
-                m = 0,
-                n = 0,
-                o = 0;
-              data.forEach((r) => {
-                let pr = (mapCol(r, ['Priority']) || 'NONE').toUpperCase();
-                let p = mapCol(r, ['Province Name']);
-                let job = (mapCol(r, ['Job ID']) || '').toLowerCase();
-                let title = (mapCol(r, ['Job Title']) || '').toLowerCase();
-                let status = (mapCol(r, ['Status']) || '').toLowerCase();
-                let assign = (mapCol(r, ['Assign to']) || '').toLowerCase();
-                let province = (mapCol(r, ['Province Name']) || '').toLowerCase();
-                let district = (mapCol(r, ['District Name']) || '').toLowerCase();
-                let work = getWorkType(title).text.toLowerCase();
-                let hr = getHr(r['Create Time']);
-                let limit = pr === 'CRITICAL' ? 3 : pr === 'MAJOR' ? 10 : 1000;
-                let od = hr > limit;
-                let k = $('#search').val().toLowerCase().trim();
-                let keys = k ? k.split(/\s+/) : [];
-                let code = (PROV_CODE[p] || '').toLowerCase();
-                let text =
-                  job +
-                  ' ' +
-                  title +
-                  ' ' +
-                  status +
-                  ' ' +
-                  assign +
-                  ' ' +
-                  province +
-                  ' ' +
-                  district +
-                  ' ' +
-                  work +
-                  ' ' +
-                  code;
-                if (od) text += ' overdue';
-                for (let key of keys) {
-                  if (key === 'overdue' && !od) return;
-                  if (key !== 'overdue' && !text.includes(key)) return;
-                }
-                if (prov && p !== prov) return;
-                if (!passToolSubFilter(r)) return;
-                if (pr === 'CRITICAL') c++;
-                else if (pr === 'MAJOR') m++;
-                else n++;
-                if (od) o++;
-                if (!pass(pr, od)) return;
-                if (!map[p]) map[p] = [];
-                map[p].push({
-                  ...r,
-                  pr,
-                  hr,
-                  limit,
-                  od,
-                  district: r['District Name'],
-                  status: r['Status'],
-                  assign: r['Assign to'] || '-',
-                  work: getWorkType(title),
-                });
-              });
-              $('#c').text('Critical:' + c);
-              $('#m').text('Major:' + m);
-              $('#n').text('Minor:' + n);
-              $('#t').text('Total:' + (c + m + n));
-              $('#o').text('Overdue:' + o);
-              root.innerHTML =
-                Object.keys(map)
-                  .map(
-                    (p) =>
-                      `<div class="card" id="${p}"><div class="card-header"><h3>📍 ${
-                        PROV_CODE[p] ? `(${PROV_CODE[p]}) ` : ''
-                      }${p}</h3><button class="btn-export" onclick="exportJPG('${p}')"><span>📸</span><span>Export</span></button></div><table><tr><th>Job</th>
+      function getPrioritySortIcon() {
+        if (prioritySortMode === 'high') return ' 🔽';
+        if (prioritySortMode === 'low') return ' 🔼';
+        return ' ↕';
+      }
+      function render() {
+        let prov = $('#provinceFilter').val();
+        let map = {},
+          c = 0,
+          m = 0,
+          n = 0,
+          o = 0;
+        data.forEach((r) => {
+          let pr = (mapCol(r, ['Priority']) || 'NONE').toUpperCase();
+          let p = mapCol(r, ['Province Name']);
+          let job = (mapCol(r, ['Job ID']) || '').toLowerCase();
+          let title = (mapCol(r, ['Job Title']) || '').toLowerCase();
+          let status = (mapCol(r, ['Status']) || '').toLowerCase();
+          let assign = (mapCol(r, ['Assign to']) || '').toLowerCase();
+          let province = (mapCol(r, ['Province Name']) || '').toLowerCase();
+          let district = (mapCol(r, ['District Name']) || '').toLowerCase();
+          let work = getWorkType(title).text.toLowerCase();
+          let hr = getHr(r['Create Time']);
+          let limit = pr === 'CRITICAL' ? 3 : pr === 'MAJOR' ? 10 : 1000;
+          let od = hr > limit;
+          let k = $('#search').val().toLowerCase().trim();
+          let keys = k ? k.split(/\s+/) : [];
+          let code = (PROV_CODE[p] || '').toLowerCase();
+          let text =
+            job +
+            ' ' +
+            title +
+            ' ' +
+            status +
+            ' ' +
+            assign +
+            ' ' +
+            province +
+            ' ' +
+            district +
+            ' ' +
+            work +
+            ' ' +
+            code;
+          if (od) text += ' overdue';
+          for (let key of keys) {
+            if (key === 'overdue' && !od) return;
+            if (key !== 'overdue' && !text.includes(key)) return;
+          }
+          if (prov && p !== prov) return;
+          if (!passToolSubFilter(r)) return;
+          if (pr === 'CRITICAL') c++;
+          else if (pr === 'MAJOR') m++;
+          else n++;
+          if (od) o++;
+          if (!pass(pr, od)) return;
+          if (!map[p]) map[p] = [];
+          map[p].push({
+            ...r,
+            pr,
+            hr,
+            limit,
+            od,
+            district: r['District Name'],
+            status: r['Status'],
+            assign: r['Assign to'] || '-',
+            work: getWorkType(title),
+          });
+        });
+        $('#c').text('Critical:' + c);
+        $('#m').text('Major:' + m);
+        $('#n').text('Minor:' + n);
+        $('#t').text('Total:' + (c + m + n));
+        $('#o').text('Overdue:' + o);
+        root.innerHTML =
+          Object.keys(map)
+            .map(
+              (p) =>
+                `<div class="card" id="${p}"><div class="card-header"><h3>📍 ${
+                  PROV_CODE[p] ? `(${PROV_CODE[p]}) ` : ''
+                }${p}</h3><button class="btn-export" onclick="exportJPG('${p}')"><span>📸</span><span>Export</span></button></div><table><tr><th>Job</th>
       <th onclick="togglePrioritySort()" class="sortable-th">
         Priority${getPrioritySortIcon()}
       </th>
       <th>Create</th><th>Work / Status</th><th>Title</th><th>Province</th><th>Assign</th><th>สถานะ SLA</th></tr>${[
-                        ...map[p],
-                      ]
-                        .sort((a, b) => {
-                          if (prioritySortMode === 'high') {
-                            return (
-                              getPrioritySortValue(a.pr) - getPrioritySortValue(b.pr)
-                            );
-                          }
+        ...map[p],
+      ]
+        .sort((a, b) => {
+          if (prioritySortMode === 'high') {
+            return getPrioritySortValue(a.pr) - getPrioritySortValue(b.pr);
+          }
 
-                          if (prioritySortMode === 'low') {
-                            return (
-                              getPrioritySortValue(b.pr) - getPrioritySortValue(a.pr)
-                            );
-                          }
+          if (prioritySortMode === 'low') {
+            return getPrioritySortValue(b.pr) - getPrioritySortValue(a.pr);
+          }
 
-                          return 0;
-                        })
-                        .map(
-                          (r) =>
-                            `<tr class="${r.od ? 'overdue' : ''}"><td>${
-                              r['Job ID'] || ''
-                            }</td><td><div class="badge ${r.pr.toLowerCase()}">${
-                              r.pr
-                            }</div></td><td>${
-                              r['Create Time'] || ''
-                            }</td><td><div class="work work-${
-                              r.work.type
-                            }" style="display:${
-                              viewMode === 0 || viewMode === 2
-                                ? 'inline-flex'
-                                : 'none'
-                            }">${r.work.icon} ${
-                              r.work.text
-                            }</div><div class="status-badge status-${
-                              getStatusInfo(r.status).cls
-                            }" style="display:${
-                              viewMode === 1 || viewMode === 2
-                                ? 'inline-flex'
-                                : 'none'
-                            }">${getStatusInfo(r.status).icon} ${
-                              getStatusInfo(r.status).text
-                            }</div></td><td class="title-cell"><div class="title-text">${
-                              r['Job Title'] || ''
-                            }</div><span class="remark-btn ${
-                              r['Reason by WF'] ? 'has-remark' : ''
-                            }" onclick="showRemark('${
-                              r['Job ID']
-                            }')">ℹ️</span></td><td><div class="prov-name">${p}</div><div class="dist">${
-                              r.district || ''
-                            }</div></td><td><div class="assign-box">${
-                              r.assign
-                            }<td>${(() => {
-                              let s = getSLA(r.hr, r.limit);
+          return 0;
+        })
+        .map(
+          (r) =>
+            `<tr class="${r.od ? 'overdue' : ''}"><td>${
+              r['Job ID'] || ''
+            }</td><td><div class="badge ${r.pr.toLowerCase()}">${
+              r.pr
+            }</div></td><td>${
+              r['Create Time'] || ''
+            }</td><td><div class="work work-${r.work.type}" style="display:${
+              viewMode === 0 || viewMode === 2 ? 'inline-flex' : 'none'
+            }">${r.work.icon} ${
+              r.work.text
+            }</div><div class="status-badge status-${
+              getStatusInfo(r.status).cls
+            }" style="display:${
+              viewMode === 1 || viewMode === 2 ? 'inline-flex' : 'none'
+            }">${getStatusInfo(r.status).icon} ${
+              getStatusInfo(r.status).text
+            }</div></td><td class="title-cell"><div class="title-text">${
+              r['Job Title'] || ''
+            }</div><span class="remark-btn ${
+              r['Reason by WF'] ? 'has-remark' : ''
+            }" onclick="showRemark('${
+              r['Job ID']
+            }')">ℹ️</span></td><td><div class="prov-name">${p}</div><div class="dist">${
+              r.district || ''
+            }</div></td><td><div class="assign-box">${r.assign}<td>${(() => {
+              let s = getSLA(r.hr, r.limit);
 
-                              let remainText = r.od
-                                ? '<span class="sla-overdue-text">🔥 เกิน SLA 🔥</span>'
-                                : 'เหลือ: ' + formatTime(r.limit - r.hr);
+              let remainText = r.od
+                ? '<span class="sla-overdue-text">🔥 เกิน SLA 🔥</span>'
+                : 'เหลือ: ' + formatTime(r.limit - r.hr);
 
-                              return `
+              return `
           <div class="sla-box">
             <div class="sla-bar">
-              <div class="sla-fill ${r.od ? 'sla-red' : s.color}" style="width:${
-                                s.pct
-                              }%"></div>
+              <div class="sla-fill ${
+                r.od ? 'sla-red' : s.color
+              }" style="width:${s.pct}%"></div>
               <div class="sla-percent">${s.pct.toFixed(0)}%</div>
             </div>
             <div class="sla-text">ใช้ไป: ${formatTime(r.hr)}</div>
             <div class="sla-text">${remainText}</div>
           </div>
         `;
-                            })()}</td>
+            })()}</td>
       </tr>`
-                        )
-                        .join('')}</table></div>`
-                  )
-                  .join('') || '<div class="no-data">❌ ไม่พบข้อมูล</div>';
-            }
+        )
+        .join('')}</table></div>`
+            )
+            .join('') || '<div class="no-data">❌ ไม่พบข้อมูล</div>';
+      }
     </script>
   </body>
 </html>
