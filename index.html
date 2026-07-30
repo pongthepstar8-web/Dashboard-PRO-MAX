@@ -1084,7 +1084,14 @@
           >
             💤 Held
           </button>
-
+          <button
+            class="tools-item mode-tool"
+            data-group="status"
+            data-value="transfer"
+            onclick="toggleToolMultiFilter('status','transfer',1,this)"
+          >
+            🔁 Transfer
+          </button>
           <button
             class="tools-item mode-tool"
             data-group="status"
@@ -1328,34 +1335,59 @@
       };
       function getStatusInfo(s) {
         let t = (s || '').toLowerCase();
-        if (t.includes('on-site') || t.includes('onsite'))
-          return { cls: 'onsite', icon: '🧑‍🔧', text: 'On-site' };
-        if (t.includes('assigned'))
-          return { cls: 'assigned', icon: '📋', text: 'Assigned' };
-        if (t.includes('departed'))
-          return { cls: 'departed', icon: '🚗', text: 'Departed' };
-        if (t.includes('done')) return { cls: 'done', icon: '🎯', text: s };
-        if (t.includes('accepted'))
-          return { cls: 'accepted', icon: '📥', text: 'Accepted' };
-        if (t.includes('interupted') || t.includes('interrupted'))
-          return { cls: 'interrupted', icon: '⚠️', text: 'Interrupted' };
-        if (t.includes('held'))
-          return { cls: 'held', icon: '💤', text: 'Held' };
-        if (t.includes('cancel'))
-          return { cls: 'cancel', icon: '❌', text: 'Cancel' };
-        if (t.includes('transfer'))
+
+        if (t.includes('transfer')) {
           return { cls: 'transfer', icon: '🔁', text: 'Transfer' };
+        }
+
+        if (t.includes('cancel')) {
+          return { cls: 'cancel', icon: '❌', text: 'Cancel' };
+        }
+
+        if (t.includes('held')) {
+          return { cls: 'held', icon: '💤', text: 'Held' };
+        }
+
+        if (t.includes('accepted')) {
+          return { cls: 'accepted', icon: '📥', text: 'Accepted' };
+        }
+
+        if (t.includes('interupted') || t.includes('interrupted')) {
+          return { cls: 'interrupted', icon: '⚠️', text: 'Interrupted' };
+        }
+
+        if (t.includes('on-site') || t.includes('onsite')) {
+          return { cls: 'onsite', icon: '🧑‍🔧', text: 'On-site' };
+        }
+
+        if (t.includes('departed')) {
+          return { cls: 'departed', icon: '🚗', text: 'Departed' };
+        }
+
+        if (t.includes('assigned')) {
+          return { cls: 'assigned', icon: '📋', text: 'Assigned' };
+        }
+
+        if (t.includes('done')) {
+          return { cls: 'done', icon: '🎯', text: 'Done' };
+        }
+
         return { cls: 'created', icon: '🆕', text: 'Created' };
       }
       function getStatusIcon(status) {
         let s = (status || '').toLowerCase();
+
+        if (s.includes('transfer')) return '🔁 Transfer';
+        if (s.includes('cancel')) return '❌ Cancel';
+        if (s.includes('held')) return '💤 Held';
+        if (s.includes('accepted')) return '📥 Accepted';
+        if (s.includes('interupted') || s.includes('interrupted'))
+          return '⚠️ Interrupted';
         if (s.includes('done')) return '✅ Done';
         if (s.includes('on-site') || s.includes('onsite')) return '🟢 On-Site';
         if (s.includes('departed')) return '🔵 Departed';
         if (s.includes('assigned')) return '🟡 Assigned';
-        if (s.includes('accepted')) return '📥 Accepted';
-        if (s.includes('held')) return '💤 Held';
-        if (s.includes('cancel')) return '❌ Cancel';
+
         return '⚪ Created';
       }
       function getPriorityIcon(pr) {
@@ -3431,7 +3463,22 @@
           }
         });
       }
+      function getStatusFilterKey(status) {
+        let s = String(status || '')
+          .toLowerCase()
+          .trim();
 
+        if (s.includes('transfer')) return 'transfer';
+        if (s.includes('cancel')) return 'cancel';
+        if (s.includes('held')) return 'held';
+        if (s.includes('accepted')) return 'accepted';
+        if (s.includes('departed')) return 'departed';
+        if (s.includes('on-site') || s.includes('onsite')) return 'on-site';
+        if (s.includes('assigned')) return 'assigned';
+        if (s.includes('done')) return 'done';
+
+        return 'created';
+      }
       function passToolSubFilter(r) {
         let title = r['Job Title'] || '';
 
@@ -3474,12 +3521,10 @@
         // Status filter
         // ถ้า All Status ถูกเลือกครบ = ไม่กรอง Status
         if (statusSubFilters.length > 0 && !isAllStatusSelected) {
-          let matchedStatus = statusSubFilters.some((filter) => {
-            if (filter === 'on-site') {
-              return status.includes('on-site') || status.includes('onsite');
-            }
+          let statusKey = getStatusFilterKey(status);
 
-            return status.includes(filter);
+          let matchedStatus = statusSubFilters.some((filter) => {
+            return statusKey === filter;
           });
 
           if (!matchedStatus) {
