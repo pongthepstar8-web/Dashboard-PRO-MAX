@@ -1102,15 +1102,31 @@
           </button>
           <div class="tools-divider"></div>
 
-          <div class="tools-group-title">📁 External</div>
+<div class="tools-group-title">🌐 Network Group</div>
 
-          <button
-            id="openSheetBtn"
-            class="tools-item"
-            onclick="openGoogleSheet()"
-          >
-            📄 Open Google Sheet
-          </button>
+<div id="networkGroupTools">
+  <button
+    class="tools-item mode-tool"
+    data-group="network"
+    data-value="all"
+    onclick="toggleToolMultiFilter('network','all',2,this)"
+  >
+    📋 All Network Group
+  </button>
+</div>
+
+<div class="tools-divider"></div>
+
+<div class="tools-group-title">📁 External</div>
+
+<button
+  id="openSheetBtn"
+  class="tools-item"
+  onclick="openGoogleSheet()"
+>
+  📄 Open Google Sheet
+</button>
+</div>
         </div>
       </div>
     </div>
@@ -1142,7 +1158,8 @@
       let prioritySortMode = 'none';
 
       let workSubFilters = [];
-      let statusSubFilters = [];
+let statusSubFilters = [];
+let networkGroupSubFilters = [];
 
       let DISTRICT_COORD = {};
       let PROVINCE_COORD_REMOTE = {};
@@ -1153,7 +1170,7 @@
 
       const SHEET_URL =
         'https://docs.google.com/spreadsheets/d/1XSR52b9wrzsBDys3PZUQTCYexOOZFa6J-bz-jR-6jaM/edit?gid=365350498#gid=365350498';
-      function checkFactoryAuth() {
+        function checkFactoryAuth() {
         const auth = JSON.parse(localStorage.getItem('factoryAuth'));
 
         if (!auth) {
@@ -1537,7 +1554,9 @@
           loadShiftDailyFromCMFE3BBShiftDaily(wb);
 
           initProvince();
-          render();
+buildNetworkGroupTools();
+initToolDefaultAll();
+render();
         };
 
         r.readAsArrayBuffer(e.target.files[0]);
@@ -3328,29 +3347,125 @@
           closeToolsMenu();
         }
       });
-      function initToolDefaultAll() {
-        let allWorkButtons = document.querySelectorAll(
-          '.mode-tool[data-group="work"]:not([data-value="all"])'
-        );
+      function getNetworkGroupValue(r) {
+  return String(
+    mapCol(r, [
+      'Network Group',
+      'NETWORK GROUP',
+      'NetworkGroup',
+      'Network group',
+      'Network Groups',
+      'NETWORK GROUPS',
+      'N/W Group'
+    ]) || ''
+  ).trim();
+}
 
-        let allStatusButtons = document.querySelectorAll(
-          '.mode-tool[data-group="status"]:not([data-value="all"])'
-        );
+function escapeHtmlAttr(v) {
+  return String(v || '')
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
 
-        workSubFilters = Array.from(allWorkButtons).map((b) => b.dataset.value);
+function buildNetworkGroupTools() {
+  const box = document.getElementById('networkGroupTools');
 
-        statusSubFilters = Array.from(allStatusButtons).map(
-          (b) => b.dataset.value
-        );
+  if (!box) return;
 
-        // Work + Status ถูกเลือกพร้อมกัน = Both
-        viewMode = 2;
+  const values = [
+    ...new Set(
+      data
+        .map((r) => getNetworkGroupValue(r))
+        .filter(Boolean)
+    ),
+  ].sort();
 
-        updateToolsActiveState();
+  let html = `
+    <button
+      class="tools-item mode-tool"
+      data-group="network"
+      data-value="all"
+      onclick="toggleToolMultiFilter('network','all',2,this)"
+    >
+      📋 All Network Group
+    </button>
+  `;
 
-        render();
-      }
+  values.forEach((v) => {
+    const safeValue = String(v)
+      .replace(/\\/g, '\\\\')
+      .replace(/'/g, "\\'");
+
+    const safeAttr = escapeHtmlAttr(v);
+
+    html += `
+      <button
+        class="tools-item mode-tool"
+        data-group="network"
+        data-value="${safeAttr}"
+        onclick="toggleToolMultiFilter('network','${safeValue}',2,this)"
+      >
+        🌐 ${safeAttr}
+      </button>
+    `;
+  });
+
+  box.innerHTML = html;
+}
+
+function initToolDefaultAll() {
+  let allWorkButtons = document.querySelectorAll(
+    '.mode-tool[data-group="work"]:not([data-value="all"])'
+  );
+
+  let allStatusButtons = document.querySelectorAll(
+    '.mode-tool[data-group="status"]:not([data-value="all"])'
+  );
+
+  let allNetworkButtons = document.querySelectorAll(
+    '.mode-tool[data-group="network"]:not([data-value="all"])'
+  );
+
+  workSubFilters = Array.from(allWorkButtons).map((b) => b.dataset.value);
+
+  statusSubFilters = Array.from(allStatusButtons).map((b) => b.dataset.value);
+
+  networkGroupSubFilters = Array.from(allNetworkButtons).map(
+    (b) => b.dataset.value
+  );
+
+  viewMode = 2;
+
+  updateToolsActiveState();
+
+  render();
+}
       function toggleToolMultiFilter(type, value, mode, btn) {
+        if (type === 'network') {
+  if (value === 'all') {
+    let allNetworkButtons = document.querySelectorAll(
+      '.mode-tool[data-group="network"]:not([data-value="all"])'
+    );
+
+    let allValues = Array.from(allNetworkButtons).map(
+      (b) => b.dataset.value
+    );
+
+    let isAllSelected =
+      allValues.length > 0 &&
+      allValues.every((v) => networkGroupSubFilters.includes(v));
+
+    networkGroupSubFilters = isAllSelected ? [] : allValues;
+  } else {
+    if (networkGroupSubFilters.includes(value)) {
+      networkGroupSubFilters = networkGroupSubFilters.filter((v) => v !== value);
+    } else {
+      networkGroupSubFilters.push(value);
+    }
+  }
+}
         if (type === 'work') {
           if (value === 'all') {
             let allWorkButtons = document.querySelectorAll(
@@ -3413,56 +3528,76 @@
         render();
       }
       function updateToolsActiveState() {
-        document.querySelectorAll('.mode-tool').forEach((btn) => {
-          let group = btn.dataset.group;
+  document.querySelectorAll('.mode-tool').forEach((btn) => {
+    let group = btn.dataset.group;
+    let value = btn.dataset.value;
 
-          let value = btn.dataset.value;
+    btn.classList.remove('active');
 
-          btn.classList.remove('active');
+    if (group === 'work') {
+      if (value === 'all') {
+        let allWorkButtons = document.querySelectorAll(
+          '.mode-tool[data-group="work"]:not([data-value="all"])'
+        );
 
-          if (group === 'work') {
-            if (value === 'all') {
-              let allWorkButtons = document.querySelectorAll(
-                '.mode-tool[data-group="work"]:not([data-value="all"])'
-              );
+        let allValues = Array.from(allWorkButtons).map(
+          (b) => b.dataset.value
+        );
 
-              let allValues = Array.from(allWorkButtons).map(
-                (b) => b.dataset.value
-              );
-
-              if (
-                allValues.length > 0 &&
-                allValues.every((v) => workSubFilters.includes(v))
-              ) {
-                btn.classList.add('active');
-              }
-            } else if (workSubFilters.includes(value)) {
-              btn.classList.add('active');
-            }
-          }
-
-          if (group === 'status') {
-            if (value === 'all') {
-              let allStatusButtons = document.querySelectorAll(
-                '.mode-tool[data-group="status"]:not([data-value="all"])'
-              );
-
-              let allValues = Array.from(allStatusButtons).map(
-                (b) => b.dataset.value
-              );
-
-              if (
-                allValues.length > 0 &&
-                allValues.every((v) => statusSubFilters.includes(v))
-              ) {
-                btn.classList.add('active');
-              }
-            } else if (statusSubFilters.includes(value)) {
-              btn.classList.add('active');
-            }
-          }
-        });
+        if (
+          allValues.length > 0 &&
+          allValues.every((v) => workSubFilters.includes(v))
+        ) {
+          btn.classList.add('active');
+        }
+      } else if (workSubFilters.includes(value)) {
+        btn.classList.add('active');
       }
+    }
+
+    if (group === 'status') {
+      if (value === 'all') {
+        let allStatusButtons = document.querySelectorAll(
+          '.mode-tool[data-group="status"]:not([data-value="all"])'
+        );
+
+        let allValues = Array.from(allStatusButtons).map(
+          (b) => b.dataset.value
+        );
+
+        if (
+          allValues.length > 0 &&
+          allValues.every((v) => statusSubFilters.includes(v))
+        ) {
+          btn.classList.add('active');
+        }
+      } else if (statusSubFilters.includes(value)) {
+        btn.classList.add('active');
+      }
+    }
+
+    if (group === 'network') {
+      if (value === 'all') {
+        let allNetworkButtons = document.querySelectorAll(
+          '.mode-tool[data-group="network"]:not([data-value="all"])'
+        );
+
+        let allValues = Array.from(allNetworkButtons).map(
+          (b) => b.dataset.value
+        );
+
+        if (
+          allValues.length > 0 &&
+          allValues.every((v) => networkGroupSubFilters.includes(v))
+        ) {
+          btn.classList.add('active');
+        }
+      } else if (networkGroupSubFilters.includes(value)) {
+        btn.classList.add('active');
+      }
+    }
+  });
+}
       function getStatusFilterKey(status) {
         let s = String(status || '')
           .toLowerCase()
@@ -3517,7 +3652,25 @@
             return false;
           }
         }
+        let networkGroup = getNetworkGroupValue(r);
 
+let allNetworkButtons = document.querySelectorAll(
+  '.mode-tool[data-group="network"]:not([data-value="all"])'
+);
+
+let allNetworkValues = Array.from(allNetworkButtons).map(
+  (b) => b.dataset.value
+);
+
+let isAllNetworkSelected =
+  allNetworkValues.length > 0 &&
+  allNetworkValues.every((v) => networkGroupSubFilters.includes(v));
+
+if (networkGroupSubFilters.length > 0 && !isAllNetworkSelected) {
+  if (!networkGroupSubFilters.includes(networkGroup)) {
+    return false;
+  }
+}
         // Status filter
         // ถ้า All Status ถูกเลือกครบ = ไม่กรอง Status
         if (statusSubFilters.length > 0 && !isAllStatusSelected) {
