@@ -1102,7 +1102,7 @@
           </button>
           <div class="tools-divider"></div>
 
-<div class="tools-group-title">🌐 Network Group</div>
+          <div class="tools-group-title">🌐 Zone</div>
 
 <div id="networkGroupTools">
   <button
@@ -1111,7 +1111,7 @@
     data-value="all"
     onclick="toggleToolMultiFilter('network','all',2,this)"
   >
-    📋 All Network Group
+  📋 All Zone
   </button>
 </div>
 
@@ -1170,6 +1170,7 @@ let networkGroupSubFilters = [];
 
       const SHEET_URL =
         'https://docs.google.com/spreadsheets/d/1XSR52b9wrzsBDys3PZUQTCYexOOZFa6J-bz-jR-6jaM/edit?gid=365350498#gid=365350498';
+      
         function checkFactoryAuth() {
         const auth = JSON.parse(localStorage.getItem('factoryAuth'));
 
@@ -3350,6 +3351,9 @@ render();
       function getNetworkGroupValue(r) {
   return String(
     mapCol(r, [
+      'Zone',
+      'ZONE',
+      'zone',
       'Network Group',
       'NETWORK GROUP',
       'NetworkGroup',
@@ -3389,7 +3393,7 @@ function buildNetworkGroupTools() {
       data-value="all"
       onclick="toggleToolMultiFilter('network','all',2,this)"
     >
-      📋 All Network Group
+    📋 All Zone
     </button>
   `;
 
