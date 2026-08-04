@@ -2790,8 +2790,7 @@ render();
       let lng = gps?.lng || group.lng;
 
       // ✅ สำคัญ: gmapUrl ต้องเป็น URL string ธรรมดา ไม่ใช่ <a>
-        let destination =
-  encodeURIComponent(`${lat},${lng}`);
+        let destination = encodeURIComponent(`${lat},${lng}`);
 
 let gmapUrl =
   `https://www.google.com/maps/dir/?api=1&destination=${destination}`;
