@@ -2745,58 +2745,164 @@ render();
             .replace(/>/g, '&gt;');
         }
         function buildMapPopup(group) {
-          let jobsHtml = group.jobs
-            .map((job) => {
-              let work = getWorkType(job['Job Title']);
-              let remain =
-                job.overdue > 0
-                  ? '🔥 OVERDUE'
-                  : `⏱ SLA เหลือ ${formatTime(
-                      job.limit - getHr(job['Create Time'])
-                    )}`;
-              let gps = extractGPS(job['Job Title'] || '');
-              let lat = gps?.lat || group.lat;
-              let lng = gps?.lng || group.lng;
-              let gmapUrl = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
-              let jobId = job['Job ID'] || '-';
+  function escapeHtml(v) {
+    return String(v || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
 
-              return `<details class="map-job-box"><summary style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
-        <span>
-          ${job['Priority'] || '-'} | ${jobId}
-        </span>
+  function getPopupSourceText(group) {
+    if (group.source === 'GPS_TITLE') {
+      return '📍 Source: GPS in Title';
+    }
 
-        <button
-          onclick="event.preventDefault();event.stopPropagation();window.copyJobId('${safeAttr(
-            jobId
-          )}')"
-          style="
-            background:#2563eb;
-            color:#fff;
-            border:none;
-            border-radius:8px;
-            padding:3px 8px;
-            font-size:11px;
-            font-weight:bold;
-            cursor:pointer;
-          "
-        >
-          📋 Copy
-        </button>
-      </summary><div style="margin-top:8px"><b>Title</b><br>${
-        job['Job Title'] || '-'
-      }<br><br><b>Status</b><br>${getStatusIcon(
-                job['Status']
-              )}<br><br><b>Assign</b><br>${
-                job['Assign to'] || '-'
-              }<br><br><b>Area</b><br>${job['Province Name'] || '-'} / ${
-                job['District Name'] || '-'
-              }<br><br>${work.icon} ${
-                work.text
-              }<br>${remain}<br><a class="route-link" href="${gmapUrl}" target="_blank">🧭 Route to this Job</a></div></details>`;
-            })
-            .join('');
-          return `<div class="map-popup"><div class="map-popup-title">📍 Jobs on this marker : ${group.jobs.length}</div>${jobsHtml}</div>`;
-        }
+    if (group.source === 'SITE_SHEET') {
+      return (
+        '📡 Source: OLT / ME / MME Sheet' +
+        (group.siteName ? ' - ' + escapeHtml(group.siteName) : '')
+      );
+    }
+
+    return '🗺️ Source: District Coordinate';
+  }
+
+  let sourceText = getPopupSourceText(group);
+
+  let jobsHtml = group.jobs
+    .map((job) => {
+      let work = getWorkType(job['Job Title']);
+
+      let remain =
+        job.overdue > 0
+          ? '🔥 OVERDUE'
+          : `⏱ SLA เหลือ ${formatTime(
+              job.limit - getHr(job['Create Time'])
+            )}`;
+
+      let gps = extractGPS(job['Job Title'] || '');
+
+      /*
+        ถ้า Title มี GPS ให้ Route ไป GPS ของ Job นั้น
+        ถ้าไม่มี GPS ให้ Route ไปพิกัดของ group
+        เช่น SITE_SHEET หรือ AREA_COORD
+      */
+      let lat = gps?.lat || group.lat;
+      let lng = gps?.lng || group.lng;
+
+      let gmapUrl =
+        `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+
+      let jobId = job['Job ID'] || '-';
+
+      let priority = job['Priority'] || '-';
+      let title = job['Job Title'] || '-';
+      let statusText = getStatusIcon(job['Status']);
+      let assign = job['Assign to'] || '-';
+      let province = job['Province Name'] || '-';
+      let district = job['District Name'] || '-';
+
+      let coordSource =
+        gps
+          ? '📍 GPS from Title'
+          : group.source === 'SITE_SHEET'
+          ? '📡 Site Coordinate'
+          : '🗺️ Area Coordinate';
+
+      return `
+        <details class="map-job-box">
+          <summary style="
+            display:flex;
+            align-items:center;
+            gap:6px;
+            flex-wrap:wrap;
+          ">
+            <span>
+              ${escapeHtml(priority)} | ${escapeHtml(jobId)}
+            </span>
+
+            <button
+              onclick="event.preventDefault();event.stopPropagation();window.copyJobId('${safeAttr(jobId)}')"
+              style="
+                background:#2563eb;
+                color:#fff;
+                border:none;
+                border-radius:8px;
+                padding:3px 8px;
+                font-size:11px;
+                font-weight:bold;
+                cursor:pointer;
+              "
+            >
+              📋 Copy
+            </button>
+          </summary>
+
+          <div style="margin-top:8px">
+            <b>Title</b><br>
+            ${escapeHtml(title)}
+
+            <br><br>
+
+            <b>Status</b><br>
+            ${escapeHtml(statusText)}
+
+            <br><br>
+
+            <b>Assign</b><br>
+            ${escapeHtml(assign)}
+
+            <br><br>
+
+            <b>Area</b><br>
+            ${escapeHtml(province)} / ${escapeHtml(district)}
+
+            <br><br>
+
+            <b>Coordinate Source</b><br>
+            ${coordSource}
+
+            <br><br>
+
+            ${escapeHtml(work.icon)} ${escapeHtml(work.text)}
+            <br>
+            ${remain}
+
+            <br>
+
+            ${gmapUrl}
+              🧭 Route to this Job
+            </a>
+          </div>
+        </details>
+      `;
+    })
+    .join('');
+
+  return `
+    <div class="map-popup">
+      <div class="map-popup-title">
+        📍 Jobs on this marker : ${group.jobs.length}
+      </div>
+
+      <div style="
+        font-size:12px;
+        color:#475569;
+        background:#e2e8f0;
+        border-radius:8px;
+        padding:6px 8px;
+        margin-bottom:8px;
+        font-weight:bold;
+      ">
+        ${sourceText}
+      </div>
+
+      ${jobsHtml}
+    </div>
+  `;
+}
         function getPriorityRank(job) {
           let pr = (job['Priority'] || 'NONE').toUpperCase();
 
@@ -2875,14 +2981,19 @@ if (useGpsKey) {
   key = `AREA|${province}|${district}`;
 }
 
-            if (!groups[key]) {
-              groups[key] = {
-                lat,
-                lng,
-                jobs: [],
-                source: useGpsKey ? 'GPS_TITLE' : 'AREA_COORD',
-              };
-            }
+if (!groups[key]) {
+  groups[key] = {
+    lat,
+    lng,
+    jobs: [],
+    source: useGpsKey
+      ? 'GPS_TITLE'
+      : siteCoord
+      ? 'SITE_SHEET'
+      : 'AREA_COORD',
+    siteName: siteCoord ? siteCoord.key : ''
+  };
+}
 
             groups[key].jobs.push(job);
           }
