@@ -1163,6 +1163,7 @@ let networkGroupSubFilters = [];
 
       let DISTRICT_COORD = {};
       let PROVINCE_COORD_REMOTE = {};
+      let SITE_COORD = {};
 
       let shiftDailyText = '';
       const APPS_SCRIPT_URL =
@@ -1274,6 +1275,7 @@ let networkGroupSubFilters = [];
 
           DISTRICT_COORD = json.districtCoords || {};
           PROVINCE_COORD_REMOTE = json.provinceCoords || {};
+          SITE_COORD = json.siteCoords || {};
 
           render();
         } catch (err) {
@@ -2859,15 +2861,19 @@ render();
 
             let gps = extractGPS(title);
 
-            let useGpsKey = gps && isSameCoord(coord, gps);
+let siteCoord = !gps ? findSiteCoordFromTitle(title) : null;
 
-            let key = '';
+let useGpsKey = gps && isSameCoord(coord, gps);
 
-            if (useGpsKey) {
-              key = `GPS|${lat.toFixed(5)}|${lng.toFixed(5)}`;
-            } else {
-              key = `AREA|${province}|${district}`;
-            }
+let key = '';
+
+if (useGpsKey) {
+  key = `GPS|${lat.toFixed(5)}|${lng.toFixed(5)}`;
+} else if (siteCoord) {
+  key = `SITE|${siteCoord.key}`;
+} else {
+  key = `AREA|${province}|${district}`;
+}
 
             if (!groups[key]) {
               groups[key] = {
@@ -2925,36 +2931,109 @@ render();
 
           w.fitAllMarkers();
         }
+        function normalizeSiteSearchText(v) {
+  let tokens =
+    String(v || '')
+      .toUpperCase()
+      .match(/[A-Zก-๙]*\d+[A-Zก-๙]*|[A-Zก-๙]+/g) || [];
 
-        async function getJobCoord(job) {
-          let title = job['Job Title'] || '';
+  tokens = tokens
+    .map((t) => {
+      // 079 -> 79
+      if (/^\d+$/.test(t)) {
+        return String(Number(t));
+      }
 
-          let gps = extractGPS(title);
+      // 01HW -> 1HW
+      if (/^0+\d+[A-Zก-๙]+$/.test(t)) {
+        return t.replace(/^0+(?=\d)/, '');
+      }
 
-          let province = job['Province Name'] || '';
+      return t;
+    })
+    .filter(Boolean);
 
-          let district = job['District Name'] || '';
+  return '|' + tokens.join('|') + '|';
+}
 
-          let areaCoord = getAreaCoord(province, district);
 
-          if (!areaCoord) {
-            areaCoord = await geocodeArea(province, district);
-          }
+function findSiteCoordFromTitle(title) {
+  if (!title || !SITE_COORD) {
+    return null;
+  }
 
-          if (
-            gps &&
-            areaCoord &&
-            distanceKm(gps.lat, gps.lng, areaCoord[0], areaCoord[1]) <= 35
-          ) {
-            return [gps.lat, gps.lng];
-          }
+  const titleNorm = normalizeSiteSearchText(title);
 
-          if (areaCoord) {
-            return areaCoord;
-          }
+  const keys = Object.keys(SITE_COORD || {})
+    .filter(Boolean)
+    .sort((a, b) => b.length - a.length);
 
-          return null;
-        }
+  for (const key of keys) {
+    const keyNorm = normalizeSiteSearchText(key);
+
+    if (!keyNorm || keyNorm === '||') continue;
+
+    if (titleNorm.includes(keyNorm)) {
+      const item = SITE_COORD[key];
+
+      if (
+        item &&
+        !isNaN(Number(item.lat)) &&
+        !isNaN(Number(item.lng))
+      ) {
+        return {
+          key,
+          lat: Number(item.lat),
+          lng: Number(item.lng),
+          type: item.type || '',
+          address: item.address || ''
+        };
+      }
+    }
+  }
+
+  return null;
+}
+async function getJobCoord(job) {
+  let title = job['Job Title'] || '';
+
+  let gps = extractGPS(title);
+
+  let province = job['Province Name'] || '';
+
+  let district = job['District Name'] || '';
+
+  let areaCoord = getAreaCoord(province, district);
+
+  if (!areaCoord) {
+    areaCoord = await geocodeArea(province, district);
+  }
+
+  // 1. ถ้า Title มี GPS และ GPS อยู่ใกล้พื้นที่งาน ให้ใช้ GPS ก่อน
+  if (
+    gps &&
+    areaCoord &&
+    distanceKm(gps.lat, gps.lng, areaCoord[0], areaCoord[1]) <= 35
+  ) {
+    return [gps.lat, gps.lng];
+  }
+
+  // 2. ถ้า Title ไม่มี GPS ให้ดึงพิกัดจาก Google Sheet OLT / ME / MME
+  if (!gps) {
+    let siteCoord = findSiteCoordFromTitle(title);
+
+    if (siteCoord) {
+      return [siteCoord.lat, siteCoord.lng];
+    }
+  }
+
+  // 3. fallback ใช้พิกัดอำเภอ
+  if (areaCoord) {
+    return areaCoord;
+  }
+
+  return null;
+}
 
         function getLatestOnsiteJob() {
           let selected = (w.selectedEngineer || '').toLowerCase().trim();
