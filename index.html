@@ -2784,19 +2784,16 @@ render();
 
       let gps = extractGPS(job['Job Title'] || '');
 
-      /*
-        ถ้า Title มี GPS ให้ Route ไป GPS ของ Job นั้น
-        ถ้าไม่มี GPS ให้ Route ไปพิกัดของ group
-        เช่น SITE_SHEET หรือ AREA_COORD
-      */
+      // ถ้า Title มี GPS ให้ route ไป GPS ของ job นั้น
+      // ถ้าไม่มี GPS ให้ route ไปพิกัด marker/group
       let lat = gps?.lat || group.lat;
       let lng = gps?.lng || group.lng;
 
+      // ✅ สำคัญ: gmapUrl ต้องเป็น URL string ธรรมดา ไม่ใช่ <a>
       let gmapUrl =
         `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
 
       let jobId = job['Job ID'] || '-';
-
       let priority = job['Priority'] || '-';
       let title = job['Job Title'] || '-';
       let statusText = getStatusIcon(job['Status']);
@@ -2805,7 +2802,7 @@ render();
       let district = job['District Name'] || '-';
 
       let coordSource =
-        gps
+        group.source === 'GPS_TITLE'
           ? '📍 GPS from Title'
           : group.source === 'SITE_SHEET'
           ? '📡 Site Coordinate'
@@ -2872,10 +2869,9 @@ render();
 
             <br>
 
-<a
-  class="route-link"
-  hrefJob
-</a>
+            ${gmapUrl}
+              🧭 Route to this Job
+            </a>
           </div>
         </details>
       `;
