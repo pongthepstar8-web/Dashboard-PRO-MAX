@@ -2969,16 +2969,20 @@ render();
 
 let siteCoord = !gps ? findSiteCoordFromTitle(title) : null;
 
-let useGpsKey = gps && isSameCoord(coord, gps);
-
 let key = '';
+let source = 'AREA_COORD';
+let siteName = '';
 
-if (useGpsKey) {
+if (gps) {
   key = `GPS|${lat.toFixed(5)}|${lng.toFixed(5)}`;
+  source = 'GPS_TITLE';
 } else if (siteCoord) {
   key = `SITE|${siteCoord.key}`;
+  source = 'SITE_SHEET';
+  siteName = siteCoord.key;
 } else {
   key = `AREA|${province}|${district}`;
+  source = 'AREA_COORD';
 }
 
 if (!groups[key]) {
@@ -2986,12 +2990,8 @@ if (!groups[key]) {
     lat,
     lng,
     jobs: [],
-    source: useGpsKey
-      ? 'GPS_TITLE'
-      : siteCoord
-      ? 'SITE_SHEET'
-      : 'AREA_COORD',
-    siteName: siteCoord ? siteCoord.key : ''
+    source: source,
+    siteName: siteName
   };
 }
 
@@ -3120,31 +3120,26 @@ async function getJobCoord(job) {
     areaCoord = await geocodeArea(province, district);
   }
 
-  // 1. ถ้า Title มี GPS และ GPS อยู่ใกล้พื้นที่งาน ให้ใช้ GPS ก่อน
-  if (
-    gps &&
-    areaCoord &&
-    distanceKm(gps.lat, gps.lng, areaCoord[0], areaCoord[1]) <= 35
-  ) {
+  // ✅ 1. ถ้า Title มี GPS ให้ใช้ GPS ก่อนเสมอ
+  if (gps) {
     return [gps.lat, gps.lng];
   }
 
-  // 2. ถ้า Title ไม่มี GPS ให้ดึงพิกัดจาก Google Sheet OLT / ME / MME
-  if (!gps) {
-    let siteCoord = findSiteCoordFromTitle(title);
+  // ✅ 2. ถ้า Title ไม่มี GPS ให้หา OLT / ME / MME จาก Google Sheet
+  let siteCoord = findSiteCoordFromTitle(title);
 
-    if (siteCoord) {
-      return [siteCoord.lat, siteCoord.lng];
-    }
+  if (siteCoord) {
+    return [siteCoord.lat, siteCoord.lng];
   }
 
-  // 3. fallback ใช้พิกัดอำเภอ
+  // ✅ 3. fallback ใช้พิกัดอำเภอ
   if (areaCoord) {
     return areaCoord;
   }
 
   return null;
 }
+
 
         function getLatestOnsiteJob() {
           let selected = (w.selectedEngineer || '').toLowerCase().trim();
