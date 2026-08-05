@@ -1418,81 +1418,101 @@ let networkGroupSubFilters = [];
         return '⚪ None';
       }
       function getWorkType(t) {
-        t = (t || '').toLowerCase();
-        if (
-          t.includes('high loss') ||
-          t.includes('loss') ||
-          (t.includes('pon') && t.includes('loss')) ||
-          (t.includes('splitter') && t.includes('l2'))
-        )
-          return {
-            icon: '📉',
-            text: 'Signal Loss',
-            full: '📉 Signal Loss (High loss)',
-            type: 'transmission',
-          };
-        if (
-          t.includes('bipv') ||
-          t.includes('inf') ||
-          t.includes('ipv') ||
-          t.includes('binl') ||
-          t.includes('inl')
-        )
-          return {
-            icon: '🏢',
-            text: 'Business Circuit',
-            full: '🏢 Business Circuit (BIPV / INF / IPV / INL)',
-            type: 'leased',
-          };
-        if (t.includes('splitter') || t.includes('pon'))
-          return {
-            icon: '🔗',
-            text: 'Access Down',
-            full: '🔗 Access Down (Splitter / PON)',
-            type: 'access',
-          };
-        if (t.includes('olt') || t.includes('ac fail'))
-          return {
-            icon: '⚡',
-            text: 'Access Power Fail',
-            full: '⚡ Access Power Fail (OLT AC Fail)',
-            type: 'access',
-          };
-        if (t.includes('crc'))
-          return {
-            icon: '📡',
-            text: 'Transmission Error',
-            full: '📡 Transmission Error (CRC)',
-            type: 'transmission',
-          };
-        if (t.includes('rectifier') || t.includes('power'))
-          return {
-            icon: '🔌',
-            text: 'Power Failure',
-            full: '🔌 Power Failure (Rectifier)',
-            type: 'power',
-          };
-        if (t.includes('loop broken'))
-          return {
-            icon: '🔁❌',
-            text: 'Loop Broken',
-            full: '🔁❌ ERPS Loop Broken',
-            type: 'access',
-          };
-        if (t.includes('link down') || t.includes('down'))
-          return {
-            icon: '🚫',
-            text: 'Link Down',
-            full: '🚫 Link Down',
-            type: 'access',
-          };
-        return {
-          icon: '❗',
-          text: 'Unknown',
-          full: '❗ Unknown',
-          type: 'other',
-        };
-      }
+  t = (t || '').toLowerCase();
+
+  // ✅ Business Circuit ต้องมาก่อน Signal Loss
+  // เพราะบาง Title มีคำว่า Loss แต่เป็นวงจรลูกค้า เช่น INF / IPV / BIPV / INL
+  if (
+    t.includes('bipv') ||
+    t.includes('inf') ||
+    t.includes('ipv') ||
+    t.includes('binl') ||
+    t.includes('inl') ||
+    t.includes('icp')
+  ) {
+    return {
+      icon: '🏢',
+      text: 'Business Circuit',
+      full: '🏢 Business Circuit (BIPV / INF / IPV / INL / ICP)',
+      type: 'leased',
+    };
+  }
+
+  if (
+    t.includes('high loss') ||
+    t.includes('loss') ||
+    (t.includes('pon') && t.includes('loss')) ||
+    (t.includes('splitter') && t.includes('l2'))
+  ) {
+    return {
+      icon: '📉',
+      text: 'Signal Loss',
+      full: '📉 Signal Loss (High loss)',
+      type: 'transmission',
+    };
+  }
+
+  if (t.includes('splitter') || t.includes('pon')) {
+    return {
+      icon: '🔗',
+      text: 'Access Down',
+      full: '🔗 Access Down (Splitter / PON)',
+      type: 'access',
+    };
+  }
+
+  if (t.includes('olt') || t.includes('ac fail')) {
+    return {
+      icon: '⚡',
+      text: 'Access Power Fail',
+      full: '⚡ Access Power Fail (OLT AC Fail)',
+      type: 'access',
+    };
+  }
+
+  if (t.includes('crc')) {
+    return {
+      icon: '📡',
+      text: 'Transmission Error',
+      full: '📡 Transmission Error (CRC)',
+      type: 'transmission',
+    };
+  }
+
+  if (t.includes('rectifier') || t.includes('power')) {
+    return {
+      icon: '🔌',
+      text: 'Power Failure',
+      full: '🔌 Power Failure (Rectifier)',
+      type: 'power',
+    };
+  }
+
+  if (t.includes('loop broken')) {
+    return {
+      icon: '🔁❌',
+      text: 'Loop Broken',
+      full: '🔁❌ ERPS Loop Broken',
+      type: 'access',
+    };
+  }
+
+  if (t.includes('link down') || t.includes('down')) {
+    return {
+      icon: '🚫',
+      text: 'Link Down',
+      full: '🚫 Link Down',
+      type: 'access',
+    };
+  }
+
+  return {
+    icon: '❗',
+    text: 'Unknown',
+    full: '❗ Unknown',
+    type: 'other',
+  };
+}
       function getSite(title) {
         let m = (title || '').match(/(ME|OX|AN)_[0-9_]+/i);
         return m ? m[0] : 'Unknown';
