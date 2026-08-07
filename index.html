@@ -3032,9 +3032,31 @@ ${remain}
       savedAt: new Date().toISOString()
     };
 
+    let oldItem = cache[key];
+
+    let isChangedOnsite =
+      !oldItem ||
+      String(oldItem.jobId || '') !== String(item.jobId || '');
+
     cache[key] = item;
 
-    // ✅ บันทึกลง Google Sheet กลาง
+    // ✅ ถ้า On-site เปลี่ยนไป Job ใหม่ ให้ล้าง Travel เดิม
+    if (isChangedOnsite && engineerTravelOn) {
+      clearEngineerTravel();
+
+      engineerTravelOn = false;
+
+      let btn = w.document.getElementById('travelToggleBtn');
+
+      if (btn) {
+        btn.innerHTML = '👣 Travel OFF';
+        btn.style.background = '#1e293b';
+        btn.style.color = '#fff';
+        btn.style.borderColor = '#334155';
+        btn.style.boxShadow = 'none';
+      }
+    }
+
     saveOnsiteToAppsScript(item);
   }
 
@@ -3283,10 +3305,13 @@ let cache = {
   for (const key of Object.keys(departedMap)) {
     let oldOnsite = cache[key];
     let departedJob = departedMap[key];
-
+    if (hasCurrentOnsiteJob(key)) {
+  continue;
+}
     if (!oldOnsite) {
       continue;
     }
+    
 
     let departedCoord = await getJobCoord(departedJob);
 
@@ -3296,8 +3321,8 @@ let cache = {
 
     // กันเคส Job เดิม ไม่ต้องวาด
     if (String(oldOnsite.jobId) === String(departedJob['Job ID'] || '')) {
-      continue;
-    }
+  continue;
+}
 
     let start = [
       Number(oldOnsite.lat),
@@ -3489,7 +3514,20 @@ engineerTravelLines.push(fallbackFlowLine);
     alert('ยังไม่พบข้อมูล On-site เดิมและ Departed ของช่างคนเดียวกัน');
   }
 };
+function hasCurrentOnsiteJob(assignKey) {
+  return jobs.some((job) => {
+    let assign = String(job['Assign to'] || '').toLowerCase().trim();
+    let status = String(job['Status'] || '').toLowerCase();
 
+    return (
+      assign === assignKey &&
+      (
+        status.includes('on-site') ||
+        status.includes('onsite')
+      )
+    );
+  });
+}
 function findSiteCoordFromTitle(title) {
   if (!title || !SITE_COORD) {
     return null;
