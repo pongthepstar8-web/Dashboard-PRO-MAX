@@ -3099,35 +3099,70 @@ function findSiteCoordFromTitle(title) {
 
   const titleNorm = normalizeSiteSearchText(title);
 
-  const keys = Object.keys(SITE_COORD || {})
-    .filter(Boolean)
-    .sort((a, b) => b.length - a.length);
+  let bestMatch = null;
+
+  const keys = Object.keys(SITE_COORD || {}).filter(Boolean);
 
   for (const key of keys) {
     const keyNorm = normalizeSiteSearchText(key);
 
-    if (!keyNorm || keyNorm === '||') continue;
+    if (!keyNorm || keyNorm === '||') {
+      continue;
+    }
 
-    if (titleNorm.includes(keyNorm)) {
-      const item = SITE_COORD[key];
+    const pos = titleNorm.indexOf(keyNorm);
 
-      if (
-        item &&
-        !isNaN(Number(item.lat)) &&
-        !isNaN(Number(item.lng))
-      ) {
-        return {
-          key,
-          lat: Number(item.lat),
-          lng: Number(item.lng),
-          type: item.type || '',
-          address: item.address || ''
-        };
-      }
+    if (pos === -1) {
+      continue;
+    }
+
+    const item = SITE_COORD[key];
+
+    if (
+      !item ||
+      isNaN(Number(item.lat)) ||
+      isNaN(Number(item.lng))
+    ) {
+      continue;
+    }
+
+    const candidate = {
+      key: key,
+      lat: Number(item.lat),
+      lng: Number(item.lng),
+      type: item.type || '',
+      address: item.address || '',
+      pos: pos,
+      keyLength: keyNorm.length
+    };
+
+    /*
+      ✅ เลือกตัวที่เจอใน Title ก่อนที่สุด
+      ถ้าเจอตำแหน่งเดียวกัน ให้เลือก key ที่ยาวกว่า
+    */
+    if (
+      !bestMatch ||
+      candidate.pos < bestMatch.pos ||
+      (
+        candidate.pos === bestMatch.pos &&
+        candidate.keyLength > bestMatch.keyLength
+      )
+    ) {
+      bestMatch = candidate;
     }
   }
 
-  return null;
+  if (!bestMatch) {
+    return null;
+  }
+
+  return {
+    key: bestMatch.key,
+    lat: bestMatch.lat,
+    lng: bestMatch.lng,
+    type: bestMatch.type,
+    address: bestMatch.address
+  };
 }
 async function getJobCoord(job) {
   let title = job['Job Title'] || '';
