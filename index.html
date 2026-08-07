@@ -2423,7 +2423,7 @@ render();
                 ''
               )}</details><div class="detail">🚨 Critical : ${critical}</div><div class="detail">⚠️ Major : ${major}</div><div class="detail">🕒 Overdue : ${overdue}</div><div class="reason">Workload : ${level}</div></div>`;
           });
-        html += `</div><div id="rootView" class="board" style="display:none">${rootHtml}</div><div id="engineerView" class="board" style="display:none">${engineerHtml}</div><div id="mapView"><div class="map-panel"><button class="map-btn" onclick="window.toggleMeasureDistance()">🛣️ วัดตามถนน</button><button class="map-btn" onclick="window.openGoogleRoute()">🧭 Open Google Maps</button><button class="map-btn" onclick="window.clearAIRoute()">🧹 Clear Route</button><button class="map-btn" onclick="window.fitAllMarkers()">📍 Fit All Jobs</button></div><div id="aiMap"></div></div><script>window.AI_JOBS=${safeJobsJson};<\/script></body></html>`;
+        html += `</div><div id="rootView" class="board" style="display:none">${rootHtml}</div><div id="engineerView" class="board" style="display:none">${engineerHtml}</div><div id="mapView"><div class="map-panel"><button class="map-btn" onclick="window.toggleMeasureDistance()">🛣️ วัดตามถนน</button><button class="map-btn" onclick="window.drawEngineerTravel()">👣 Engineer Travel</button><button class="map-btn" onclick="window.openGoogleRoute()">🧭 Open Google Maps</button><button class="map-btn" onclick="window.clearAIRoute()">🧹 Clear Route</button><button class="map-btn" onclick="window.fitAllMarkers()">📍 Fit All Jobs</button></div><div id="aiMap"></div></div><script>window.AI_JOBS=${safeJobsJson};<\/script></body></html>`;
         let w = window.open();
         w.document.write(html);
         w.document.close();
@@ -2435,10 +2435,12 @@ render();
           aiRouteLine = null,
           aiRouteMarkers = [],
           measureMode = false,
-          measurePoints = [],
-          measureMarkers = [],
-          measureLine = null,
-          measureLabel = null;
+measurePoints = [],
+measureMarkers = [],
+measureLine = null,
+measureLabel = null,
+engineerTravelLines = [],
+engineerTravelMarkers = [];
         w.initAIMap = function () {
           if (aiMapInited) {
             setTimeout(() => aiMap && aiMap.invalidateSize(), 250);
@@ -2968,7 +2970,47 @@ ${remain}
 
           return [newLat, newLng];
         }
+        async function rememberLatestOnsiteJobs() {
+  let cache = JSON.parse(localStorage.getItem('aiLastOnsiteByEngineer') || '{}');
+
+  for (const job of jobs) {
+    let status = String(job['Status'] || '').toLowerCase();
+    let assign = String(job['Assign to'] || '').trim();
+
+    let isOnsite =
+      status.includes('on-site') ||
+      status.includes('onsite');
+
+    if (!isOnsite || !assign) {
+      continue;
+    }
+
+    let coord = await getJobCoord(job);
+
+    if (!coord) {
+      continue;
+    }
+
+    let key = assign.toLowerCase();
+
+    cache[key] = {
+      assign: assign,
+      jobId: job['Job ID'] || '',
+      title: job['Job Title'] || '',
+      province: job['Province Name'] || '',
+      district: job['District Name'] || '',
+      lat: coord[0],
+      lng: coord[1],
+      status: job['Status'] || '',
+      createTime: job['Create Time'] || '',
+      savedAt: new Date().toISOString()
+    };
+  }
+
+  localStorage.setItem('aiLastOnsiteByEngineer', JSON.stringify(cache));
+}
         async function buildAIMapMarkers() {
+          await rememberLatestOnsiteJobs();
           let groups = {};
 
           for (const job of jobs) {
@@ -3090,7 +3132,215 @@ if (!groups[key]) {
 
   return '|' + tokens.join('|') + '|';
 }
+function clearEngineerTravel() {
+  engineerTravelLines.forEach((line) => {
+    aiMap.removeLayer(line);
+  });
 
+  engineerTravelMarkers.forEach((marker) => {
+    aiMap.removeLayer(marker);
+  });
+
+  engineerTravelLines = [];
+  engineerTravelMarkers = [];
+}
+
+function getLatestDepartedJobsByEngineer() {
+  let map = {};
+
+  jobs.forEach((job) => {
+    let status = String(job['Status'] || '').toLowerCase();
+    let assign = String(job['Assign to'] || '').trim();
+
+    let isDeparted = status.includes('departed');
+
+    if (!isDeparted || !assign) {
+      return;
+    }
+
+    let key = assign.toLowerCase();
+
+    if (!map[key]) {
+      map[key] = job;
+      return;
+    }
+
+    let oldTime = new Date(map[key]['Create Time'] || 0);
+    let newTime = new Date(job['Create Time'] || 0);
+
+    if (newTime > oldTime) {
+      map[key] = job;
+    }
+  });
+
+  return map;
+}
+
+w.drawEngineerTravel = async function () {
+  if (!aiMap) return;
+
+  clearEngineerTravel();
+
+  let cache = JSON.parse(localStorage.getItem('aiLastOnsiteByEngineer') || '{}');
+  let departedMap = getLatestDepartedJobsByEngineer();
+
+  let bounds = [];
+
+  for (const key of Object.keys(departedMap)) {
+    let oldOnsite = cache[key];
+    let departedJob = departedMap[key];
+
+    if (!oldOnsite) {
+      continue;
+    }
+
+    let departedCoord = await getJobCoord(departedJob);
+
+    if (!departedCoord) {
+      continue;
+    }
+
+    // กันเคส job เดิมไม่ต้องวาด
+    if (String(oldOnsite.jobId) === String(departedJob['Job ID'] || '')) {
+      continue;
+    }
+
+    let start = [Number(oldOnsite.lat), Number(oldOnsite.lng)];
+    let end = departedCoord;
+
+    if (
+      isNaN(start[0]) ||
+      isNaN(start[1]) ||
+      isNaN(end[0]) ||
+      isNaN(end[1])
+    ) {
+      continue;
+    }
+
+    let route = null;
+
+    try {
+      route = await getRoadRouteFromOSRM([start, end]);
+    } catch (err) {
+      console.warn('Engineer travel route failed:', oldOnsite.assign, err);
+    }
+
+    // เงาที่ Job เดิม
+    let shadow = w.L.circleMarker(start, {
+      radius: 18,
+      color: '#f97316',
+      fillColor: '#f97316',
+      fillOpacity: 0.18,
+      opacity: 0.75,
+      weight: 3,
+      dashArray: '5,5'
+    }).addTo(aiMap).bindPopup(`
+      <div style="color:#111;font-family:Arial">
+        <b>👤 Last On-site Shadow</b><br>
+        ${oldOnsite.assign || '-'}<br>
+        Job: ${oldOnsite.jobId || '-'}<br>
+        ${oldOnsite.district || '-'}
+      </div>
+    `);
+
+    engineerTravelMarkers.push(shadow);
+
+    // จุด Departed ปัจจุบัน
+    let departedMarker = w.L.marker(end, {
+      icon: w.L.divIcon({
+        className: '',
+        html: `
+          <div style="
+            background:#2563eb;
+            color:white;
+            padding:5px 9px;
+            border-radius:14px;
+            font-weight:900;
+            border:2px solid white;
+            box-shadow:0 0 10px rgba(37,99,235,.8);
+            white-space:nowrap;
+            font-family:Arial;
+            font-size:12px;
+          ">
+            🚗 Departed
+          </div>
+        `,
+        iconSize: [95, 30],
+        iconAnchor: [20, 15],
+      }),
+    }).addTo(aiMap).bindPopup(`
+      <div style="color:#111;font-family:Arial">
+        <b>🚗 Departed Job</b><br>
+        ${departedJob['Assign to'] || '-'}<br>
+        Job: ${departedJob['Job ID'] || '-'}<br>
+        ${departedJob['District Name'] || '-'}
+      </div>
+    `);
+
+    engineerTravelMarkers.push(departedMarker);
+
+    if (route && route.latlngs && route.latlngs.length) {
+      let routeLine = w.L.polyline(route.latlngs, {
+        color: '#f97316',
+        weight: 6,
+        opacity: 0.9
+      }).addTo(aiMap);
+
+      engineerTravelLines.push(routeLine);
+
+      let mid =
+        route.latlngs[Math.floor(route.latlngs.length / 2)];
+
+      let label = w.L.marker(mid, {
+        icon: w.L.divIcon({
+          className: '',
+          html: `
+            <div style="
+              background:#020617;
+              color:#fed7aa;
+              padding:7px 10px;
+              border-radius:14px;
+              font-weight:900;
+              border:1px solid #fb923c;
+              box-shadow:0 0 10px rgba(249,115,22,.65);
+              white-space:nowrap;
+              font-family:Arial;
+              font-size:12px;
+            ">
+              👣 ${oldOnsite.assign || '-'}<br>
+              🛣️ ${route.distanceKm.toFixed(2)} km | ⏱ ${route.durationMin.toFixed(0)} min
+            </div>
+          `,
+          iconSize: [160, 42],
+          iconAnchor: [80, 21],
+        }),
+      }).addTo(aiMap);
+
+      engineerTravelMarkers.push(label);
+
+      route.latlngs.forEach((p) => bounds.push(p));
+    } else {
+      // fallback ถ้า OSRM ไม่ตอบ ให้ลากเส้นตรง
+      let fallbackLine = w.L.polyline([start, end], {
+        color: '#f97316',
+        weight: 4,
+        opacity: 0.8,
+        dashArray: '8,8'
+      }).addTo(aiMap);
+
+      engineerTravelLines.push(fallbackLine);
+      bounds.push(start, end);
+    }
+  }
+
+  if (bounds.length > 0) {
+    aiMap.fitBounds(bounds, {
+      padding: [60, 60],
+    });
+  } else {
+    alert('ยังไม่พบข้อมูล On-site เดิมและ Departed ของช่างคนเดียวกัน');
+  }
+};
 
 function findSiteCoordFromTitle(title) {
   if (!title || !SITE_COORD) {
@@ -3399,6 +3649,7 @@ async function getJobCoord(job) {
           aiRoutePoints = [];
 
           clearDistanceMeasure();
+          clearEngineerTravel();
         };
 
         w.fitAllMarkers = function () {
