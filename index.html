@@ -1164,6 +1164,7 @@ let networkGroupSubFilters = [];
       let DISTRICT_COORD = {};
       let PROVINCE_COORD_REMOTE = {};
       let SITE_COORD = {};
+      let TRAVEL_HISTORY = {};
 
       let shiftDailyText = '';
       const APPS_SCRIPT_URL =
@@ -1276,6 +1277,7 @@ let networkGroupSubFilters = [];
           DISTRICT_COORD = json.districtCoords || {};
           PROVINCE_COORD_REMOTE = json.provinceCoords || {};
           SITE_COORD = json.siteCoords || {};
+          TRAVEL_HISTORY = json.travelHistory || {};
 
           render();
         } catch (err) {
@@ -2993,7 +2995,9 @@ ${remain}
           return [newLat, newLng];
         }
         async function rememberLatestOnsiteJobs() {
-  let cache = JSON.parse(localStorage.getItem('aiLastOnsiteByEngineer') || '{}');
+  let cache = JSON.parse(
+    localStorage.getItem('aiLastOnsiteByEngineer') || '{}'
+  );
 
   for (const job of jobs) {
     let status = String(job['Status'] || '').toLowerCase();
@@ -3015,7 +3019,7 @@ ${remain}
 
     let key = assign.toLowerCase();
 
-    cache[key] = {
+    let item = {
       assign: assign,
       jobId: job['Job ID'] || '',
       title: job['Job Title'] || '',
@@ -3027,9 +3031,39 @@ ${remain}
       createTime: job['Create Time'] || '',
       savedAt: new Date().toISOString()
     };
+
+    cache[key] = item;
+
+    // ✅ บันทึกลง Google Sheet กลาง
+    saveOnsiteToAppsScript(item);
   }
 
-  localStorage.setItem('aiLastOnsiteByEngineer', JSON.stringify(cache));
+  localStorage.setItem(
+    'aiLastOnsiteByEngineer',
+    JSON.stringify(cache)
+  );
+}
+function saveOnsiteToAppsScript(item) {
+  if (!item || !item.assign || !item.jobId) return;
+
+  let url =
+    APPS_SCRIPT_URL +
+    '?action=saveOnsite' +
+    '&assign=' + encodeURIComponent(item.assign) +
+    '&jobId=' + encodeURIComponent(item.jobId) +
+    '&title=' + encodeURIComponent(item.title || '') +
+    '&province=' + encodeURIComponent(item.province || '') +
+    '&district=' + encodeURIComponent(item.district || '') +
+    '&lat=' + encodeURIComponent(item.lat) +
+    '&lng=' + encodeURIComponent(item.lng) +
+    '&status=' + encodeURIComponent(item.status || '') +
+    '&createTime=' + encodeURIComponent(item.createTime || '');
+
+  fetch(url)
+    .then(() => {})
+    .catch((err) => {
+      console.warn('Save onsite history failed:', err);
+    });
 }
         async function buildAIMapMarkers() {
           await rememberLatestOnsiteJobs();
@@ -3231,9 +3265,16 @@ w.drawEngineerTravel = async function () {
 
   clearEngineerTravel();
 
-  let cache = JSON.parse(
-    localStorage.getItem('aiLastOnsiteByEngineer') || '{}'
-  );
+  let localCache = JSON.parse(
+  localStorage.getItem('aiLastOnsiteByEngineer') || '{}'
+);
+
+// ✅ รวมประวัติจาก Google Sheet + localStorage
+// localStorage ทับ Google Sheet ถ้ามีข้อมูลใหม่กว่า
+let cache = {
+  ...(TRAVEL_HISTORY || {}),
+  ...localCache
+};
 
   let departedMap = getLatestDepartedJobsByEngineer();
 
