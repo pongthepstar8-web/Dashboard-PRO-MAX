@@ -2239,6 +2239,26 @@ render();
       .sla-ring-near {
         animation: slaBlinkYellow 1s infinite;
       }
+      @keyframes travelDashMove {
+  from {
+    stroke-dashoffset: 0;
+  }
+
+  to {
+    stroke-dashoffset: -36;
+  }
+}
+
+.engineer-travel-glow {
+  filter: drop-shadow(0 0 5px rgba(249, 115, 22, 0.9))
+    drop-shadow(0 0 9px rgba(251, 191, 36, 0.65));
+}
+
+.engineer-travel-flow {
+  animation: travelDashMove 0.65s linear infinite;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 5px rgba(253, 224, 71, 0.95))
+    drop-shadow(0 0 10px
             <\/style></head><body><div class="title"><h2>🧠 AI ACTION BOARD</h2><div class="view-bar"><button class="view-btn active" onclick="window.changeView('district',this)">📋 Job Queue</button><button class="view-btn" onclick="window.changeView('root',this)">⚠️ Root Cause</button><button class="view-btn" onclick="window.changeView('engineer',this)">👨‍🔧 Engineer Workload</button><button class="view-btn" onclick="window.changeView('map',this)">🗺️ AI Map</button></div><div id="districtFilterBar" class="district-bar">
         <button class="district-btn active" onclick="window.filterDistrict('', this)">
           ทั้งหมด
@@ -2441,6 +2461,7 @@ measureLine = null,
 measureLabel = null,
 engineerTravelLines = [],
 engineerTravelMarkers = [];
+
         w.initAIMap = function () {
           if (aiMapInited) {
             setTimeout(() => aiMap && aiMap.invalidateSize(), 250);
@@ -3181,7 +3202,10 @@ w.drawEngineerTravel = async function () {
 
   clearEngineerTravel();
 
-  let cache = JSON.parse(localStorage.getItem('aiLastOnsiteByEngineer') || '{}');
+  let cache = JSON.parse(
+    localStorage.getItem('aiLastOnsiteByEngineer') || '{}'
+  );
+
   let departedMap = getLatestDepartedJobsByEngineer();
 
   let bounds = [];
@@ -3200,12 +3224,16 @@ w.drawEngineerTravel = async function () {
       continue;
     }
 
-    // กันเคส job เดิมไม่ต้องวาด
+    // กันเคส Job เดิม ไม่ต้องวาด
     if (String(oldOnsite.jobId) === String(departedJob['Job ID'] || '')) {
       continue;
     }
 
-    let start = [Number(oldOnsite.lat), Number(oldOnsite.lng)];
+    let start = [
+      Number(oldOnsite.lat),
+      Number(oldOnsite.lng)
+    ];
+
     let end = departedCoord;
 
     if (
@@ -3220,12 +3248,19 @@ w.drawEngineerTravel = async function () {
     let route = null;
 
     try {
-      route = await getRoadRouteFromOSRM([start, end]);
+      route = await getRoadRouteFromOSRM([
+        start,
+        end
+      ]);
     } catch (err) {
-      console.warn('Engineer travel route failed:', oldOnsite.assign, err);
+      console.warn(
+        'Engineer travel route failed:',
+        oldOnsite.assign,
+        err
+      );
     }
 
-    // เงาที่ Job เดิม
+    // ✅ วงเงา Job เดิม
     let shadow = w.L.circleMarker(start, {
       radius: 18,
       color: '#f97316',
@@ -3236,7 +3271,7 @@ w.drawEngineerTravel = async function () {
       dashArray: '5,5'
     }).addTo(aiMap).bindPopup(`
       <div style="color:#111;font-family:Arial">
-        <b>👤 Last On-site Shadow</b><br>
+        <b>👣 Last On-site Job</b><br>
         ${oldOnsite.assign || '-'}<br>
         Job: ${oldOnsite.jobId || '-'}<br>
         ${oldOnsite.district || '-'}
@@ -3245,49 +3280,36 @@ w.drawEngineerTravel = async function () {
 
     engineerTravelMarkers.push(shadow);
 
-    // จุด Departed ปัจจุบัน
-    let departedMarker = w.L.marker(end, {
-      icon: w.L.divIcon({
-        className: '',
-        html: `
-          <div style="
-            background:#2563eb;
-            color:white;
-            padding:5px 9px;
-            border-radius:14px;
-            font-weight:900;
-            border:2px solid white;
-            box-shadow:0 0 10px rgba(37,99,235,.8);
-            white-space:nowrap;
-            font-family:Arial;
-            font-size:12px;
-          ">
-            🚗 Departed
-          </div>
-        `,
-        iconSize: [95, 30],
-        iconAnchor: [20, 15],
-      }),
-    }).addTo(aiMap).bindPopup(`
-      <div style="color:#111;font-family:Arial">
-        <b>🚗 Departed Job</b><br>
-        ${departedJob['Assign to'] || '-'}<br>
-        Job: ${departedJob['Job ID'] || '-'}<br>
-        ${departedJob['District Name'] || '-'}
-      </div>
-    `);
-
-    engineerTravelMarkers.push(departedMarker);
+    // ❌ ไม่สร้าง Marker Departed ใหม่แล้ว
+    // ใช้ marker เดิมบนแผนที่แทน
 
     if (route && route.latlngs && route.latlngs.length) {
-      let routeLine = w.L.polyline(route.latlngs, {
-        color: '#f97316',
-        weight: 6,
-        opacity: 0.9
-      }).addTo(aiMap);
+      // ✅ เส้นทางตามถนนจริง
+      // ✅ เส้นฐานสีส้ม
+let routeBaseLine = w.L.polyline(route.latlngs, {
+  color: '#f97316',
+  weight: 8,
+  opacity: 0.75,
+  lineCap: 'round',
+  lineJoin: 'round',
+  className: 'engineer-travel-glow'
+}).addTo(aiMap);
 
-      engineerTravelLines.push(routeLine);
+// ✅ เส้นไฟวิ่งด้านบน
+let routeFlowLine = w.L.polyline(route.latlngs, {
+  color: '#fde047',
+  weight: 4,
+  opacity: 1,
+  dashArray: '10, 18',
+  lineCap: 'round',
+  lineJoin: 'round',
+  className: 'engineer-travel-flow'
+}).addTo(aiMap);
 
+engineerTravelLines.push(routeBaseLine);
+engineerTravelLines.push(routeFlowLine);
+
+      // ✅ Label ระยะทาง / เวลา
       let mid =
         route.latlngs[Math.floor(route.latlngs.length / 2)];
 
@@ -3306,13 +3328,14 @@ w.drawEngineerTravel = async function () {
               white-space:nowrap;
               font-family:Arial;
               font-size:12px;
+              text-align:center;
             ">
               👣 ${oldOnsite.assign || '-'}<br>
               🛣️ ${route.distanceKm.toFixed(2)} km | ⏱ ${route.durationMin.toFixed(0)} min
             </div>
           `,
-          iconSize: [160, 42],
-          iconAnchor: [80, 21],
+          iconSize: [170, 42],
+          iconAnchor: [85, 21],
         }),
       }).addTo(aiMap);
 
@@ -3320,15 +3343,70 @@ w.drawEngineerTravel = async function () {
 
       route.latlngs.forEach((p) => bounds.push(p));
     } else {
-      // fallback ถ้า OSRM ไม่ตอบ ให้ลากเส้นตรง
-      let fallbackLine = w.L.polyline([start, end], {
-        color: '#f97316',
-        weight: 4,
-        opacity: 0.8,
-        dashArray: '8,8'
+      // fallback ถ้า OSRM ไม่ตอบ
+      let fallbackBaseLine = w.L.polyline([start, end], {
+  color: '#f97316',
+  weight: 7,
+  opacity: 0.65,
+  dashArray: '8,8',
+  lineCap: 'round',
+  lineJoin: 'round',
+  className: 'engineer-travel-glow'
+}).addTo(aiMap);
+
+let fallbackFlowLine = w.L.polyline([start, end], {
+  color: '#fde047',
+  weight: 4,
+  opacity: 1,
+  dashArray: '8,16',
+  lineCap: 'round',
+  lineJoin: 'round',
+  className: 'engineer-travel-flow'
+}).addTo(aiMap);
+
+engineerTravelLines.push(fallbackBaseLine);
+engineerTravelLines.push(fallbackFlowLine);
+
+      let km = distanceKm(
+        start[0],
+        start[1],
+        end[0],
+        end[1]
+      );
+
+      let mid = [
+        (start[0] + end[0]) / 2,
+        (start[1] + end[1]) / 2
+      ];
+
+      let label = w.L.marker(mid, {
+        icon: w.L.divIcon({
+          className: '',
+          html: `
+            <div style="
+              background:#020617;
+              color:#fed7aa;
+              padding:7px 10px;
+              border-radius:14px;
+              font-weight:900;
+              border:1px solid #fb923c;
+              box-shadow:0 0 10px rgba(249,115,22,.65);
+              white-space:nowrap;
+              font-family:Arial;
+              font-size:12px;
+              text-align:center;
+            ">
+              👣 ${oldOnsite.assign || '-'}<br>
+              📏 ${km.toFixed(2)} km
+            </div>
+          `,
+          iconSize: [150, 42],
+          iconAnchor: [75, 21],
+        }),
       }).addTo(aiMap);
 
-      engineerTravelLines.push(fallbackLine);
+      engineerTravelMarkers.push(label);
+
       bounds.push(start, end);
     }
   }
