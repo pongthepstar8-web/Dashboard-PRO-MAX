@@ -2150,6 +2150,19 @@ render();
   background: #020617;
   color: #e2e8f0;
 }
+#departedEngineerSelect {
+  min-width: 210px;
+  max-width: 260px;
+  background: #1e293b;
+  color: #fff;
+  border: 1px solid #334155;
+  font-weight: 900;
+}
+
+#departedEngineerSelect option {
+  background: #020617;
+  color: #e2e8f0;
+}
         .map-tools-wrap {
   position: relative;
   display: inline-flex;
@@ -2547,6 +2560,13 @@ render();
 >
   <option value="">🧑‍🔧 On-site ล่าสุด</option>
 </select>
+<select
+  id="departedEngineerSelect"
+  class="map-btn"
+  onchange="window.focusDepartedEngineer(this.value)"
+>
+  <option value="">🚗 Departed ล่าสุด</option>
+</select>
   <div class="map-tools-wrap">
     <button
       class="map-btn"
@@ -2582,6 +2602,7 @@ render();
           aiMarkers = [],
           aiAllPoints = [],
           onsiteEngineerIndex = {};
+          departedEngineerIndex = {};
           aiRoutePoints = [],
           aiRouteLine = null,
           aiRouteMarkers = [],
@@ -2619,8 +2640,10 @@ engineerTravelOn = false;
             attribution: '© OpenStreetMap',
           }).addTo(aiMap);
 
-          buildAIMapMarkers();
-buildOnsiteEngineerSelect();
+          buildAIMapMarkers().then(() => {
+  buildOnsiteEngineerSelect();
+  buildDepartedEngineerSelect();
+});
           aiMap.on('click', function (e) {
   if (routeSimMode) {
     selectRouteSimPoint(
@@ -3552,6 +3575,11 @@ function isOnsiteStatus(status) {
     s.includes('onsite')
   );
 }
+function isDepartedStatus(status) {
+  let s = String(status || '').toLowerCase();
+
+  return s.includes('departed');
+}
 function normalizeProvinceName(v) {
   return String(v || '')
     .trim()
@@ -3664,6 +3692,72 @@ function buildOnsiteEngineerSelect() {
     html += `
       <option value="${safeValue}">
         ${badge} | ${safeValue} | ${area}
+      </option>
+    `;
+  });
+
+  select.innerHTML = html;
+}
+function buildDepartedEngineerSelect() {
+  let select = w.document.getElementById('departedEngineerSelect');
+
+  if (!select) return;
+
+  let latestByEngineer = {};
+
+  jobs
+    .filter((job) => {
+      let assign = String(job['Assign to'] || '').trim();
+      let status = job['Status'] || '';
+      let province = job['Province Name'] || '';
+
+      return (
+        assign &&
+        isDepartedStatus(status) &&
+        isMatchSelectedProvince(province)
+      );
+    })
+    .sort((a, b) => {
+      return new Date(b['Create Time'] || 0) - new Date(a['Create Time'] || 0);
+    })
+    .forEach((job) => {
+      let assign = String(job['Assign to'] || '').trim();
+      let key = assign.toLowerCase();
+
+      if (!latestByEngineer[key]) {
+        latestByEngineer[key] = job;
+      }
+    });
+
+  let items = Object.values(latestByEngineer).sort((a, b) => {
+    return String(a['Assign to'] || '').localeCompare(
+      String(b['Assign to'] || '')
+    );
+  });
+
+  let label = prov
+    ? `🚗 Departed ล่าสุด: ${prov}`
+    : '🚗 Departed ล่าสุด';
+
+  let html = `<option value="">${label}</option>`;
+
+  items.forEach((job) => {
+    let assign = String(job['Assign to'] || '').trim();
+
+    let safeValue = assign
+      .replace(/&/g, '&amp;')
+      .replace(/"/g, '&quot;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+
+    let area =
+      [job['Province Name'], job['District Name']]
+        .filter(Boolean)
+        .join(' / ') || '-';
+
+    html += `
+      <option value="${safeValue}">
+        🚗 ${safeValue} | ${area}
       </option>
     `;
   });
@@ -3809,6 +3903,31 @@ group.jobs.forEach((job) => {
     };
   }
 });
+group.jobs.forEach((job) => {
+  let assign = String(job['Assign to'] || '').trim();
+  let status = job['Status'] || '';
+
+  if (!assign || !isDepartedStatus(status)) {
+    return;
+  }
+
+  let key = assign.toLowerCase();
+
+  let old = departedEngineerIndex[key];
+
+  let currentTime = new Date(job['Create Time'] || 0);
+  let oldTime = old ? new Date(old.job['Create Time'] || 0) : null;
+
+  if (!old || currentTime > oldTime) {
+    departedEngineerIndex[key] = {
+      assign: assign,
+      job: job,
+      marker: marker,
+      group: group,
+      coord: displayCoord
+    };
+  }
+});
             aiMarkers.push(marker);
 
             aiAllPoints.push(displayCoord);
@@ -3891,6 +4010,40 @@ group.jobs.forEach((job) => {
   }
 
   alert('ไม่พบ On-site ปัจจุบันหรือ On-site ล่าสุดของช่างในจังหวัดที่เลือก');
+};
+w.focusDepartedEngineer = function (name) {
+  let key = String(name || '').toLowerCase().trim();
+
+  if (!key) return;
+
+  let item = departedEngineerIndex[key];
+
+  if (!item) {
+    alert('ไม่พบ Departed ล่าสุดของช่างคนนี้ในจังหวัดที่เลือก');
+    return;
+  }
+
+  let province =
+    item.job?.['Province Name'] ||
+    item.group?.jobs?.[0]?.['Province Name'] ||
+    '';
+
+  if (!isMatchSelectedProvince(province)) {
+    alert('ช่างคนนี้ไม่ได้อยู่ในจังหวัดที่เลือก');
+    return;
+  }
+
+  let coord = item.coord || [item.group.lat, item.group.lng];
+
+  aiMap.setView(coord, 13, {
+    animate: true
+  });
+
+  setTimeout(() => {
+    if (item.marker) {
+      item.marker.openPopup();
+    }
+  }, 350);
 };
         function normalizeSiteSearchText(v) {
   let tokens =
