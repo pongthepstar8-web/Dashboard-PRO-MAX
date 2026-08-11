@@ -2659,51 +2659,14 @@ function selectRouteSimPoint(coord, meta) {
     clearRouteSimulator();
   }
 
-  let pointNo = routeSimPoints.length + 1;
-
   routeSimPoints.push({
     lat: Number(coord[0]),
     lng: Number(coord[1]),
     meta: meta || {}
   });
 
-  let pointLabel = pointNo === 1 ? 'START' : 'END';
-
-  let color = pointNo === 1 ? '#2563eb' : '#f97316';
-
-  let marker = w.L.marker([coord[0], coord[1]], {
-    icon: w.L.divIcon({
-      className: '',
-      html: `
-        <div style="
-          background:${color};
-          color:white;
-          padding:5px 10px;
-          border-radius:16px;
-          font-weight:900;
-          border:2px solid white;
-          box-shadow:0 0 10px ${color};
-          white-space:nowrap;
-          font-family:Arial;
-          font-size:12px;
-        ">
-          ${pointNo === 1 ? '🚩' : '🏁'} ${pointLabel}
-        </div>
-      `,
-      iconSize: [90, 30],
-      iconAnchor: [25, 15],
-    }),
-  }).addTo(aiMap);
-
-  marker.bindPopup(`
-    <div style="color:#111;font-family:Arial">
-      <b>${pointLabel}</b><br>
-      ${meta?.name || meta?.source || 'Map Point'}<br>
-      ${coord[0].toFixed(6)}, ${coord[1].toFixed(6)}
-    </div>
-  `);
-
-  routeSimMarkers.push(marker);
+  // ✅ ไม่สร้าง START / END marker แล้ว
+  // ใช้ marker Job เดิมบนแผนที่ หรือจุดคลิกบนแผนที่เท่านั้น
 
   if (routeSimPoints.length === 2) {
     drawRouteSimulator();
