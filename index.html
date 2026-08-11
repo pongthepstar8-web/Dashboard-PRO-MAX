@@ -1294,6 +1294,29 @@ let networkGroupSubFilters = [];
     .replace(/[()]/g, '')           // กันวงเล็บ
     .trim();
 }
+function cleanMobileNumber(v) {
+  return String(v || '')
+    .trim()
+    .replace(/[^\d]/g, '');
+}
+
+function formatMobileDisplay(v) {
+  return String(v || '').trim() || '-';
+}
+function renderMobileLink(mobile) {
+  let display = formatMobileDisplay(mobile);
+  let clean = cleanMobileNumber(mobile);
+
+  if (!clean) {
+    return '-';
+  }
+
+  return `
+    tel:${clean}
+      ${display}
+    </a>
+  `;
+}
 function normalizeProvinceForShift(v) {
   return String(v || '')
     .trim()
@@ -2778,12 +2801,7 @@ Object.entries(engineers)
             } ${eng}</div><div class="detail">📍 Current Area : ${
               currentJob?.['District Name'] || '-'
             }</div><div class="detail">
-  📞 Mobile :
-  ${
-    obj.mobile
-      ? `tel:${obj.mobile}${obj.mobile}</a>`
-      : '-'
-  }
+  📞 Mobile : ${renderMobileLink(obj.mobile)}
 </div><div class="detail">🗺️ ${
               obj.districts.size
             } District(s)</div><div style="color:#93c5fd;margin-top:4px;font-size:13px">${[
