@@ -2619,9 +2619,8 @@ engineerTravelOn = false;
             attribution: '© OpenStreetMap',
           }).addTo(aiMap);
 
-          buildAIMapMarkers().then(() => {
-  buildOnsiteEngineerSelect();
-});
+          buildAIMapMarkers();
+buildOnsiteEngineerSelect();
           aiMap.on('click', function (e) {
   if (routeSimMode) {
     selectRouteSimPoint(
@@ -3558,6 +3557,9 @@ function buildOnsiteEngineerSelect() {
 
   if (!select) return;
 
+  let map = {};
+
+  // ✅ 1. On-site ปัจจุบันจาก jobs
   let onsiteJobs = jobs
     .filter((job) => {
       let assign = String(job['Assign to'] || '').trim();
@@ -3569,34 +3571,70 @@ function buildOnsiteEngineerSelect() {
       return new Date(b['Create Time'] || 0) - new Date(a['Create Time'] || 0);
     });
 
-  let latestByEngineer = {};
-
   onsiteJobs.forEach((job) => {
     let assign = String(job['Assign to'] || '').trim();
     let key = assign.toLowerCase();
 
-    if (!latestByEngineer[key]) {
-      latestByEngineer[key] = job;
+    if (!map[key]) {
+      map[key] = {
+        assign: assign,
+        source: 'CURRENT_ONSITE',
+        jobId: job['Job ID'] || '',
+        district: job['District Name'] || '',
+        province: job['Province Name'] || '',
+        savedAt: job['Create Time'] || ''
+      };
     }
   });
 
-  let names = Object.values(latestByEngineer)
-    .map((job) => String(job['Assign to'] || '').trim())
-    .filter(Boolean)
-    .sort();
+  // ✅ 2. On-site ล่าสุดจาก ENGINEER_TRAVEL_LOG / TRAVEL_HISTORY
+  Object.keys(TRAVEL_HISTORY || {}).forEach((key) => {
+    let item = TRAVEL_HISTORY[key];
 
-  let html = `<option value="">🧑‍🔧 On-site ล่าสุด</option>`;
+    if (!item || !item.assign) return;
 
-  names.forEach((name) => {
-    let safeValue = String(name)
+    let assign = String(item.assign || '').trim();
+    let normKey = assign.toLowerCase();
+
+    // ถ้ามี On-site ปัจจุบันอยู่แล้ว ให้ใช้ของปัจจุบันก่อน
+    if (map[normKey]) return;
+
+    map[normKey] = {
+      assign: assign,
+      source: 'TRAVEL_HISTORY',
+      jobId: item.jobId || '',
+      district: item.district || '',
+      province: item.province || '',
+      savedAt: item.savedAt || ''
+    };
+  });
+
+  let items = Object.values(map).sort((a, b) => {
+    return a.assign.localeCompare(b.assign);
+  });
+
+  let html = `<option value="">🧑‍🔧 On-site ปัจจุบัน / ล่าสุด</option>`;
+
+  items.forEach((item) => {
+    let safeValue = String(item.assign)
       .replace(/&/g, '&amp;')
       .replace(/"/g, '&quot;')
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;');
 
+    let badge =
+      item.source === 'CURRENT_ONSITE'
+        ? '🟢 ปัจจุบัน'
+        : '🕘 ล่าสุด';
+
+    let area =
+      [item.province, item.district]
+        .filter(Boolean)
+        .join(' / ') || '-';
+
     html += `
       <option value="${safeValue}">
-        🧑‍🔧 ${safeValue}
+        ${badge} | ${safeValue} | ${area}
       </option>
     `;
   });
@@ -3754,24 +3792,69 @@ group.jobs.forEach((job) => {
 
   if (!key) return;
 
+  // ✅ 1. หา On-site ปัจจุบันจาก marker index ก่อน
   let item = onsiteEngineerIndex[key];
 
-  if (!item) {
-    alert('ไม่พบ On-site ล่าสุดของช่างคนนี้บนแผนที่');
+  if (item) {
+    let coord = item.coord || [item.group.lat, item.group.lng];
+
+    aiMap.setView(coord, 13, {
+      animate: true
+    });
+
+    setTimeout(() => {
+      if (item.marker) {
+        item.marker.openPopup();
+      }
+    }, 350);
+
     return;
   }
 
-  let coord = item.coord || [item.group.lat, item.group.lng];
+  // ✅ 2. fallback ไปหา On-site ล่าสุดจาก TRAVEL_HISTORY
+  let history = TRAVEL_HISTORY && TRAVEL_HISTORY[key];
 
-  aiMap.setView(coord, 13, {
-    animate: true
-  });
+  if (
+    history &&
+    !isNaN(Number(history.lat)) &&
+    !isNaN(Number(history.lng))
+  ) {
+    let coord = [
+      Number(history.lat),
+      Number(history.lng)
+    ];
 
-  setTimeout(() => {
-    if (item.marker) {
-      item.marker.openPopup();
-    }
-  }, 350);
+    aiMap.setView(coord, 13, {
+      animate: true
+    });
+
+    let marker = w.L.circleMarker(coord, {
+      radius: 22,
+      color: '#38bdf8',
+      fillColor: '#38bdf8',
+      fillOpacity: 0.18,
+      opacity: 0.9,
+      weight: 3,
+      dashArray: '6,6'
+    }).addTo(aiMap).bindPopup(`
+      <div style="color:#111;font-family:Arial">
+        <b>🕘 Last On-site From Travel Log</b><br>
+        ${history.assign || '-'}<br>
+        Job: ${history.jobId || '-'}<br>
+        ${history.province || '-'} / ${history.district || '-'}<br>
+        Saved: ${history.savedAt || '-'}
+      </div>
+    `);
+
+    marker.openPopup();
+
+    // ใช้ aiRouteMarkers เพื่อให้ Clear Route ล้างออกได้
+    aiRouteMarkers.push(marker);
+
+    return;
+  }
+
+  alert('ไม่พบ On-site ปัจจุบันหรือ On-site ล่าสุดของช่างคนนี้');
 };
         function normalizeSiteSearchText(v) {
   let tokens =
