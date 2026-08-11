@@ -2137,7 +2137,50 @@ render();
       <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"><\/script>
 
       <style>
+        .map-tools-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
 
+.map-tools-menu {
+  position: absolute;
+  top: 44px;
+  right: 0;
+  min-width: 210px;
+  background: #020617;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 8px;
+  display: none;
+  z-index: 99999;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.55);
+}
+
+.map-tools-menu.show {
+  display: block;
+}
+
+.map-tools-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: #e2e8f0;
+  font-weight: 900;
+  font-size: 13px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.map-tools-item:hover {
+  background: #1e293b;
+  color: #ffffff;
+}
 
 
                 .job-list{
@@ -2468,7 +2511,50 @@ render();
                 ''
               )}</details><div class="detail">🚨 Critical : ${critical}</div><div class="detail">⚠️ Major : ${major}</div><div class="detail">🕒 Overdue : ${overdue}</div><div class="reason">Workload : ${level}</div></div>`;
           });
-        html += `</div><div id="rootView" class="board" style="display:none">${rootHtml}</div><div id="engineerView" class="board" style="display:none">${engineerHtml}</div><div id="mapView"><div class="map-panel"><button class="map-btn" id="routeSimBtn" onclick="window.toggleRouteSimulator()">🧭 Route Simulator OFF</button><button class="map-btn" id="travelToggleBtn" onclick="window.toggleEngineerTravel()">👣 Travel OFF</button><button class="map-btn" onclick="window.openGoogleRoute()">🧭 Open Google Maps</button><button class="map-btn" onclick="window.clearAIRoute()">🧹 Clear Route</button><button class="map-btn" onclick="window.fitAllMarkers()">📍 Fit All Jobs</button><button class="map-btn" onclick="window.showDistrictSourceJobs()">🗺️ District Source</button></div><div id="aiMap"></div></div><script>window.AI_JOBS=${safeJobsJson};<\/script></body></html>`;
+        html += `</div><div id="rootView" class="board" style="display:none">${rootHtml}</div><div id="engineerView" class="board" style="display:none">${engineerHtml}</div><div id="mapView"><div class="map-panel">
+  <button
+    class="map-btn"
+    id="routeSimBtn"
+    onclick="window.toggleRouteSimulator()"
+  >
+    🧭 Route Simulator OFF
+  </button>
+
+  <button
+    class="map-btn"
+    id="travelToggleBtn"
+    onclick="window.toggleEngineerTravel()"
+  >
+    👣 Travel OFF
+  </button>
+
+  <div class="map-tools-wrap">
+    <button
+      class="map-btn"
+      onclick="window.toggleMapToolsMenu()"
+    >
+      ⚙️ Map Tools
+    </button>
+
+    <div class="map-tools-menu" id="mapToolsMenu">
+      <button class="map-tools-item" onclick="window.openGoogleRoute()">
+        🧭 Open Google Maps
+      </button>
+
+      <button class="map-tools-item" onclick="window.clearAIRoute()">
+        🧹 Clear Route
+      </button>
+
+      <button class="map-tools-item" onclick="window.fitAllMarkers()">
+        📍 Fit All Jobs
+      </button>
+
+      <button class="map-tools-item" onclick="window.showDistrictSourceJobs()">
+        🗺️ District Source
+      </button>
+    </div>
+  </div>
+</div><div id="aiMap"></div></div><script>window.AI_JOBS=${safeJobsJson};<\/script></body></html>`;
         let w = window.open();
         w.document.write(html);
         w.document.close();
@@ -4283,7 +4369,31 @@ if (routeBtn) {
 
           window.open(url, '_blank');
         };
+        w.toggleMapToolsMenu = function () {
+  let menu = w.document.getElementById('mapToolsMenu');
 
+  if (!menu) return;
+
+  menu.classList.toggle('show');
+};
+
+w.closeMapToolsMenu = function () {
+  let menu = w.document.getElementById('mapToolsMenu');
+
+  if (!menu) return;
+
+  menu.classList.remove('show');
+};
+
+w.document.addEventListener('click', function (e) {
+  let wrap = w.document.querySelector('.map-tools-wrap');
+
+  if (!wrap) return;
+
+  if (!wrap.contains(e.target)) {
+    w.closeMapToolsMenu();
+  }
+});
         w.changeView = function (view, btn) {
           w.document
             .querySelectorAll('.view-btn')
