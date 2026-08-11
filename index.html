@@ -3552,6 +3552,20 @@ function isOnsiteStatus(status) {
     s.includes('onsite')
   );
 }
+function normalizeProvinceName(v) {
+  return String(v || '')
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, ' ');
+}
+
+function isMatchSelectedProvince(provinceName) {
+  // prov เป็นตัวแปรใน showAIBoard()
+  // ได้ค่าจาก $('#provinceFilter').val()
+  if (!prov) return true;
+
+  return normalizeProvinceName(provinceName) === normalizeProvinceName(prov);
+}
 function buildOnsiteEngineerSelect() {
   let select = w.document.getElementById('onsiteEngineerSelect');
 
@@ -3560,12 +3574,18 @@ function buildOnsiteEngineerSelect() {
   let map = {};
 
   // ✅ 1. On-site ปัจจุบันจาก jobs
+  // jobs ใน AI Board ถูกกรองจังหวัดไว้แล้ว แต่ใส่กันซ้ำเพื่อความชัวร์
   let onsiteJobs = jobs
     .filter((job) => {
       let assign = String(job['Assign to'] || '').trim();
       let status = job['Status'] || '';
+      let province = job['Province Name'] || '';
 
-      return assign && isOnsiteStatus(status);
+      return (
+        assign &&
+        isOnsiteStatus(status) &&
+        isMatchSelectedProvince(province)
+      );
     })
     .sort((a, b) => {
       return new Date(b['Create Time'] || 0) - new Date(a['Create Time'] || 0);
@@ -3593,10 +3613,15 @@ function buildOnsiteEngineerSelect() {
 
     if (!item || !item.assign) return;
 
+    // ✅ กรองเฉพาะจังหวัดที่เลือก
+    if (!isMatchSelectedProvince(item.province)) {
+      return;
+    }
+
     let assign = String(item.assign || '').trim();
     let normKey = assign.toLowerCase();
 
-    // ถ้ามี On-site ปัจจุบันอยู่แล้ว ให้ใช้ของปัจจุบันก่อน
+    // ถ้ามี On-site ปัจจุบันอยู่แล้ว ใช้ข้อมูลปัจจุบันก่อน
     if (map[normKey]) return;
 
     map[normKey] = {
@@ -3613,7 +3638,11 @@ function buildOnsiteEngineerSelect() {
     return a.assign.localeCompare(b.assign);
   });
 
-  let html = `<option value="">🧑‍🔧 On-site ปัจจุบัน / ล่าสุด</option>`;
+  let label = prov
+    ? `🧑‍🔧 On-site ล่าสุด: ${prov}`
+    : '🧑‍🔧 On-site ปัจจุบัน / ล่าสุด';
+
+  let html = `<option value="">${label}</option>`;
 
   items.forEach((item) => {
     let safeValue = String(item.assign)
@@ -3796,6 +3825,13 @@ group.jobs.forEach((job) => {
   let item = onsiteEngineerIndex[key];
 
   if (item) {
+    let province = item.job?.['Province Name'] || item.group?.jobs?.[0]?.['Province Name'] || '';
+
+    if (!isMatchSelectedProvince(province)) {
+      alert('ช่างคนนี้ไม่ได้อยู่ในจังหวัดที่เลือก');
+      return;
+    }
+
     let coord = item.coord || [item.group.lat, item.group.lng];
 
     aiMap.setView(coord, 13, {
@@ -3816,6 +3852,7 @@ group.jobs.forEach((job) => {
 
   if (
     history &&
+    isMatchSelectedProvince(history.province) &&
     !isNaN(Number(history.lat)) &&
     !isNaN(Number(history.lng))
   ) {
@@ -3848,13 +3885,12 @@ group.jobs.forEach((job) => {
 
     marker.openPopup();
 
-    // ใช้ aiRouteMarkers เพื่อให้ Clear Route ล้างออกได้
     aiRouteMarkers.push(marker);
 
     return;
   }
 
-  alert('ไม่พบ On-site ปัจจุบันหรือ On-site ล่าสุดของช่างคนนี้');
+  alert('ไม่พบ On-site ปัจจุบันหรือ On-site ล่าสุดของช่างในจังหวัดที่เลือก');
 };
         function normalizeSiteSearchText(v) {
   let tokens =
