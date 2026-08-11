@@ -2465,6 +2465,7 @@ routeSimMode = false,
 routeSimPoints = [],
 routeSimMarkers = [],
 routeSimLine = null,
+routeSimLines = [],
 routeSimLabel = null;
 aiDistrictSourceGroups = [];
 engineerTravelLines = [],
@@ -2706,13 +2707,32 @@ async function drawRouteSimulator() {
       return;
     }
 
-    routeSimLine = w.L.polyline(route.latlngs, {
-      color: '#38bdf8',
-      weight: 6,
-      opacity: 0.92,
-      lineCap: 'round',
-      lineJoin: 'round'
-    }).addTo(aiMap);
+    // ✅ เส้นฐานสีฟ้า
+let routeSimBaseLine = w.L.polyline(route.latlngs, {
+  color: '#0ea5e9',
+  weight: 8,
+  opacity: 0.65,
+  lineCap: 'round',
+  lineJoin: 'round',
+  className: 'route-sim-glow'
+}).addTo(aiMap);
+
+// ✅ เส้นไฟวิ่งด้านบน
+let routeSimFlowLine = w.L.polyline(route.latlngs, {
+  color: '#e0f2fe',
+  weight: 4,
+  opacity: 1,
+  dashArray: '10, 18',
+  lineCap: 'round',
+  lineJoin: 'round',
+  className: 'route-sim-flow'
+}).addTo(aiMap);
+
+routeSimLines.push(routeSimBaseLine);
+routeSimLines.push(routeSimFlowLine);
+
+// ใช้ routeSimLine อ้างอิง bounds
+routeSimLine = routeSimBaseLine;
 
     let mid = route.latlngs[Math.floor(route.latlngs.length / 2)];
 
@@ -2752,12 +2772,30 @@ async function drawRouteSimulator() {
 }
 
 function drawRouteSimulatorFallback(start, end) {
-  routeSimLine = w.L.polyline([start, end], {
-    color: '#38bdf8',
-    weight: 4,
-    opacity: 0.85,
-    dashArray: '8,8'
-  }).addTo(aiMap);
+  let fallbackBaseLine = w.L.polyline([start, end], {
+  color: '#0ea5e9',
+  weight: 7,
+  opacity: 0.6,
+  dashArray: '8,8',
+  lineCap: 'round',
+  lineJoin: 'round',
+  className: 'route-sim-glow'
+}).addTo(aiMap);
+
+let fallbackFlowLine = w.L.polyline([start, end], {
+  color: '#e0f2fe',
+  weight: 4,
+  opacity: 1,
+  dashArray: '8,16',
+  lineCap: 'round',
+  lineJoin: 'round',
+  className: 'route-sim-flow'
+}).addTo(aiMap);
+
+routeSimLines.push(fallbackBaseLine);
+routeSimLines.push(fallbackFlowLine);
+
+routeSimLine = fallbackBaseLine;
 
   let km = distanceKm(
     start[0],
@@ -2807,6 +2845,12 @@ function clearRouteSimulator() {
     aiMap.removeLayer(routeSimLine);
     routeSimLine = null;
   }
+
+  routeSimLines.forEach((line) => {
+    aiMap.removeLayer(line);
+  });
+
+  routeSimLines = [];
 
   if (routeSimLabel) {
     aiMap.removeLayer(routeSimLabel);
