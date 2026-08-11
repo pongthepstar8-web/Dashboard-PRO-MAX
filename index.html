@@ -4011,7 +4011,7 @@ group.jobs.forEach((job) => {
 
   alert('ไม่พบ On-site ปัจจุบันหรือ On-site ล่าสุดของช่างในจังหวัดที่เลือก');
 };
-w.focusDepartedEngineer = function (name) {
+w.focusDepartedEngineer = async function (name) {
   let key = String(name || '').toLowerCase().trim();
 
   if (!key) return;
@@ -4033,6 +4033,10 @@ w.focusDepartedEngineer = function (name) {
     return;
   }
 
+  // ✅ วาดเส้นทางรายคนจาก On-site ล่าสุด → Departed ล่าสุด
+  await drawDepartedTravelForEngineer(key);
+
+  // ✅ Zoom และเปิด popup marker Departed เดิม
   let coord = item.coord || [item.group.lat, item.group.lng];
 
   aiMap.setView(coord, 13, {
@@ -4069,6 +4073,7 @@ w.focusDepartedEngineer = function (name) {
 
   return '|' + tokens.join('|') + '|';
 }
+
 function clearEngineerTravel() {
   engineerTravelLines.forEach((line) => {
     aiMap.removeLayer(line);
@@ -4373,6 +4378,236 @@ engineerTravelLines.push(fallbackFlowLine);
     alert('ยังไม่พบข้อมูล On-site เดิมและ Departed ของช่างคนเดียวกัน');
   }
 };
+async function drawDepartedTravelForEngineer(assignKey) {
+  if (!aiMap) return;
+
+  clearEngineerTravel();
+
+  let localCache = JSON.parse(
+    localStorage.getItem('aiLastOnsiteByEngineer') || '{}'
+  );
+
+  let cache = {
+    ...(TRAVEL_HISTORY || {}),
+    ...localCache
+  };
+
+  let oldOnsite = cache[assignKey];
+  let departedItem = departedEngineerIndex[assignKey];
+
+  if (!departedItem) {
+    alert('ไม่พบ Departed ล่าสุดของช่างคนนี้');
+    return;
+  }
+
+  if (!oldOnsite) {
+    alert('ไม่พบ On-site ล่าสุดของช่างคนนี้จาก Travel Log');
+    return;
+  }
+
+  let departedJob = departedItem.job;
+  let departedCoord = await getJobCoord(departedJob);
+
+  if (!departedCoord) {
+    alert('ไม่พบพิกัด Departed ล่าสุดของช่างคนนี้');
+    return;
+  }
+
+  let start = [
+    Number(oldOnsite.lat),
+    Number(oldOnsite.lng)
+  ];
+
+  let end = departedCoord;
+
+  if (
+    isNaN(start[0]) ||
+    isNaN(start[1]) ||
+    isNaN(end[0]) ||
+    isNaN(end[1])
+  ) {
+    alert('พิกัด On-site หรือ Departed ไม่ถูกต้อง');
+    return;
+  }
+
+  // ถ้า On-site ล่าสุดกับ Departed คือ Job เดียวกัน ไม่ต้องวาดเส้น
+  if (String(oldOnsite.jobId || '') === String(departedJob['Job ID'] || '')) {
+    alert('ช่างคนนี้ถึงปลายทางแล้ว หรือ On-site ล่าสุดเป็น Job เดียวกับ Departed');
+    return;
+  }
+
+  // ✅ วงเงา Job เดิม
+  let shadow = w.L.circleMarker(start, {
+    radius: 18,
+    color: '#f97316',
+    fillColor: '#f97316',
+    fillOpacity: 0.18,
+    opacity: 0.75,
+    weight: 3,
+    dashArray: '5,5'
+  }).addTo(aiMap).bindPopup(`
+    <div style="color:#111;font-family:Arial">
+      <b>👣 จุดเริ่มต้น On-site ล่าสุด</b><br>
+      ${oldOnsite.assign || '-'}<br>
+      Job: ${oldOnsite.jobId || '-'}<br>
+      ${oldOnsite.province || '-'} / ${oldOnsite.district || '-'}
+    </div>
+  `);
+
+  engineerTravelMarkers.push(shadow);
+
+  let route = null;
+
+  try {
+    route = await getRoadRouteFromOSRM([
+      start,
+      end
+    ]);
+  } catch (err) {
+    console.warn('Departed travel route failed:', oldOnsite.assign, err);
+  }
+
+  let fromText =
+    `${oldOnsite.district || '-'} / ${oldOnsite.jobId || '-'}`;
+
+  let toText =
+    `${departedJob['District Name'] || '-'} / ${departedJob['Job ID'] || '-'}`;
+
+  if (route && route.latlngs && route.latlngs.length) {
+    // ✅ เส้นฐานสีส้ม
+    let routeBaseLine = w.L.polyline(route.latlngs, {
+      color: '#f97316',
+      weight: 8,
+      opacity: 0.65,
+      lineCap: 'round',
+      lineJoin: 'round',
+      className: 'engineer-travel-glow'
+    }).addTo(aiMap);
+
+    // ✅ เส้นไฟวิ่ง
+    let routeFlowLine = w.L.polyline(route.latlngs, {
+      color: '#fde047',
+      weight: 4,
+      opacity: 1,
+      dashArray: '10, 18',
+      lineCap: 'round',
+      lineJoin: 'round',
+      className: 'engineer-travel-flow'
+    }).addTo(aiMap);
+
+    engineerTravelLines.push(routeBaseLine);
+    engineerTravelLines.push(routeFlowLine);
+
+    let mid =
+      route.latlngs[Math.floor(route.latlngs.length / 2)];
+
+    let label = w.L.marker(mid, {
+      icon: w.L.divIcon({
+        className: '',
+        html: `
+          <div style="
+            background:#020617;
+            color:#fed7aa;
+            padding:8px 12px;
+            border-radius:14px;
+            font-weight:900;
+            border:1px solid #fb923c;
+            box-shadow:0 0 10px rgba(249,115,22,.65);
+            white-space:nowrap;
+            font-family:Arial;
+            font-size:12px;
+            text-align:left;
+            line-height:1.45;
+          ">
+            👣 ${oldOnsite.assign || '-'}<br>
+            จาก: ${fromText}<br>
+            ไป: ${toText}<br>
+            🛣️ ${route.distanceKm.toFixed(2)} km | ⏱ ${route.durationMin.toFixed(0)} min
+          </div>
+        `,
+        iconSize: [240, 76],
+        iconAnchor: [120, 38],
+      }),
+    }).addTo(aiMap);
+
+    engineerTravelMarkers.push(label);
+
+    aiMap.fitBounds(routeBaseLine.getBounds(), {
+      padding: [70, 70],
+    });
+  } else {
+    // fallback ถ้า OSRM ไม่ตอบ
+    let fallbackBaseLine = w.L.polyline([start, end], {
+      color: '#f97316',
+      weight: 7,
+      opacity: 0.65,
+      dashArray: '8,8',
+      lineCap: 'round',
+      lineJoin: 'round',
+      className: 'engineer-travel-glow'
+    }).addTo(aiMap);
+
+    let fallbackFlowLine = w.L.polyline([start, end], {
+      color: '#fde047',
+      weight: 4,
+      opacity: 1,
+      dashArray: '8,16',
+      lineCap: 'round',
+      lineJoin: 'round',
+      className: 'engineer-travel-flow'
+    }).addTo(aiMap);
+
+    engineerTravelLines.push(fallbackBaseLine);
+    engineerTravelLines.push(fallbackFlowLine);
+
+    let km = distanceKm(
+      start[0],
+      start[1],
+      end[0],
+      end[1]
+    );
+
+    let mid = [
+      (start[0] + end[0]) / 2,
+      (start[1] + end[1]) / 2
+    ];
+
+    let label = w.L.marker(mid, {
+      icon: w.L.divIcon({
+        className: '',
+        html: `
+          <div style="
+            background:#020617;
+            color:#fed7aa;
+            padding:8px 12px;
+            border-radius:14px;
+            font-weight:900;
+            border:1px solid #fb923c;
+            box-shadow:0 0 10px rgba(249,115,22,.65);
+            white-space:nowrap;
+            font-family:Arial;
+            font-size:12px;
+            text-align:left;
+            line-height:1.45;
+          ">
+            👣 ${oldOnsite.assign || '-'}<br>
+            จาก: ${fromText}<br>
+            ไป: ${toText}<br>
+            📏 ${km.toFixed(2)} km
+          </div>
+        `,
+        iconSize: [230, 72],
+        iconAnchor: [115, 36],
+      }),
+    }).addTo(aiMap);
+
+    engineerTravelMarkers.push(label);
+
+    aiMap.fitBounds([start, end], {
+      padding: [70, 70],
+    });
+  }
+}
 function hasCurrentOnsiteJob(assignKey) {
   return jobs.some((job) => {
     let assign = String(job['Assign to'] || '').toLowerCase().trim();
