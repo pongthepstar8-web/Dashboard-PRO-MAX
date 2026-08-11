@@ -1312,8 +1312,13 @@ function renderMobileLink(mobile) {
     return '-';
   }
 
-  return `tel:${clean}${display}</a>`;
+  return `
+    tel:${clean}
+      ${display}
+    </a>
+  `;
 }
+
 function normalizeProvinceForShift(v) {
   return String(v || '')
     .trim()
