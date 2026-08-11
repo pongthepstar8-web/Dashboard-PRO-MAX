@@ -1303,6 +1303,7 @@ function cleanMobileNumber(v) {
 function formatMobileDisplay(v) {
   return String(v || '').trim() || '-';
 }
+
 function renderMobileLink(mobile) {
   let display = formatMobileDisplay(mobile);
   let clean = cleanMobileNumber(mobile);
@@ -1311,11 +1312,7 @@ function renderMobileLink(mobile) {
     return '-';
   }
 
-  return `
-    tel:${clean}
-      ${display}
-    </a>
-  `;
+  return `tel:${clean}${display}</a>`;
 }
 function normalizeProvinceForShift(v) {
   return String(v || '')
@@ -2786,6 +2783,53 @@ let staff = shiftStaffMap[key] || {};
   color: #38bdf8;
   font-weight: 900;
 }
+.mobile-link {
+  color: #a3e635;
+  font-weight: 900;
+  text-decoration: none;
+}
+
+.mobile-link:hover {
+  color: #bbf7d0;
+  text-decoration: underline;
+}
+/* ✅ Duty badge: On / Off แยกสีให้ชัด */
+.eng-chip.on {
+  background: linear-gradient(135deg, rgba(22, 101, 52, 0.95), rgba(34, 197, 94, 0.55));
+  color: #dcfce7;
+  border-color: rgba(74, 222, 128, 0.55);
+  box-shadow:
+    0 0 8px rgba(34, 197, 94, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.eng-chip.off {
+  background: linear-gradient(135deg, #334155, #475569);
+  color: #cbd5e1;
+  border-color: rgba(148, 163, 184, 0.35);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  opacity: 0.88;
+}
+
+/* ✅ จุดสถานะใน Duty badge */
+.duty-dot {
+  width: 9px;
+  min-width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.duty-dot.on {
+  background: #22c55e;
+  box-shadow: 0 0 8px rgba(34, 197, 94, 0.85);
+}
+
+.duty-dot.off {
+  background: #94a3b8;
+  box-shadow: none;
+}
             body{background:#0f172a;color:white;font-family:Consolas,monospace;margin:0;padding:20px}.title{text-align:center;margin-bottom:25px}.view-bar{display:flex;justify-content:center;gap:10px;margin:15px 0;flex-wrap:wrap}.view-btn{background:#1e293b;color:#fff;border:1px solid #334155;padding:8px 16px;border-radius:20px;cursor:pointer;font-weight:bold}.view-btn.active{background:#7c3aed}.district-bar{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin:15px 0 20px}.district-btn{background:#1e293b;color:#fff;border:1px solid #334155;padding:8px 14px;border-radius:20px;cursor:pointer;font-weight:bold}.district-btn.active{background:#f59e0b;color:#000}.board{display:flex;flex-wrap:wrap;justify-content:center;gap:20px;padding:20px}.ai-card{width:360px;min-width:360px;background:#000;border:2px solid #f59e0b;border-radius:12px;padding:16px;box-shadow:0 0 8px rgba(255,165,0,.4)}.ai-card.critical{border-color:#ef4444;box-shadow:0 0 12px rgba(255,0,0,.8)}.ai-card.pool{background:linear-gradient(180deg,#312e81,#000);border-color:#8b5cf6;box-shadow:0 0 12px rgba(139,92,246,.8)}.ai-card.duty-on{background:linear-gradient(180deg,#052e16,#000);border-color:#22c55e}.ai-card.duty-off{background:linear-gradient(180deg,#1f2937,#000);border-color:#6b7280;opacity:.75}.off-name{color:#9ca3af!important}.job{color:#facc15;font-size:28px;font-weight:bold;margin-bottom:10px}.detail{color:#84cc16;margin-top:10px;line-height:1.4}.reason{color:#e5e7eb;margin-top:14px}.district-summary{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0;font-weight:bold}.district-summary span{background:#111827;padding:4px 10px;border-radius:20px}.job-title{margin:6px 0;padding-left:6px;color:#cbd5e1;font-size:11px;line-height:16px;border-left:2px solid #475569;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;text-overflow:ellipsis;word-break:break-word}.job-expand{margin-top:8px;border:1px solid #334155;border-radius:8px;padding:8px;background:#0f172a}.job-expand summary{cursor:pointer;color:#38bdf8;font-weight:bold}.job-expand summary:hover{color:#facc15}#mapView{display:none;width:100%;padding:12px}.map-panel{width:100%;display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}.map-btn{background:#1e293b;color:#fff;border:1px solid #334155;padding:8px 14px;border-radius:12px;cursor:pointer;font-weight:bold}.map-btn:hover{background:#334155}#aiMap{width:100%;height:78vh;border:2px solid #334155;border-radius:14px;overflow:hidden}.map-popup{color:#111827;font-family:Arial;min-width:280px;max-width:380px}.map-popup-title{font-weight:bold;color:#dc2626;margin-bottom:8px;font-size:15px}.map-job-box{margin-top:8px;padding:8px;background:#f1f5f9;border-radius:8px;border:1px solid #cbd5e1}.map-job-box summary{cursor:pointer;font-weight:bold}.route-link{display:inline-block;margin-top:8px;padding:7px 10px;background:#2563eb;color:#fff!important;text-decoration:none;border-radius:8px;font-weight:bold}@keyframes slaBlinkRed {
         0% {
           box-shadow: 0 0 0 0 rgba(239,68,68,.95), 0 0 14px rgba(239,68,68,.9);
@@ -3181,8 +3225,8 @@ Object.entries(engineers)
 
         <details class="engineer-jobs-box">
           <summary>
-            ▶ 📋 Jobs Detail : ${obj.jobs.length}
-          </summary>
+  📋 Jobs Detail : ${obj.jobs.length}
+</summary>
           ${jobsHtml}
         </details>
       </div>
