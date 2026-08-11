@@ -2445,7 +2445,7 @@ render();
                 ''
               )}</details><div class="detail">🚨 Critical : ${critical}</div><div class="detail">⚠️ Major : ${major}</div><div class="detail">🕒 Overdue : ${overdue}</div><div class="reason">Workload : ${level}</div></div>`;
           });
-        html += `</div><div id="rootView" class="board" style="display:none">${rootHtml}</div><div id="engineerView" class="board" style="display:none">${engineerHtml}</div><div id="mapView"><div class="map-panel"><button class="map-btn" onclick="window.toggleMeasureDistance()">🛣️ วัดตามถนน</button><button class="map-btn" id="travelToggleBtn" onclick="window.toggleEngineerTravel()">👣 Travel OFF</button><button class="map-btn" onclick="window.openGoogleRoute()">🧭 Open Google Maps</button><button class="map-btn" onclick="window.clearAIRoute()">🧹 Clear Route</button><button class="map-btn" onclick="window.fitAllMarkers()">📍 Fit All Jobs</button><button class="map-btn" onclick="window.showDistrictSourceJobs()">🗺️ District Source</button></div><div id="aiMap"></div></div><script>window.AI_JOBS=${safeJobsJson};<\/script></body></html>`;
+        html += `</div><div id="rootView" class="board" style="display:none">${rootHtml}</div><div id="engineerView" class="board" style="display:none">${engineerHtml}</div><div id="mapView"><div class="map-panel"><button class="map-btn" id="routeSimBtn" onclick="window.toggleRouteSimulator()">🧭 Route Simulator OFF</button><button class="map-btn" id="travelToggleBtn" onclick="window.toggleEngineerTravel()">👣 Travel OFF</button><button class="map-btn" onclick="window.openGoogleRoute()">🧭 Open Google Maps</button><button class="map-btn" onclick="window.clearAIRoute()">🧹 Clear Route</button><button class="map-btn" onclick="window.fitAllMarkers()">📍 Fit All Jobs</button><button class="map-btn" onclick="window.showDistrictSourceJobs()">🗺️ District Source</button></div><div id="aiMap"></div></div><script>window.AI_JOBS=${safeJobsJson};<\/script></body></html>`;
         let w = window.open();
         w.document.write(html);
         w.document.close();
@@ -2461,6 +2461,11 @@ measurePoints = [],
 measureMarkers = [],
 measureLine = null,
 measureLabel = null,
+routeSimMode = false,
+routeSimPoints = [],
+routeSimMarkers = [],
+routeSimLine = null,
+routeSimLabel = null;
 aiDistrictSourceGroups = [];
 engineerTravelLines = [],
 engineerTravelMarkers = [],
@@ -2486,10 +2491,21 @@ engineerTravelOn = false;
 
           buildAIMapMarkers();
           aiMap.on('click', function (e) {
-            if (!measureMode) return;
+  if (routeSimMode) {
+    selectRouteSimPoint(
+      [e.latlng.lat, e.latlng.lng],
+      {
+        name: 'Map Point',
+        source: 'MAP_CLICK'
+      }
+    );
+    return;
+  }
 
-            handleMeasureClick(e.latlng);
-          });
+  if (!measureMode) return;
+
+  handleMeasureClick(e.latlng);
+});
 
           setTimeout(() => aiMap.invalidateSize(), 500);
         };
@@ -2608,7 +2624,240 @@ engineerTravelOn = false;
 
           drawDistanceMeasure();
         }
+        w.toggleRouteSimulator = function () {
+  routeSimMode = !routeSimMode;
 
+  let btn = w.document.getElementById('routeSimBtn');
+
+  if (routeSimMode) {
+    if (btn) {
+      btn.innerHTML = '🧭 Route Simulator ON';
+      btn.style.background = '#2563eb';
+      btn.style.color = '#fff';
+      btn.style.borderColor = '#60a5fa';
+      btn.style.boxShadow = '0 0 12px rgba(37,99,235,.75)';
+    }
+
+    alert(
+      'Route Simulator ON\n\nเลือกต้นทางจากหมุด Job หรือคลิกบนแผนที่\nจากนั้นเลือกปลายทางจากหมุด Job หรือคลิกบนแผนที่'
+    );
+  } else {
+    if (btn) {
+      btn.innerHTML = '🧭 Route Simulator OFF';
+      btn.style.background = '#1e293b';
+      btn.style.color = '#fff';
+      btn.style.borderColor = '#334155';
+      btn.style.boxShadow = 'none';
+    }
+  }
+};
+
+function selectRouteSimPoint(coord, meta) {
+  if (!coord || coord.length !== 2) return;
+
+  if (routeSimPoints.length >= 2) {
+    clearRouteSimulator();
+  }
+
+  let pointNo = routeSimPoints.length + 1;
+
+  routeSimPoints.push({
+    lat: Number(coord[0]),
+    lng: Number(coord[1]),
+    meta: meta || {}
+  });
+
+  let pointLabel = pointNo === 1 ? 'START' : 'END';
+
+  let color = pointNo === 1 ? '#2563eb' : '#f97316';
+
+  let marker = w.L.marker([coord[0], coord[1]], {
+    icon: w.L.divIcon({
+      className: '',
+      html: `
+        <div style="
+          background:${color};
+          color:white;
+          padding:5px 10px;
+          border-radius:16px;
+          font-weight:900;
+          border:2px solid white;
+          box-shadow:0 0 10px ${color};
+          white-space:nowrap;
+          font-family:Arial;
+          font-size:12px;
+        ">
+          ${pointNo === 1 ? '🚩' : '🏁'} ${pointLabel}
+        </div>
+      `,
+      iconSize: [90, 30],
+      iconAnchor: [25, 15],
+    }),
+  }).addTo(aiMap);
+
+  marker.bindPopup(`
+    <div style="color:#111;font-family:Arial">
+      <b>${pointLabel}</b><br>
+      ${meta?.name || meta?.source || 'Map Point'}<br>
+      ${coord[0].toFixed(6)}, ${coord[1].toFixed(6)}
+    </div>
+  `);
+
+  routeSimMarkers.push(marker);
+
+  if (routeSimPoints.length === 2) {
+    drawRouteSimulator();
+  }
+}
+
+async function drawRouteSimulator() {
+  if (routeSimLine) {
+    aiMap.removeLayer(routeSimLine);
+    routeSimLine = null;
+  }
+
+  if (routeSimLabel) {
+    aiMap.removeLayer(routeSimLabel);
+    routeSimLabel = null;
+  }
+
+  if (routeSimPoints.length < 2) {
+    return;
+  }
+
+  let start = [
+    routeSimPoints[0].lat,
+    routeSimPoints[0].lng
+  ];
+
+  let end = [
+    routeSimPoints[1].lat,
+    routeSimPoints[1].lng
+  ];
+
+  try {
+    let route = await getRoadRouteFromOSRM([start, end]);
+
+    if (!route || !route.latlngs || !route.latlngs.length) {
+      drawRouteSimulatorFallback(start, end);
+      return;
+    }
+
+    routeSimLine = w.L.polyline(route.latlngs, {
+      color: '#38bdf8',
+      weight: 6,
+      opacity: 0.92,
+      lineCap: 'round',
+      lineJoin: 'round'
+    }).addTo(aiMap);
+
+    let mid = route.latlngs[Math.floor(route.latlngs.length / 2)];
+
+    routeSimLabel = w.L.marker(mid, {
+      icon: w.L.divIcon({
+        className: '',
+        html: `
+          <div style="
+            background:#020617;
+            color:#bae6fd;
+            padding:7px 11px;
+            border-radius:14px;
+            font-weight:900;
+            border:1px solid #38bdf8;
+            box-shadow:0 0 12px rgba(56,189,248,.7);
+            white-space:nowrap;
+            font-family:Arial;
+            font-size:12px;
+            text-align:center;
+          ">
+            🧭 Route Simulator<br>
+            🛣️ ${route.distanceKm.toFixed(2)} km | ⏱ ${route.durationMin.toFixed(0)} min
+          </div>
+        `,
+        iconSize: [170, 44],
+        iconAnchor: [85, 22],
+      }),
+    }).addTo(aiMap);
+
+    aiMap.fitBounds(routeSimLine.getBounds(), {
+      padding: [60, 60],
+    });
+  } catch (err) {
+    console.warn('Route simulator failed:', err);
+    drawRouteSimulatorFallback(start, end);
+  }
+}
+
+function drawRouteSimulatorFallback(start, end) {
+  routeSimLine = w.L.polyline([start, end], {
+    color: '#38bdf8',
+    weight: 4,
+    opacity: 0.85,
+    dashArray: '8,8'
+  }).addTo(aiMap);
+
+  let km = distanceKm(
+    start[0],
+    start[1],
+    end[0],
+    end[1]
+  );
+
+  let mid = [
+    (start[0] + end[0]) / 2,
+    (start[1] + end[1]) / 2
+  ];
+
+  routeSimLabel = w.L.marker(mid, {
+    icon: w.L.divIcon({
+      className: '',
+      html: `
+        <div style="
+          background:#020617;
+          color:#bae6fd;
+          padding:7px 11px;
+          border-radius:14px;
+          font-weight:900;
+          border:1px solid #38bdf8;
+          box-shadow:0 0 12px rgba(56,189,248,.7);
+          white-space:nowrap;
+          font-family:Arial;
+          font-size:12px;
+          text-align:center;
+        ">
+          🧭 Route Simulator<br>
+          📏 ${km.toFixed(2)} km
+        </div>
+      `,
+      iconSize: [150, 44],
+      iconAnchor: [75, 22],
+    }),
+  }).addTo(aiMap);
+
+  aiMap.fitBounds([start, end], {
+    padding: [60, 60],
+  });
+}
+
+function clearRouteSimulator() {
+  if (routeSimLine) {
+    aiMap.removeLayer(routeSimLine);
+    routeSimLine = null;
+  }
+
+  if (routeSimLabel) {
+    aiMap.removeLayer(routeSimLabel);
+    routeSimLabel = null;
+  }
+
+  routeSimMarkers.forEach((m) => {
+    aiMap.removeLayer(m);
+  });
+
+  routeSimMarkers = [];
+  routeSimPoints = [];
+  routeSimLabel = null;
+}
         async function drawDistanceMeasure() {
           if (measureLine) {
             aiMap.removeLayer(measureLine);
@@ -3248,10 +3497,30 @@ if (!groups[key]) {
             );
 
             let marker = w.L.marker(displayCoord, {
-              icon: makeMapIcon(mainJob),
-            })
-              .addTo(aiMap)
-              .bindPopup(buildMapPopup(group));
+  icon: makeMapIcon(mainJob),
+})
+  .addTo(aiMap)
+  .bindPopup(buildMapPopup(group));
+
+marker.on('click', function (e) {
+  if (!routeSimMode) return;
+
+  if (e && e.originalEvent) {
+    w.L.DomEvent.stopPropagation(e.originalEvent);
+  }
+
+  selectRouteSimPoint(
+    [group.lat, group.lng],
+    {
+      name:
+        (group.jobs[0]?.['Job ID'] || 'Job') +
+        ' | ' +
+        (group.jobs[0]?.['District Name'] || ''),
+      source: group.source || 'JOB_MARKER',
+      jobs: group.jobs
+    }
+  );
+});
 
             aiMarkers.push(marker);
 
@@ -3896,6 +4165,19 @@ async function getJobCoord(job) {
         };
 
         w.clearAIRoute = function () {
+          clearRouteSimulator();
+
+routeSimMode = false;
+
+let routeBtn = w.document.getElementById('routeSimBtn');
+
+if (routeBtn) {
+  routeBtn.innerHTML = '🧭 Route Simulator OFF';
+  routeBtn.style.background = '#1e293b';
+  routeBtn.style.color = '#fff';
+  routeBtn.style.borderColor = '#334155';
+  routeBtn.style.boxShadow = 'none';
+}
   if (aiRouteLine) {
     aiMap.removeLayer(aiRouteLine);
     aiRouteLine = null;
