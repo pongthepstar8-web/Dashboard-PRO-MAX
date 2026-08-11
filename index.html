@@ -1302,6 +1302,34 @@ function normalizeProvinceForShift(v) {
     .replace(/\s+/g, ' ');
 }
 
+function getProvinceMatchKeys(province) {
+  let name = String(province || '').trim();
+
+  let keys = [
+    name,
+    PROV_CODE[name],
+    PROV_EN[name]
+  ];
+
+  // รองรับ NMA 1 / NMA 2 / NMA 3
+  if (name === 'นครราชสีมา') {
+    keys.push('NMA 1', 'NMA 2', 'NMA 3');
+  }
+
+  // รองรับ UBN / NLP ที่ใน shift ใช้รหัส
+  if (name === 'อุบลราชธานี') {
+    keys.push('UBN');
+  }
+
+  if (name === 'หนองบัวลำภู') {
+    keys.push('NLP');
+  }
+
+  return keys
+    .filter(Boolean)
+    .map((x) => normalizeProvinceForShift(x));
+}
+
 function getProvinceCodeFromName(province) {
   return String(PROV_CODE[province] || '')
     .trim()
@@ -1387,19 +1415,15 @@ function getShiftStaffMapByProvince(province) {
 }
 
 function getShiftNamesByProvince(province) {
-  let targetName = normalizeProvinceForShift(province);
-  let targetCode = getProvinceCodeFromName(province);
+  let matchKeys = getProvinceMatchKeys(province);
 
   return getShiftStaffRows()
     .filter((x) => {
-      if (!targetName) return true;
+      if (!province) return true;
 
       let p = normalizeProvinceForShift(x.province);
 
-      return (
-        p === targetName ||
-        p === targetCode
-      );
+      return matchKeys.includes(p);
     })
     .map((x) => x.name)
     .filter(Boolean);
@@ -1448,6 +1472,28 @@ function getShiftNamesByProvince(province) {
         ยโสธร: 'YST',
         อำนาจเจริญ: 'ACR',
       };
+      const PROV_EN = {
+  ขอนแก่น: 'Khon Kaen',
+  ร้อยเอ็ด: 'Roi Et',
+  มหาสารคาม: 'Maha Sarakham',
+  สกลนคร: 'Sakon Nakhon',
+  นครพนม: 'Nakhon Phanom',
+  มุกดาหาร: 'Mukdahan',
+  กาฬสินธุ์: 'Kalasin',
+  อุดรธานี: 'Udonthani',
+  เลย: 'Loei',
+  หนองคาย: 'Nong Khai',
+  บึงกาฬ: 'Bueng Kan',
+  หนองบัวลำภู: 'NLP',
+  นครราชสีมา: 'NMA',
+  ชัยภูมิ: 'Chaiyaphum',
+  ศรีสะเกษ: 'Si Sa Ket',
+  บุรีรัมย์: 'Buriram',
+  อุบลราชธานี: 'UBN',
+  สุรินทร์: 'Surin',
+  ยโสธร: 'Yasothon',
+  อำนาจเจริญ: 'Amnat Charoen'
+};
       function getStatusInfo(s) {
         let t = (s || '').toLowerCase();
 
