@@ -1311,6 +1311,40 @@ let networkGroupSubFilters = [];
           initToolDefaultAll();
         }, 100);
       });
+      function getShiftStaffRows() {
+  let txt = shiftDailyText || localStorage.getItem('shiftDaily') || '';
+
+  return txt
+    .split('\n')
+    .map((line) => {
+      let parts = line.split('|').map((x) => x.trim());
+
+      // SHIFT | PROVINCE | LOCAL | NAME | MOBILE
+      return {
+        shift: parts[0] || '',
+        province: parts[1] || '',
+        local: parts[2] || '',
+        name: parts[3] || '',
+        mobile: parts[4] || ''
+      };
+    })
+    .filter((x) => x.name);
+}
+
+function getShiftNamesByProvince(province) {
+  let target = String(province || '').trim().toLowerCase();
+
+  return getShiftStaffRows()
+    .filter((x) => {
+      if (!target) return true;
+
+      return String(x.province || '')
+        .trim()
+        .toLowerCase() === target;
+    })
+    .map((x) => x.name)
+    .filter(Boolean);
+}
       function mapCol(r, k) {
         for (let x of k) {
           if (r[x] != undefined) return r[x];
@@ -2106,8 +2140,8 @@ render();
           });
           let engineers = {};
 
-// ✅ 1. สร้างรายชื่อช่างจาก CM FE3BB Shift Daily ก่อน
-getShiftNames().forEach((name) => {
+// ✅ 1. ดึงรายชื่อช่างจาก CM FE3BB Shift Daily เฉพาะจังหวัดที่เลือก
+getShiftNamesByProvince(prov).forEach((name) => {
   let eng = String(name || '').trim();
 
   if (!eng) return;
@@ -2121,7 +2155,8 @@ getShiftNames().forEach((name) => {
   }
 });
 
-// ✅ 2. เอางานจาก Assign to มาเติมเข้าไป
+// ✅ 2. เติมงานจาก Assign to
+// jobs ใน showAIBoard ถูกกรอง province แล้วจากด้านบน
 jobs.forEach((r) => {
   let eng = (r['Assign to'] || '').trim();
 
@@ -2141,6 +2176,7 @@ jobs.forEach((r) => {
 
   engineers[eng].jobs.push(r);
 });
+
         let districtButtons = Object.keys(districts)
           .sort()
           .map(
@@ -2510,7 +2546,9 @@ jobs.forEach((r) => {
       </details>
       </div>`;
         });
-        let shiftNames = getShiftNames().map((x) => x.toLowerCase().trim());
+        let shiftNames = getShiftNamesByProvince(prov).map((x) =>
+  x.toLowerCase().trim()
+);
         let engineerHtml = '';
         Object.entries(engineers)
           .sort((a, b) => {
