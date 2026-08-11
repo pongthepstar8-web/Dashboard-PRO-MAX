@@ -2104,16 +2104,43 @@ render();
             });
             rootHtml += `</div>`;
           });
-        let engineers = {};
-        jobs.forEach((r) => {
-          let eng = (r['Assign to'] || '').trim();
-          if (!eng) return;
-          if (!engineers[eng])
-            engineers[eng] = { jobs: [], districts: new Set() };
-          if (r['District Name'])
-            engineers[eng].districts.add(r['District Name']);
-          engineers[eng].jobs.push(r);
-        });
+          let engineers = {};
+
+// ✅ 1. สร้างรายชื่อช่างจาก CM FE3BB Shift Daily ก่อน
+getShiftNames().forEach((name) => {
+  let eng = String(name || '').trim();
+
+  if (!eng) return;
+
+  if (!engineers[eng]) {
+    engineers[eng] = {
+      jobs: [],
+      districts: new Set(),
+      fromShift: true
+    };
+  }
+});
+
+// ✅ 2. เอางานจาก Assign to มาเติมเข้าไป
+jobs.forEach((r) => {
+  let eng = (r['Assign to'] || '').trim();
+
+  if (!eng) return;
+
+  if (!engineers[eng]) {
+    engineers[eng] = {
+      jobs: [],
+      districts: new Set(),
+      fromShift: false
+    };
+  }
+
+  if (r['District Name']) {
+    engineers[eng].districts.add(r['District Name']);
+  }
+
+  engineers[eng].jobs.push(r);
+});
         let districtButtons = Object.keys(districts)
           .sort()
           .map(
@@ -2498,7 +2525,7 @@ render();
           .forEach(([eng, obj]) => {
             let isPool = eng === 'Workforce NER Pool';
             let onDuty = shiftNames.includes(eng.toLowerCase().trim());
-            if (!isPool && obj.jobs.length === 0) return;
+            
             let currentJob = [...obj.jobs].sort(
               (a, b) =>
                 a.limit -
@@ -2533,23 +2560,29 @@ render();
               ' • '
             )}</div><details class="job-expand"><summary>📋 Jobs : ${
               obj.jobs.length
-            }</summary>${obj.jobs
-              .map((job) => {
-                let remain =
-                  job.overdue > 0
-                    ? '🔥 OVERDUE'
-                    : `⏱ ${formatTime(job.limit - getHr(job['Create Time']))}`;
-                return `<div style="margin-top:8px;padding:8px;background:#111827;border-radius:8px"><b>${
-                  job['Job ID']
-                }</b><br>${getPriorityIcon(job['Priority'])} | ${getStatusIcon(
-                  job['Status']
-                )}<br>${getWorkType(job['Job Title']).icon} ${
-                  getWorkType(job['Job Title']).text
-                }<br>${remain}</div>`;
-              })
-              .join(
-                ''
-              )}</details><div class="detail">🚨 Critical : ${critical}</div><div class="detail">⚠️ Major : ${major}</div><div class="detail">🕒 Overdue : ${overdue}</div><div class="reason">Workload : ${level}</div></div>`;
+            }</summary>
+            ${
+  obj.jobs.length
+    ? obj.jobs
+        .map((job) => {
+          let remain =
+            job.overdue > 0
+              ? '🔥 OVERDUE'
+              : `⏱ ${formatTime(job.limit - getHr(job['Create Time']))}`;
+
+          return `<div style="margin-top:8px;padding:8px;background:#111827;border-radius:8px"><b>${
+            job['Job ID'] || '-'
+          }</b><br>${getPriorityIcon(job['Priority'])} | ${getStatusIcon(
+            job['Status']
+          )}<br>${getWorkType(job['Job Title']).icon} ${
+            getWorkType(job['Job Title']).text
+          }<br>${remain}</div>`;
+        })
+        .join('')
+    : `<div style="margin-top:8px;padding:10px;background:#052e16;border:1px solid #22c55e;border-radius:8px;color:#bbf7d0;font-weight:bold">
+        ✅ ไม่มีงาน Assign ตอนนี้
+      </div>`
+}</details><div class="detail">🚨 Critical : ${critical}</div><div class="detail">⚠️ Major : ${major}</div><div class="detail">🕒 Overdue : ${overdue}</div><div class="reason">Workload : ${level}</div></div>`;
           });
         html += `</div><div id="rootView" class="board" style="display:none">${rootHtml}</div><div id="engineerView" class="board" style="display:none">${engineerHtml}</div><div id="mapView"><div class="map-panel">
   <button
