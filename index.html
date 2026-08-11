@@ -1285,6 +1285,16 @@ let networkGroupSubFilters = [];
           alert('ไม่สามารถโหลดข้อมูลจาก Apps Script ได้');
         }
       }
+      function normalizeEngineerName(name) {
+  return String(name || '')
+    .trim()
+    .toLowerCase()
+    .replace(/\u00a0/g, ' ')        // กัน space แปลก
+    .replace(/\s+/g, ' ')           // รวม space หลายตัว
+    .replace(/[()]/g, '')           // กันวงเล็บ
+    .trim();
+}
+
       function getShiftNames() {
         let txt = shiftDailyText || localStorage.getItem('shiftDaily') || '';
 
@@ -1344,7 +1354,7 @@ function getShiftStaffMapByProvince(province) {
         .toLowerCase() === target;
     })
     .forEach((x) => {
-      let key = String(x.name || '').trim().toLowerCase();
+      let key = normalizeEngineerName(x.name);
 
       if (!key) return;
 
@@ -1362,14 +1372,15 @@ function getShiftStaffMapByProvince(province) {
 
 function getShiftNamesByProvince(province) {
   let target = String(province || '').trim().toLowerCase();
+  let targetCode = String(PROV_CODE[province] || '').trim().toLowerCase();
 
   return getShiftStaffRows()
     .filter((x) => {
       if (!target) return true;
 
-      return String(x.province || '')
-        .trim()
-        .toLowerCase() === target;
+      let p = String(x.province || '').trim().toLowerCase();
+
+      return p === target || p === targetCode;
     })
     .map((x) => x.name)
     .filter(Boolean);
@@ -2196,8 +2207,8 @@ jobs.forEach((r) => {
 
   if (!eng) return;
 
-  let key = eng.toLowerCase();
-  let staff = shiftStaffMap[key] || {};
+  let key = normalizeEngineerName(eng);
+let staff = shiftStaffMap[key] || {};
 
   if (!engineers[eng]) {
     engineers[eng] = {
@@ -2593,22 +2604,24 @@ jobs.forEach((r) => {
       </div>`;
         });
         let shiftNames = getShiftNamesByProvince(prov).map((x) =>
-  x.toLowerCase().trim()
+  normalizeEngineerName(x)
 );
+console.log('SHIFT NAMES:', shiftNames);
+console.log('ENGINEERS:', Object.keys(engineers).map((x) => normalizeEngineerName(x)));
         let engineerHtml = '';
         Object.entries(engineers)
           .sort((a, b) => {
             if (a[0] === 'Workforce NER Pool') return -1;
             if (b[0] === 'Workforce NER Pool') return 1;
-            let aOn = shiftNames.includes(a[0].toLowerCase().trim()),
-              bOn = shiftNames.includes(b[0].toLowerCase().trim());
+            let aOn = shiftNames.includes(normalizeEngineerName(a[0])),
+  bOn = shiftNames.includes(normalizeEngineerName(b[0]));
             if (aOn && !bOn) return -1;
             if (!aOn && bOn) return 1;
             return b[1].jobs.length - a[1].jobs.length;
           })
           .forEach(([eng, obj]) => {
             let isPool = eng === 'Workforce NER Pool';
-            let onDuty = shiftNames.includes(eng.toLowerCase().trim());
+            let onDuty = shiftNames.includes(normalizeEngineerName(eng));
             
             let currentJob = [...obj.jobs].sort(
               (a, b) =>
