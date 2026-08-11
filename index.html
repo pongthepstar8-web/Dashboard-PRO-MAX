@@ -1661,9 +1661,13 @@ render();
         r.readAsArrayBuffer(e.target.files[0]);
       };
       function loadShiftDailyFromCMFE3BBShiftDaily(wb) {
-        let sheetName = wb.SheetNames.find(
-          (name) => name.toLowerCase().trim() === 'cm fe3bb shift daily'
-        );
+        let sheetName = wb.SheetNames.find((name) => {
+  let n = String(name || '')
+    .toLowerCase()
+    .replace(/\s+/g, '');
+
+  return n === 'cmfe3bbshiftdaily';
+});
 
         if (!sheetName) {
           console.warn('ไม่พบ Sheet: CM FE3BB Shift Daily');
@@ -2608,6 +2612,21 @@ let staff = shiftStaffMap[key] || {};
 );
 console.log('SHIFT NAMES:', shiftNames);
 console.log('ENGINEERS:', Object.keys(engineers).map((x) => normalizeEngineerName(x)));
+let shiftSet = new Set(shiftNames);
+
+let engineerKeys = Object.keys(engineers).map((x) =>
+  normalizeEngineerName(x)
+);
+
+console.log(
+  'ENGINEERS NOT IN SHIFT:',
+  engineerKeys.filter((x) => !shiftSet.has(x))
+);
+
+console.log(
+  'SHIFT NOT IN ENGINEERS:',
+  shiftNames.filter((x) => !engineerKeys.includes(x))
+);
         let engineerHtml = '';
         Object.entries(engineers)
           .sort((a, b) => {
