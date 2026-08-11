@@ -1330,6 +1330,35 @@ let networkGroupSubFilters = [];
     })
     .filter((x) => x.name);
 }
+function getShiftStaffMapByProvince(province) {
+  let target = String(province || '').trim().toLowerCase();
+
+  let map = {};
+
+  getShiftStaffRows()
+    .filter((x) => {
+      if (!target) return true;
+
+      return String(x.province || '')
+        .trim()
+        .toLowerCase() === target;
+    })
+    .forEach((x) => {
+      let key = String(x.name || '').trim().toLowerCase();
+
+      if (!key) return;
+
+      map[key] = {
+        name: x.name || '',
+        mobile: x.mobile || '',
+        province: x.province || '',
+        local: x.local || '',
+        shift: x.shift || ''
+      };
+    });
+
+  return map;
+}
 
 function getShiftNamesByProvince(province) {
   let target = String(province || '').trim().toLowerCase();
@@ -2140,9 +2169,11 @@ render();
           });
           let engineers = {};
 
-// ✅ 1. ดึงรายชื่อช่างจาก CM FE3BB Shift Daily เฉพาะจังหวัดที่เลือก
-getShiftNamesByProvince(prov).forEach((name) => {
-  let eng = String(name || '').trim();
+let shiftStaffMap = getShiftStaffMapByProvince(prov);
+
+// ✅ 1. สร้างรายชื่อช่างจาก CM FE3BB Shift Daily เฉพาะจังหวัดที่เลือก
+Object.values(shiftStaffMap).forEach((staff) => {
+  let eng = String(staff.name || '').trim();
 
   if (!eng) return;
 
@@ -2150,24 +2181,39 @@ getShiftNamesByProvince(prov).forEach((name) => {
     engineers[eng] = {
       jobs: [],
       districts: new Set(),
-      fromShift: true
+      fromShift: true,
+      mobile: staff.mobile || '',
+      local: staff.local || '',
+      shift: staff.shift || '',
+      province: staff.province || ''
     };
   }
 });
 
 // ✅ 2. เติมงานจาก Assign to
-// jobs ใน showAIBoard ถูกกรอง province แล้วจากด้านบน
 jobs.forEach((r) => {
   let eng = (r['Assign to'] || '').trim();
 
   if (!eng) return;
 
+  let key = eng.toLowerCase();
+  let staff = shiftStaffMap[key] || {};
+
   if (!engineers[eng]) {
     engineers[eng] = {
       jobs: [],
       districts: new Set(),
-      fromShift: false
+      fromShift: false,
+      mobile: staff.mobile || '',
+      local: staff.local || '',
+      shift: staff.shift || '',
+      province: staff.province || ''
     };
+  }
+
+  // ถ้ามีข้อมูล mobile จาก shift ให้เติมให้
+  if (!engineers[eng].mobile && staff.mobile) {
+    engineers[eng].mobile = staff.mobile;
   }
 
   if (r['District Name']) {
@@ -2590,7 +2636,7 @@ jobs.forEach((r) => {
               isPool ? '🛟' : '👨‍🔧'
             } ${eng}</div><div class="detail">📍 Current Area : ${
               currentJob?.['District Name'] || '-'
-            }</div><div class="detail">🗺️ ${
+            }</div><div class="detail">📞 Mobile : ${obj.mobile || '-'}</div><div class="detail">🗺️ ${
               obj.districts.size
             } District(s)</div><div style="color:#93c5fd;margin-top:4px;font-size:13px">${[
               ...obj.districts,
