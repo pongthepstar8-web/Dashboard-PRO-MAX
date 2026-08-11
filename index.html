@@ -1294,7 +1294,19 @@ let networkGroupSubFilters = [];
     .replace(/[()]/g, '')           // กันวงเล็บ
     .trim();
 }
+function normalizeProvinceForShift(v) {
+  return String(v || '')
+    .trim()
+    .toLowerCase()
+    .replace(/\u00a0/g, ' ')
+    .replace(/\s+/g, ' ');
+}
 
+function getProvinceCodeFromName(province) {
+  return String(PROV_CODE[province] || '')
+    .trim()
+    .toLowerCase();
+}
       function getShiftNames() {
         let txt = shiftDailyText || localStorage.getItem('shiftDaily') || '';
 
@@ -1341,17 +1353,21 @@ let networkGroupSubFilters = [];
     .filter((x) => x.name);
 }
 function getShiftStaffMapByProvince(province) {
-  let target = String(province || '').trim().toLowerCase();
+  let targetName = normalizeProvinceForShift(province);
+  let targetCode = getProvinceCodeFromName(province);
 
   let map = {};
 
   getShiftStaffRows()
     .filter((x) => {
-      if (!target) return true;
+      if (!targetName) return true;
 
-      return String(x.province || '')
-        .trim()
-        .toLowerCase() === target;
+      let p = normalizeProvinceForShift(x.province);
+
+      return (
+        p === targetName ||
+        p === targetCode
+      );
     })
     .forEach((x) => {
       let key = normalizeEngineerName(x.name);
@@ -1371,16 +1387,19 @@ function getShiftStaffMapByProvince(province) {
 }
 
 function getShiftNamesByProvince(province) {
-  let target = String(province || '').trim().toLowerCase();
-  let targetCode = String(PROV_CODE[province] || '').trim().toLowerCase();
+  let targetName = normalizeProvinceForShift(province);
+  let targetCode = getProvinceCodeFromName(province);
 
   return getShiftStaffRows()
     .filter((x) => {
-      if (!target) return true;
+      if (!targetName) return true;
 
-      let p = String(x.province || '').trim().toLowerCase();
+      let p = normalizeProvinceForShift(x.province);
 
-      return p === target || p === targetCode;
+      return (
+        p === targetName ||
+        p === targetCode
+      );
     })
     .map((x) => x.name)
     .filter(Boolean);
@@ -2610,8 +2629,27 @@ let staff = shiftStaffMap[key] || {};
         let shiftNames = getShiftNamesByProvince(prov).map((x) =>
   normalizeEngineerName(x)
 );
+
+// วาง debug ตรงนี้
+console.log(
+  'SELECTED PROVINCE:',
+  prov,
+  'CODE:',
+  PROV_CODE[prov]
+);
+
+console.log(
+  'SHIFT PROVINCES:',
+  [...new Set(getShiftStaffRows().map((x) => x.province))]
+);
+
 console.log('SHIFT NAMES:', shiftNames);
-console.log('ENGINEERS:', Object.keys(engineers).map((x) => normalizeEngineerName(x)));
+
+console.log(
+  'ENGINEERS:',
+  Object.keys(engineers).map((x) => normalizeEngineerName(x))
+);
+
 let shiftSet = new Set(shiftNames);
 
 let engineerKeys = Object.keys(engineers).map((x) =>
@@ -2627,9 +2665,10 @@ console.log(
   'SHIFT NOT IN ENGINEERS:',
   shiftNames.filter((x) => !engineerKeys.includes(x))
 );
-        let engineerHtml = '';
-        Object.entries(engineers)
-          .sort((a, b) => {
+
+let engineerHtml = '';
+Object.entries(engineers)
+  .sort((a, b) => {
             if (a[0] === 'Workforce NER Pool') return -1;
             if (b[0] === 'Workforce NER Pool') return 1;
             let aOn = shiftNames.includes(normalizeEngineerName(a[0])),
