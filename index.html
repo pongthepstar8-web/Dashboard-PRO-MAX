@@ -2523,6 +2523,269 @@ let staff = shiftStaffMap[key] || {};
         margin-top:8px;
         font-size:13px;
       }
+      /* =========================
+   Engineer Workload Pro Card
+========================= */
+
+.engineer-card {
+  width: 390px;
+  min-width: 390px;
+  background:
+    radial-gradient(circle at top left, rgba(34,197,94,.16), transparent 35%),
+    linear-gradient(180deg, #03140c, #020617);
+  border: 1px solid rgba(34,197,94,.65);
+  border-radius: 18px;
+  padding: 16px;
+  box-shadow:
+    0 0 0 1px rgba(34,197,94,.14),
+    0 0 18px rgba(34,197,94,.28),
+    0 14px 30px rgba(0,0,0,.35);
+}
+
+.engineer-card.duty-off {
+  background:
+    radial-gradient(circle at top left, rgba(148,163,184,.14), transparent 35%),
+    linear-gradient(180deg, #111827, #020617);
+  border-color: rgba(100,116,139,.7);
+  box-shadow:
+    0 0 0 1px rgba(148,163,184,.12),
+    0 12px 26px rgba(0,0,0,.35);
+}
+
+.engineer-card.pool {
+  background:
+    radial-gradient(circle at top left, rgba(139,92,246,.2), transparent 35%),
+    linear-gradient(180deg, #1e1b4b, #020617);
+  border-color: rgba(139,92,246,.75);
+  box-shadow:
+    0 0 0 1px rgba(139,92,246,.18),
+    0 0 18px rgba(139,92,246,.35),
+    0 14px 30px rgba(0,0,0,.35);
+}
+
+.engineer-top {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 14px;
+}
+
+.engineer-avatar {
+  width: 42px;
+  min-width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(15,23,42,.85);
+  border: 1px solid rgba(148,163,184,.22);
+  font-size: 22px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.08);
+}
+
+.engineer-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.engineer-name {
+  color: #facc15;
+  font-size: 22px;
+  font-weight: 900;
+  line-height: 1.15;
+  word-break: break-word;
+  letter-spacing: .2px;
+}
+
+.engineer-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 8px;
+}
+
+.eng-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 900;
+  border: 1px solid rgba(255,255,255,.12);
+  white-space: nowrap;
+}
+
+.eng-chip.on {
+  background: rgba(34,197,94,.18);
+  color: #bbf7d0;
+  border-color: rgba(34,197,94,.38);
+}
+
+.eng-chip.off {
+  background: rgba(100,116,139,.22);
+  color: #cbd5e1;
+  border-color: rgba(148,163,184,.28);
+}
+
+.eng-chip.high {
+  background: rgba(239,68,68,.18);
+  color: #fecaca;
+  border-color: rgba(239,68,68,.36);
+}
+
+.eng-chip.medium {
+  background: rgba(245,158,11,.18);
+  color: #fde68a;
+  border-color: rgba(245,158,11,.36);
+}
+
+.eng-chip.low {
+  background: rgba(34,197,94,.18);
+  color: #bbf7d0;
+  border-color: rgba(34,197,94,.36);
+}
+
+.engineer-info-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.eng-info-row {
+  display: grid;
+  grid-template-columns: 28px 112px 1fr;
+  align-items: start;
+  gap: 6px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: rgba(15,23,42,.58);
+  border: 1px solid rgba(148,163,184,.13);
+  color: #a3e635;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.eng-info-icon {
+  font-size: 16px;
+}
+
+.eng-info-label {
+  color: #93c5fd;
+  font-weight: 900;
+}
+
+.eng-info-value {
+  color: #a3e635;
+  font-weight: 800;
+  word-break: break-word;
+}
+
+.eng-info-value a {
+  color: #86efac;
+  text-decoration: none;
+  font-weight: 900;
+}
+
+.eng-info-value a:hover {
+  color: #bbf7d0;
+  text-decoration: underline;
+}
+
+.engineer-district-list {
+  margin-top: -4px;
+  margin-bottom: 12px;
+  color: #93c5fd;
+  font-size: 12.5px;
+  line-height: 1.45;
+  word-break: break-word;
+}
+
+.engineer-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.eng-stat {
+  background: rgba(15,23,42,.75);
+  border: 1px solid rgba(148,163,184,.13);
+  border-radius: 13px;
+  padding: 9px 6px;
+  text-align: center;
+}
+
+.eng-stat-label {
+  font-size: 11px;
+  color: #94a3b8;
+  font-weight: 800;
+}
+
+.eng-stat-value {
+  margin-top: 4px;
+  font-size: 18px;
+  font-weight: 950;
+  color: #38bdf8;
+}
+
+.eng-stat.critical .eng-stat-value {
+  color: #fca5a5;
+}
+
+.eng-stat.major .eng-stat-value {
+  color: #fbbf24;
+}
+
+.eng-stat.overdue .eng-stat-value {
+  color: #f87171;
+}
+
+.engineer-jobs-box {
+  margin-top: 10px;
+}
+
+.engineer-jobs-box summary {
+  background: #0f172a;
+  border: 1px solid #334155;
+  padding: 10px 12px;
+  border-radius: 12px;
+  color: #38bdf8;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.engineer-jobs-box summary:hover {
+  color: #facc15;
+  background: #111827;
+}
+
+.engineer-empty-job {
+  margin-top: 8px;
+  padding: 10px;
+  background: rgba(5,46,22,.75);
+  border: 1px solid rgba(34,197,94,.45);
+  border-radius: 10px;
+  color: #bbf7d0;
+  font-weight: 900;
+}
+
+.engineer-job-item {
+  margin-top: 8px;
+  padding: 9px;
+  background: #111827;
+  border: 1px solid rgba(148,163,184,.12);
+  border-radius: 10px;
+  color: #e5e7eb;
+  line-height: 1.45;
+}
+
+.engineer-job-id {
+  color: #38bdf8;
+  font-weight: 900;
+}
             body{background:#0f172a;color:white;font-family:Consolas,monospace;margin:0;padding:20px}.title{text-align:center;margin-bottom:25px}.view-bar{display:flex;justify-content:center;gap:10px;margin:15px 0;flex-wrap:wrap}.view-btn{background:#1e293b;color:#fff;border:1px solid #334155;padding:8px 16px;border-radius:20px;cursor:pointer;font-weight:bold}.view-btn.active{background:#7c3aed}.district-bar{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin:15px 0 20px}.district-btn{background:#1e293b;color:#fff;border:1px solid #334155;padding:8px 14px;border-radius:20px;cursor:pointer;font-weight:bold}.district-btn.active{background:#f59e0b;color:#000}.board{display:flex;flex-wrap:wrap;justify-content:center;gap:20px;padding:20px}.ai-card{width:360px;min-width:360px;background:#000;border:2px solid #f59e0b;border-radius:12px;padding:16px;box-shadow:0 0 8px rgba(255,165,0,.4)}.ai-card.critical{border-color:#ef4444;box-shadow:0 0 12px rgba(255,0,0,.8)}.ai-card.pool{background:linear-gradient(180deg,#312e81,#000);border-color:#8b5cf6;box-shadow:0 0 12px rgba(139,92,246,.8)}.ai-card.duty-on{background:linear-gradient(180deg,#052e16,#000);border-color:#22c55e}.ai-card.duty-off{background:linear-gradient(180deg,#1f2937,#000);border-color:#6b7280;opacity:.75}.off-name{color:#9ca3af!important}.job{color:#facc15;font-size:28px;font-weight:bold;margin-bottom:10px}.detail{color:#84cc16;margin-top:10px;line-height:1.4}.reason{color:#e5e7eb;margin-top:14px}.district-summary{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0;font-weight:bold}.district-summary span{background:#111827;padding:4px 10px;border-radius:20px}.job-title{margin:6px 0;padding-left:6px;color:#cbd5e1;font-size:11px;line-height:16px;border-left:2px solid #475569;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;text-overflow:ellipsis;word-break:break-word}.job-expand{margin-top:8px;border:1px solid #334155;border-radius:8px;padding:8px;background:#0f172a}.job-expand summary{cursor:pointer;color:#38bdf8;font-weight:bold}.job-expand summary:hover{color:#facc15}#mapView{display:none;width:100%;padding:12px}.map-panel{width:100%;display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}.map-btn{background:#1e293b;color:#fff;border:1px solid #334155;padding:8px 14px;border-radius:12px;cursor:pointer;font-weight:bold}.map-btn:hover{background:#334155}#aiMap{width:100%;height:78vh;border:2px solid #334155;border-radius:14px;overflow:hidden}.map-popup{color:#111827;font-family:Arial;min-width:280px;max-width:380px}.map-popup-title{font-weight:bold;color:#dc2626;margin-bottom:8px;font-size:15px}.map-job-box{margin-top:8px;padding:8px;background:#f1f5f9;border-radius:8px;border:1px solid #cbd5e1}.map-job-box summary{cursor:pointer;font-weight:bold}.route-link{display:inline-block;margin-top:8px;padding:7px 10px;background:#2563eb;color:#fff!important;text-decoration:none;border-radius:8px;font-weight:bold}@keyframes slaBlinkRed {
         0% {
           box-shadow: 0 0 0 0 rgba(239,68,68,.95), 0 0 14px rgba(239,68,68,.9);
@@ -2760,80 +3023,171 @@ console.log(
 );
 
 let engineerHtml = '';
+
 Object.entries(engineers)
   .sort((a, b) => {
-            if (a[0] === 'Workforce NER Pool') return -1;
-            if (b[0] === 'Workforce NER Pool') return 1;
-            let aOn = shiftNames.includes(normalizeEngineerName(a[0])),
-  bOn = shiftNames.includes(normalizeEngineerName(b[0]));
-            if (aOn && !bOn) return -1;
-            if (!aOn && bOn) return 1;
-            return b[1].jobs.length - a[1].jobs.length;
-          })
-          .forEach(([eng, obj]) => {
-            let isPool = eng === 'Workforce NER Pool';
-            let onDuty = shiftNames.includes(normalizeEngineerName(eng));
-            
-            let currentJob = [...obj.jobs].sort(
-              (a, b) =>
-                a.limit -
-                getHr(a['Create Time']) -
-                (b.limit - getHr(b['Create Time']))
-            )[0];
-            let cardClass = isPool ? 'pool' : onDuty ? 'duty-on' : 'duty-off';
-            let critical = obj.jobs.filter(
-              (x) => (x['Priority'] || '').toUpperCase() === 'CRITICAL'
-            ).length;
-            let major = obj.jobs.filter(
-              (x) => (x['Priority'] || '').toUpperCase() === 'MAJOR'
-            ).length;
-            let overdue = obj.jobs.filter((x) => x.overdue > 0).length;
-            let level =
-              obj.jobs.length >= 8
-                ? '🔴 HIGH'
-                : obj.jobs.length >= 4
-                ? '🟡 MEDIUM'
-                : '🟢 LOW';
-            engineerHtml += `<div class="ai-card ${cardClass}"><div class="job ${
-              !onDuty && !isPool ? 'off-name' : ''
-            }">${
-              isPool ? '🛟' : '👨‍🔧'
-            } ${eng}</div><div class="detail">📍 Current Area : ${
-              currentJob?.['District Name'] || '-'
-            }</div><div class="detail">
-  📞 Mobile : ${renderMobileLink(obj.mobile)}
-</div><div class="detail">🗺️ ${
-              obj.districts.size
-            } District(s)</div><div style="color:#93c5fd;margin-top:4px;font-size:13px">${[
-              ...obj.districts,
-            ].join(
-              ' • '
-            )}</div><details class="job-expand"><summary>📋 Jobs : ${
-              obj.jobs.length
-            }</summary>
-            ${
-  obj.jobs.length
-    ? obj.jobs
-        .map((job) => {
-          let remain =
-            job.overdue > 0
-              ? '🔥 OVERDUE'
-              : `⏱ ${formatTime(job.limit - getHr(job['Create Time']))}`;
+    if (a[0] === 'Workforce NER Pool') return -1;
+    if (b[0] === 'Workforce NER Pool') return 1;
 
-          return `<div style="margin-top:8px;padding:8px;background:#111827;border-radius:8px"><b>${
-            job['Job ID'] || '-'
-          }</b><br>${getPriorityIcon(job['Priority'])} | ${getStatusIcon(
-            job['Status']
-          )}<br>${getWorkType(job['Job Title']).icon} ${
-            getWorkType(job['Job Title']).text
-          }<br>${remain}</div>`;
-        })
-        .join('')
-    : `<div style="margin-top:8px;padding:10px;background:#052e16;border:1px solid #22c55e;border-radius:8px;color:#bbf7d0;font-weight:bold">
-        ✅ ไม่มีงาน Assign ตอนนี้
-      </div>`
-}</details><div class="detail">🚨 Critical : ${critical}</div><div class="detail">⚠️ Major : ${major}</div><div class="detail">🕒 Overdue : ${overdue}</div><div class="reason">Workload : ${level}</div></div>`;
-          });
+    let aOn = shiftNames.includes(normalizeEngineerName(a[0]));
+    let bOn = shiftNames.includes(normalizeEngineerName(b[0]));
+
+    if (aOn && !bOn) return -1;
+    if (!aOn && bOn) return 1;
+
+    return b[1].jobs.length - a[1].jobs.length;
+  })
+  .forEach(([eng, obj]) => {
+    let isPool = eng === 'Workforce NER Pool';
+    let onDuty = shiftNames.includes(normalizeEngineerName(eng));
+
+    let currentJob =
+      obj.jobs.length > 0
+        ? [...obj.jobs].sort(
+            (a, b) =>
+              a.limit -
+              getHr(a['Create Time']) -
+              (b.limit - getHr(b['Create Time']))
+          )[0]
+        : null;
+
+    let cardClass = isPool ? 'pool' : onDuty ? 'duty-on' : 'duty-off';
+
+    let critical = obj.jobs.filter(
+      (x) => (x['Priority'] || '').toUpperCase() === 'CRITICAL'
+    ).length;
+
+    let major = obj.jobs.filter(
+      (x) => (x['Priority'] || '').toUpperCase() === 'MAJOR'
+    ).length;
+
+    let overdue = obj.jobs.filter((x) => x.overdue > 0).length;
+
+    let workloadText =
+      obj.jobs.length >= 8 ? 'HIGH' : obj.jobs.length >= 4 ? 'MEDIUM' : 'LOW';
+
+    let workloadClass =
+      obj.jobs.length >= 8 ? 'high' : obj.jobs.length >= 4 ? 'medium' : 'low';
+
+    let workloadIcon =
+      obj.jobs.length >= 8 ? '🔴' : obj.jobs.length >= 4 ? '🟡' : '🟢';
+
+    let districtList = [...obj.districts];
+
+    let districtText = districtList.length ? districtList.join(' • ') : '-';
+
+    let currentArea =
+      currentJob?.['District Name'] ||
+      obj.local ||
+      '-';
+
+    let mobileHtml = renderMobileLink(obj.mobile);
+
+    let jobsHtml = obj.jobs.length
+      ? obj.jobs
+          .map((job) => {
+            let remain =
+              job.overdue > 0
+                ? '🔥 OVERDUE'
+                : `⏱ ${formatTime(job.limit - getHr(job['Create Time']))}`;
+
+            return `
+              <div class="engineer-job-item">
+                <div class="engineer-job-id">${job['Job ID'] || '-'}</div>
+                ${getPriorityIcon(job['Priority'])} | ${getStatusIcon(job['Status'])}
+                <br>
+                ${getWorkType(job['Job Title']).icon} ${getWorkType(job['Job Title']).text}
+                <br>
+                ${remain}
+              </div>
+            `;
+          })
+          .join('')
+      : `
+        <div class="engineer-empty-job">
+          ✅ ไม่มีงาน Assign ตอนนี้
+        </div>
+      `;
+
+    engineerHtml += `
+      <div class="engineer-card ${cardClass}">
+        <div class="engineer-top">
+          <div class="engineer-avatar">
+            ${isPool ? '🛟' : '👷'}
+          </div>
+
+          <div class="engineer-main">
+            <div class="engineer-name">
+              ${eng}
+            </div>
+
+            <div class="engineer-badges">
+              <span class="eng-chip ${onDuty || isPool ? 'on' : 'off'}">
+                ${onDuty || isPool ? '🟢 Duty On' : '⚪ Duty Off'}
+              </span>
+
+              <span class="eng-chip ${workloadClass}">
+                ${workloadIcon} ${workloadText}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="engineer-info-grid">
+          <div class="eng-info-row">
+            <div class="eng-info-icon">📍</div>
+            <div class="eng-info-label">Current Area</div>
+            <div class="eng-info-value">${currentArea}</div>
+          </div>
+
+          <div class="eng-info-row">
+            <div class="eng-info-icon">📞</div>
+            <div class="eng-info-label">Mobile</div>
+            <div class="eng-info-value">${mobileHtml}</div>
+          </div>
+
+          <div class="eng-info-row">
+            <div class="eng-info-icon">🗺️</div>
+            <div class="eng-info-label">District</div>
+            <div class="eng-info-value">${obj.districts.size} District(s)</div>
+          </div>
+        </div>
+
+        <div class="engineer-district-list">
+          ${districtText}
+        </div>
+
+        <div class="engineer-stats">
+          <div class="eng-stat jobs">
+            <div class="eng-stat-label">Jobs</div>
+            <div class="eng-stat-value">${obj.jobs.length}</div>
+          </div>
+
+          <div class="eng-stat critical">
+            <div class="eng-stat-label">Critical</div>
+            <div class="eng-stat-value">${critical}</div>
+          </div>
+
+          <div class="eng-stat major">
+            <div class="eng-stat-label">Major</div>
+            <div class="eng-stat-value">${major}</div>
+          </div>
+
+          <div class="eng-stat overdue">
+            <div class="eng-stat-label">Overdue</div>
+            <div class="eng-stat-value">${overdue}</div>
+          </div>
+        </div>
+
+        <details class="engineer-jobs-box">
+          <summary>
+            ▶ 📋 Jobs Detail : ${obj.jobs.length}
+          </summary>
+          ${jobsHtml}
+        </details>
+      </div>
+    `;
+  });
         html += `</div><div id="rootView" class="board" style="display:none">${rootHtml}</div><div id="engineerView" class="board" style="display:none">${engineerHtml}</div><div id="mapView"><div class="map-panel">
   <button
     class="map-btn"
