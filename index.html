@@ -1424,19 +1424,7 @@ function getShiftStaffMapByProvince(province) {
 
   return map;
 }
-console.log('SHIFT STAFF MAP:', shiftStaffMap);
 
-console.log(
-  'MOBILE CHECK:',
-  normalizeEngineerName('Narathip Panthon'),
-  shiftStaffMap[normalizeEngineerName('Narathip Panthon')]
-);
-
-console.log(
-  'MOBILE CHECK:',
-  normalizeEngineerName('Sukkamon Sanyamoon'),
-  shiftStaffMap[normalizeEngineerName('Sukkamon Sanyamoon')]
-);
 function getShiftNamesByProvince(province) {
   let matchKeys = getProvinceMatchKeys(province);
 
@@ -2271,6 +2259,18 @@ render();
           let engineers = {};
 
 let shiftStaffMap = getShiftStaffMapByProvince(prov);
+console.log('SHIFT STAFF MAP:', shiftStaffMap);
+console.log(
+'MOBILE CHECK:',
+normalizeEngineerName('Narathip Panthon'),
+shiftStaffMap[normalizeEngineerName('Narathip Panthon')]
+);
+console.log(
+'MOBILE CHECK:',
+normalizeEngineerName('Sukkamon Sanyamoon'),
+shiftStaffMap[normalizeEngineerName('Sukkamon Sanyamoon')]
+);
+
 
 // ✅ 1. สร้างรายชื่อช่างจาก CM FE3BB Shift Daily เฉพาะจังหวัดที่เลือก
 Object.values(shiftStaffMap).forEach((staff) => {
