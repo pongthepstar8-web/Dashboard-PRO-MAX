@@ -1370,32 +1370,43 @@ function getProvinceCodeFromName(province) {
       let parts = line.split('|').map((x) => x.trim());
 
       // SHIFT | PROVINCE | LOCAL | NAME | MOBILE
+      let shift = parts[0] || '';
+      let province = parts[1] || '';
+      let local = parts[2] || '';
+      let name = parts[3] || '';
+      let mobile = parts[4] || '';
+
+      // ✅ fallback หาเบอร์จากทุกช่อง ถ้า parts[4] ไม่มี
+      if (!mobile) {
+        mobile =
+          parts.find((x) => {
+            let clean = String(x || '').replace(/[\s-]/g, '');
+            return /^0\d{8,9}$/.test(clean);
+          }) || '';
+      }
+
       return {
-        shift: parts[0] || '',
-        province: parts[1] || '',
-        local: parts[2] || '',
-        name: parts[3] || '',
-        mobile: parts[4] || ''
+        shift,
+        province,
+        local,
+        name,
+        mobile
       };
     })
     .filter((x) => x.name);
 }
 function getShiftStaffMapByProvince(province) {
-  let targetName = normalizeProvinceForShift(province);
-  let targetCode = getProvinceCodeFromName(province);
+  let matchKeys = getProvinceMatchKeys(province);
 
   let map = {};
 
   getShiftStaffRows()
     .filter((x) => {
-      if (!targetName) return true;
+      if (!province) return true;
 
       let p = normalizeProvinceForShift(x.province);
 
-      return (
-        p === targetName ||
-        p === targetCode
-      );
+      return matchKeys.includes(p);
     })
     .forEach((x) => {
       let key = normalizeEngineerName(x.name);
@@ -1413,7 +1424,19 @@ function getShiftStaffMapByProvince(province) {
 
   return map;
 }
+console.log('SHIFT STAFF MAP:', shiftStaffMap);
 
+console.log(
+  'MOBILE CHECK:',
+  normalizeEngineerName('Narathip Panthon'),
+  shiftStaffMap[normalizeEngineerName('Narathip Panthon')]
+);
+
+console.log(
+  'MOBILE CHECK:',
+  normalizeEngineerName('Sukkamon Sanyamoon'),
+  shiftStaffMap[normalizeEngineerName('Sukkamon Sanyamoon')]
+);
 function getShiftNamesByProvince(province) {
   let matchKeys = getProvinceMatchKeys(province);
 
@@ -1760,9 +1783,7 @@ render();
 
             let mobile = r['MOBILE'] || '';
 
-            return [shift, province, local, name, mobile]
-              .filter(Boolean)
-              .join(' | ');
+            return [shift, province, local, name, mobile].join(' | ');
           })
           .filter(Boolean);
 
@@ -2268,6 +2289,9 @@ Object.values(shiftStaffMap).forEach((staff) => {
       province: staff.province || ''
     };
   }
+  if (!engineers[eng].mobile && staff.mobile) {
+  engineers[eng].mobile = staff.mobile;
+}
 });
 
 // ✅ 2. เติมงานจาก Assign to
@@ -2753,7 +2777,14 @@ Object.entries(engineers)
               isPool ? '🛟' : '👨‍🔧'
             } ${eng}</div><div class="detail">📍 Current Area : ${
               currentJob?.['District Name'] || '-'
-            }</div><div class="detail">📞 Mobile : ${obj.mobile || '-'}</div><div class="detail">🗺️ ${
+            }</div><div class="detail">
+  📞 Mobile :
+  ${
+    obj.mobile
+      ? `tel:${obj.mobile}${obj.mobile}</a>`
+      : '-'
+  }
+</div><div class="detail">🗺️ ${
               obj.districts.size
             } District(s)</div><div style="color:#93c5fd;margin-top:4px;font-size:13px">${[
               ...obj.districts,
