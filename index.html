@@ -2460,15 +2460,38 @@ render();
       }
 
       async function showAIBoard() {
-        if (!isApproved('AIActionBoard')) {
-          alert('คุณยังไม่มีสิทธิ์ใช้งาน AI Action Board');
-          return;
-        }
-        await ensureAppsDataReady();
-console.log('OPEN AI BOARD WITH SITE_COORD:', {
-siteCoordCount: Object.keys(SITE_COORD || {}).length,
-siteIndexCount: Object.keys(SITE_COORD_INDEX || {}).length
-});
+  if (!isApproved('AIActionBoard')) {
+    alert('คุณยังไม่มีสิทธิ์ใช้งาน AI Action Board');
+    return;
+  }
+
+  let w = window.open('', '_blank');
+
+  if (!w || !w.document) {
+    alert('ไม่สามารถเปิด AI Action Board ได้ กรุณาอนุญาต Popup ใน Browser');
+    return;
+  }
+
+  w.document.open();
+  w.document.write(`
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <title>AI Action Board</title>
+      </head>
+      <body style="background:#020617;color:white;font-family:Arial;padding:24px">
+        กำลังโหลด AI Action Board...
+      </body>
+    </html>
+  `);
+  w.document.close();
+
+  await ensureAppsDataReady();
+
+  console.log('OPEN AI BOARD WITH SITE_COORD:', {
+    siteCoordCount: Object.keys(SITE_COORD || {}).length,
+    siteIndexCount: Object.keys(SITE_COORD_INDEX || {}).length
+  });
         let prov = $('#provinceFilter').val();
         let jobs = [];
         data.forEach((r) => {
@@ -3695,7 +3718,7 @@ if (!w || !w.document) {
   alert('ไม่สามารถเปิด AI Action Board ได้ กรุณาอนุญาต Popup ใน Browser');
   return;
 }
-
+w.document.open();
 w.document.write(html);
 w.document.close();
 let aiMapInited = false,
