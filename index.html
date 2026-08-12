@@ -3746,6 +3746,87 @@ let aiMapInited = false,
   engineerTravelMarkers = [],
   engineerTravelOn = false;
 
+  w.showAIOperationsNotice = function (title, message) {
+  let old = w.document.getElementById('aiOperationsNotice');
+
+  if (old) {
+    old.remove();
+  }
+
+  let box = w.document.createElement('div');
+
+  box.id = 'aiOperationsNotice';
+
+  box.innerHTML = `
+    <div style="
+      position:fixed;
+      inset:0;
+      background:rgba(2,6,23,.65);
+      z-index:999999;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-family:Arial;
+    ">
+      <div style="
+        width:min(520px,90vw);
+        background:#020617;
+        color:#e5e7eb;
+        border:1px solid #334155;
+        border-radius:18px;
+        box-shadow:0 20px 60px rgba(0,0,0,.55);
+        padding:22px;
+      ">
+        <div style="
+          font-size:20px;
+          font-weight:900;
+          margin-bottom:12px;
+          color:#a78bfa;
+        ">
+          🧠 AI OPERATIONS BOARD
+        </div>
+
+        <div style="
+          font-size:17px;
+          font-weight:800;
+          color:#ffffff;
+          margin-bottom:14px;
+        ">
+          ${title}
+        </div>
+
+        <div style="
+          white-space:pre-line;
+          line-height:1.6;
+          font-size:15px;
+          color:#dbeafe;
+          margin-bottom:20px;
+        ">
+          ${message}
+        </div>
+
+        <div style="text-align:right">
+          <button
+            onclick="document.getElementById('aiOperationsNotice').remove()"
+            style="
+              background:#7c3aed;
+              color:white;
+              border:none;
+              border-radius:12px;
+              padding:9px 18px;
+              font-weight:800;
+              cursor:pointer;
+            "
+          >
+            OK
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  w.document.body.appendChild(box);
+};
         w.initAIMap = function () {
           if (aiMapInited) {
             setTimeout(() => aiMap && aiMap.invalidateSize(), 250);
@@ -3864,7 +3945,10 @@ let aiMapInited = false,
           if (measureMode) {
             alert('โหมดวัดระยะทาง: คลิกบนแผนที่ 2 จุดเพื่อวัดระยะ');
           } else {
-            alert('ปิดโหมดวัดระยะทาง');
+            w.showAIOperationsNotice(
+  'Measure Distance OFF',
+  'ปิดโหมดวัดระยะทาง'
+);
           }
         };
 
@@ -3917,9 +4001,10 @@ let aiMapInited = false,
       btn.style.boxShadow = '0 0 12px rgba(37,99,235,.75)';
     }
 
-    alert(
-      'Route Simulator ON\n\nเลือกต้นทางจากหมุด Job หรือคลิกบนแผนที่\nจากนั้นเลือกปลายทางจากหมุด Job หรือคลิกบนแผนที่'
-    );
+    w.showAIOperationsNotice(
+  'Route Simulator ON',
+  'เลือกต้นทางจากหมุด Job หรือคลิกบนแผนที่\nจากนั้นเลือกปลายทางจากหมุด Job หรือคลิกบนแผนที่'
+);
   } else {
     if (btn) {
       btn.innerHTML = '🧭 Route Simulator OFF';
