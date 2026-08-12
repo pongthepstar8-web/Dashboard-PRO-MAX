@@ -1170,8 +1170,6 @@ let networkGroupSubFilters = [];
       const APPS_SCRIPT_URL =
   'https://script.google.com/macros/s/AKfycbyKED88K86X4eu2ycnl1ib0VY74iheDAWInvrRrQU7zarDu2fB_zNKTaW_TN6DGvAkxzw/exec';
 
-const SHEET_URL =
-  'https://docs.google.com/spreadsheets/d/1XSR52b9wrzsBDys3PZUQTCYexOOZFa6J-bz-jR-6jaM/edit?gid=365350498#gid=365350498';
   function getAppsScriptUrl() {
   let url = String(APPS_SCRIPT_URL || '').trim();
 
@@ -1195,6 +1193,10 @@ const SHEET_URL =
 
   return url;
 }
+
+const SHEET_URL =
+  'https://docs.google.com/spreadsheets/d/1XSR52b9wrzsBDys3PZUQTCYexOOZFa6J-bz-jR-6jaM/edit?gid=365350498#gid=365350498';
+  
       
         function checkFactoryAuth() {
         const auth = JSON.parse(localStorage.getItem('factoryAuth'));
@@ -1282,32 +1284,69 @@ const SHEET_URL =
 
   window.open(SHEET_URL, '_blank');
 }
-      async function loadDataFromAppsScript() {
-        try {
-          let res = await fetch(APPS_SCRIPT_URL + '?action=all');
+async function loadDataFromAppsScript() {
+  try {
+    APPS_DATA_READY = false;
 
-          let json = await res.json();
+    let baseUrl = getAppsScriptUrl();
 
-          if (!json.ok) {
-            alert('โหลดข้อมูลจาก Apps Script ไม่สำเร็จ');
-            return;
-          }
+    if (!baseUrl) return;
 
-          shiftDailyText = json.shiftText || '';
+    let url = baseUrl + '?action=all&ts=' + Date.now();
 
-          localStorage.setItem('shiftDaily', shiftDailyText);
+    console.log('LOAD APPS SCRIPT URL:', url);
 
-          DISTRICT_COORD = json.districtCoords || {};
-          PROVINCE_COORD_REMOTE = json.provinceCoords || {};
-          SITE_COORD = json.siteCoords || {};
-          TRAVEL_HISTORY = json.travelHistory || {};
+    let res = await fetch(url);
 
-          render();
-        } catch (err) {
-          console.error(err);
-          alert('ไม่สามารถโหลดข้อมูลจาก Apps Script ได้');
-        }
-      }
+    console.log('LOAD APPS SCRIPT STATUS:', res.status);
+
+    let text = await res.text();
+
+    console.log('LOAD APPS SCRIPT RESPONSE:', text);
+
+    if (!text.trim().startsWith('{')) {
+      console.error('Apps Script response is not JSON. URL may be wrong:', url);
+      throw new Error('Apps Script response is not JSON');
+    }
+
+    let json = JSON.parse(text);
+
+    if (!json.ok) {
+      alert('โหลดข้อมูลจาก Apps Script ไม่สำเร็จ');
+      return;
+    }
+
+    shiftDailyText = json.shiftText || '';
+
+    localStorage.setItem('shiftDaily', shiftDailyText);
+
+    DISTRICT_COORD = json.districtCoords || {};
+    PROVINCE_COORD_REMOTE = json.provinceCoords || {};
+    SITE_COORD = json.siteCoords || {};
+    TRAVEL_HISTORY = json.travelHistory || {};
+
+    if (SITE_COORD && Object.keys(SITE_COORD).length > 0) {
+      localStorage.setItem('siteCoordsCache', JSON.stringify(SITE_COORD));
+    }
+
+    APPS_DATA_READY = true;
+
+    render();
+  } catch (err) {
+    console.error('LOAD APPS SCRIPT ERROR:', err);
+
+    let cached = localStorage.getItem('siteCoordsCache');
+
+    if (cached) {
+      try {
+        SITE_COORD = JSON.parse(cached) || {};
+        console.warn('Apps Script failed, ใช้ SITE_COORD จาก cache');
+      } catch (e) {}
+    }
+
+    alert('ไม่สามารถโหลดข้อมูลจาก Apps Script ได้');
+  }
+}
       function normalizeEngineerName(name) {
   return String(name || '')
     .trim()
@@ -4381,8 +4420,12 @@ ${remain}
 function saveOnsiteToAppsScript(item) {
   if (!item || !item.assign || !item.jobId) return;
 
+  let baseUrl = getAppsScriptUrl();
+
+  if (!baseUrl) return;
+
   let url =
-    APPS_SCRIPT_URL +
+    baseUrl +
     '?action=saveOnsite' +
     '&assign=' + encodeURIComponent(item.assign) +
     '&jobId=' + encodeURIComponent(item.jobId) +
@@ -4394,8 +4437,13 @@ function saveOnsiteToAppsScript(item) {
     '&status=' + encodeURIComponent(item.status || '') +
     '&createTime=' + encodeURIComponent(item.createTime || '');
 
+  console.log('SAVE ONSITE URL:', url);
+
   fetch(url)
-    .then(() => {})
+    .then((res) => res.text())
+    .then((text) => {
+      console.log('SAVE ONSITE RESPONSE:', text);
+    })
     .catch((err) => {
       console.warn('Save onsite history failed:', err);
     });
