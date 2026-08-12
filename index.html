@@ -1166,6 +1166,8 @@ let networkGroupSubFilters = [];
       let SITE_COORD = {};
       let TRAVEL_HISTORY = {};
       let SITE_COORD_INDEX = {};
+      let APPS_DATA_READY = false;
+      let appsDataPromise = null;
 
       let shiftDailyText = '';
       const APPS_SCRIPT_URL =
@@ -1285,6 +1287,93 @@ const SHEET_URL =
 
   window.open(SHEET_URL, '_blank');
 }
+async function loadSiteCoordsFromAppsScript() {
+  try {
+    let baseUrl = getAppsScriptUrl();
+
+    if (!baseUrl) {
+      return false;
+    }
+
+    let url = baseUrl + '?action=siteCoords&ts=' + Date.now();
+
+    console.log('LOAD SITE COORDS URL:', url);
+
+    let res = await fetch(url);
+
+    console.log('LOAD SITE COORDS STATUS:', res.status);
+
+    let text = await res.text();
+
+    console.log('LOAD SITE COORDS RESPONSE:', text.slice(0, 500));
+
+    if (!text.trim().startsWith('{')) {
+      console.error('siteCoords response is not JSON');
+      return false;
+    }
+
+    let json = JSON.parse(text);
+
+    if (!json.ok) {
+      console.error('siteCoords not ok:', json);
+      return false;
+    }
+
+    SITE_COORD = json.siteCoords || {};
+
+    if (SITE_COORD && Object.keys(SITE_COORD).length > 0) {
+      localStorage.setItem('siteCoordsCache', JSON.stringify(SITE_COORD));
+    }
+
+    buildSiteCoordIndex();
+
+    console.log('SITE_COORD LOADED:', {
+      siteCoordCount: Object.keys(SITE_COORD || {}).length,
+      siteIndexCount: Object.keys(SITE_COORD_INDEX || {}).length,
+      test3702087: SITE_COORD_INDEX[normalizeSiteCodeKey('3702_087')]
+    });
+
+    return true;
+  } catch (err) {
+    console.error('LOAD SITE COORDS ERROR:', err);
+    return false;
+  }
+}
+async function ensureAppsDataReady() {
+if (appsDataPromise) {
+await appsDataPromise;
+} else {
+appsDataPromise = loadDataFromAppsScript();
+await appsDataPromise;
+}
+// ถ้า SITE_COORD ยังว่าง ให้โหลดแยก
+if (!SITE_COORD || Object.keys(SITE_COORD).length === 0) {
+console.warn('SITE_COORD ว่าง กำลังโหลด action=siteCoords แยก');
+let ok = await loadSiteCoordsFromAppsScript();
+if (!ok) {
+let cached = localStorage.getItem('siteCoordsCache');
+if (cached) {
+try {
+SITE_COORD = JSON.parse(cached) || {};
+buildSiteCoordIndex();
+console.warn('ใช้ SITE_COORD จาก cache');
+} catch (e) {
+console.warn('siteCoordsCache parse failed:', e);
+}
+}
+}
+}
+if (!SITE_COORD_INDEX || Object.keys(SITE_COORD_INDEX).length === 0) {
+buildSiteCoordIndex();
+}
+APPS_DATA_READY = true;
+console.log('ENSURE APPS DATA READY:', {
+siteCoordCount: Object.keys(SITE_COORD || {}).length,
+siteIndexCount: Object.keys(SITE_COORD_INDEX || {}).length
+});
+return true;
+}
+
 async function loadDataFromAppsScript() {
   try {
     APPS_DATA_READY = false;
@@ -2278,11 +2367,16 @@ render();
         return '#64748b'; // เทา
       }
 
-      function showAIBoard() {
+      async function showAIBoard() {
         if (!isApproved('AIActionBoard')) {
           alert('คุณยังไม่มีสิทธิ์ใช้งาน AI Action Board');
           return;
         }
+        await ensureAppsDataReady();
+console.log('OPEN AI BOARD WITH SITE_COORD:', {
+siteCoordCount: Object.keys(SITE_COORD || {}).length,
+siteIndexCount: Object.keys(SITE_COORD_INDEX || {}).length
+});
         let prov = $('#provinceFilter').val();
         let jobs = [];
         data.forEach((r) => {
