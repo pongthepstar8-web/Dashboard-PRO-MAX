@@ -1261,11 +1261,7 @@ let networkGroupSubFilters = [];
       }
       async function loadDataFromAppsScript() {
         try {
-          let url = APPS_SCRIPT_URL + '?action=all&ts=' + Date.now();
-
-console.log('LOAD APPS SCRIPT URL:', url);
-
-let res = await fetch(url);
+          
           let res = await fetch(APPS_SCRIPT_URL + '?action=all');
 
           let json = await res.json();
