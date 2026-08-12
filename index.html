@@ -4769,7 +4769,6 @@ if (!groups[key]) {
     siteName: siteName
   };
 }
-
             groups[key].jobs.push(job);
           }
 
@@ -5006,7 +5005,7 @@ w.focusDepartedEngineer = async function (name) {
     }
   }, 350);
 };
-        function normalizeSiteSearchText(v) {
+function normalizeSiteSearchText(v) {
   let tokens =
     String(v || '')
       .toUpperCase()
@@ -5014,7 +5013,7 @@ w.focusDepartedEngineer = async function (name) {
 
   tokens = tokens
     .map((t) => {
-      // 079 -> 79
+      // 087 -> 87
       if (/^\d+$/.test(t)) {
         return String(Number(t));
       }
@@ -5579,6 +5578,22 @@ function hasCurrentOnsiteJob(assignKey) {
     );
   });
 }
+
+function debugFindSite(title, code) {
+  let titleNorm = normalizeSiteSearchText(title);
+  let codeNorm = normalizeSiteSearchText(code);
+
+  console.log('DEBUG SITE MATCH:', {
+    code: code,
+    codeNorm: codeNorm,
+    title: title,
+    titleNorm: titleNorm,
+    included: titleNorm.includes(codeNorm),
+    siteCoordExists: !!SITE_COORD[code],
+    siteCoordCount: Object.keys(SITE_COORD || {}).length,
+    siteCoordItem: SITE_COORD[code]
+  });
+}
 function findSiteCoordFromTitle(title) {
   if (!title || !SITE_COORD) {
     return null;
@@ -5623,10 +5638,6 @@ function findSiteCoordFromTitle(title) {
       keyLength: keyNorm.length
     };
 
-    /*
-      ✅ เลือกตัวที่เจอใน Title ก่อนที่สุด
-      ถ้าเจอตำแหน่งเดียวกัน ให้เลือก key ที่ยาวกว่า
-    */
     if (
       !bestMatch ||
       candidate.pos < bestMatch.pos ||
@@ -5651,8 +5662,11 @@ function findSiteCoordFromTitle(title) {
     address: bestMatch.address
   };
 }
+
 async function getJobCoord(job) {
-  let title = job['Job Title'] || '';
+  if (String(title).includes('3702_087')) {
+  debugFindSite(title, '3702_087');
+}
 
   let gps = extractGPS(title);
 
