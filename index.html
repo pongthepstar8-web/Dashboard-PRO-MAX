@@ -1169,6 +1169,23 @@ let networkGroupSubFilters = [];
       let shiftDailyText = '';
       const APPS_SCRIPT_URL =
   'https://script.google.com/macros/s/AKfycbyKED88K86X4eu2ycnl1ib0VY74iheDAWInvrRrQU7zarDu2fB_zNKTaW_TN6DGvAkxzw/exec';
+  function getAppsScriptUrl() {
+  let url = String(APPS_SCRIPT_URL || '').trim();
+
+  if (url.includes('script.googleusercontent.com')) {
+    console.error('APPS_SCRIPT_URL ผิด ห้ามใช้ googleusercontent:', url);
+    alert('APPS_SCRIPT_URL ผิด: ห้ามใช้ script.googleusercontent.com ให้ใช้ URL /exec เท่านั้น');
+    return '';
+  }
+
+  if (!url.includes('/exec')) {
+    console.error('APPS_SCRIPT_URL ต้องลงท้ายด้วย /exec:', url);
+    alert('APPS_SCRIPT_URL ต้องเป็นลิงก์ Apps Script Web App ที่ลงท้ายด้วย /exec');
+    return '';
+  }
+
+  return url;
+}
 
       const SHEET_URL =
         'https://docs.google.com/spreadsheets/d/1XSR52b9wrzsBDys3PZUQTCYexOOZFa6J-bz-jR-6jaM/edit?gid=365350498#gid=365350498';
@@ -1260,32 +1277,62 @@ let networkGroupSubFilters = [];
         window.open(SHEET_URL, '_blank');
       }
       async function loadDataFromAppsScript() {
-        try {
-          
-          let res = await fetch(APPS_SCRIPT_URL + '?action=all');
+  try {
+    APPS_DATA_READY = false;
 
-          let json = await res.json();
+    let baseUrl = getAppsScriptUrl();
 
-          if (!json.ok) {
-            alert('โหลดข้อมูลจาก Apps Script ไม่สำเร็จ');
-            return;
-          }
+if (!baseUrl) {
+  return;
+}
 
-          shiftDailyText = json.shiftText || '';
+let url = baseUrl + '?action=clearTravel';
 
-          localStorage.setItem('shiftDaily', shiftDailyText);
+console.log('CLEAR TRAVEL URL:', url);
 
-          DISTRICT_COORD = json.districtCoords || {};
-          PROVINCE_COORD_REMOTE = json.provinceCoords || {};
-          SITE_COORD = json.siteCoords || {};
-          TRAVEL_HISTORY = json.travelHistory || {};
+let res = await fetch(url);
 
-          render();
-        } catch (err) {
-          console.error(err);
-          alert('ไม่สามารถโหลดข้อมูลจาก Apps Script ได้');
-        }
-      }
+    console.log('LOAD APPS SCRIPT STATUS:', res.status);
+
+    let text = await res.text();
+
+    console.log('LOAD APPS SCRIPT RESPONSE:', text);
+
+    let json = JSON.parse(text);
+
+    if (!json.ok) {
+      alert('โหลดข้อมูลจาก Apps Script ไม่สำเร็จ');
+      return;
+    }
+
+    shiftDailyText = json.shiftText || '';
+
+    localStorage.setItem('shiftDaily', shiftDailyText);
+
+    DISTRICT_COORD = json.districtCoords || {};
+    PROVINCE_COORD_REMOTE = json.provinceCoords || {};
+    SITE_COORD = json.siteCoords || {};
+    TRAVEL_HISTORY = json.travelHistory || {};
+
+    if (SITE_COORD && Object.keys(SITE_COORD).length > 0) {
+      localStorage.setItem('siteCoordsCache', JSON.stringify(SITE_COORD));
+    }
+
+    APPS_DATA_READY = true;
+
+    console.log('APPS DATA READY:', {
+      districtCoords: Object.keys(DISTRICT_COORD || {}).length,
+      provinceCoords: Object.keys(PROVINCE_COORD_REMOTE || {}).length,
+      siteCoords: Object.keys(SITE_COORD || {}).length,
+      travelHistory: Object.keys(TRAVEL_HISTORY || {}).length
+    });
+
+    render();
+  } catch (err) {
+    console.error('LOAD APPS SCRIPT ERROR:', err);
+    alert('ไม่สามารถโหลดข้อมูลจาก Apps Script ได้');
+  }
+}
       function normalizeEngineerName(name) {
   return String(name || '')
     .trim()
@@ -4642,14 +4689,22 @@ if (!groups[key]) {
           }
 
           let groupList = Object.values(groups);
-          aiDistrictSourceGroups = groupList.filter((g) => {
+
+aiDistrictSourceGroups = groupList.filter((g) => {
   return g.source === 'AREA_COORD';
 });
 
-updateDistrictSourceButton();
-          
+console.log('AI MAP SOURCE SUMMARY:', {
+  gps: groupList.filter((g) => g.source === 'GPS_TITLE').length,
+  site: groupList.filter((g) => g.source === 'SITE_SHEET').length,
+  district: aiDistrictSourceGroups.length,
+  total: groupList.length,
+  siteCoordCount: Object.keys(SITE_COORD || {}).length
+});
 
-          let buckets = {};
+updateDistrictSourceButton();
+
+let buckets = {};
 
           groupList.forEach((group) => {
             let key = group.lat.toFixed(5) + '|' + group.lng.toFixed(5);
