@@ -1473,25 +1473,46 @@ function normalizeSiteCodeKey(v) {
 function buildSiteCoordIndex() {
   SITE_COORD_INDEX = {};
 
-  Object.keys(SITE_COORD || {}).forEach((key) => {
-    let item = SITE_COORD[key];
+  const source = SITE_COORD || {};
+  const keys = Object.keys(source);
+
+  keys.forEach((key) => {
+    const item = source[key];
+
+    if (!item) return;
 
     if (
-      !item ||
-      isNaN(Number(item.lat)) ||
-      isNaN(Number(item.lng))
+      item.lat === undefined ||
+      item.lng === undefined ||
+      item.lat === '' ||
+      item.lng === ''
     ) {
       return;
     }
 
-    let norm = normalizeSiteCodeKey(key);
+    const lat = Number(item.lat);
+    const lng = Number(item.lng);
+
+    if (Number.isNaN(lat) || Number.isNaN(lng)) {
+      return;
+    }
+
+    const norm = normalizeSiteCodeKey(key);
 
     if (!norm) return;
 
+    if (SITE_COORD_INDEX[norm]) {
+      console.warn('Duplicate normalized site key:', {
+        norm,
+        oldKey: SITE_COORD_INDEX[norm].key,
+        newKey: key
+      });
+    }
+
     SITE_COORD_INDEX[norm] = {
       key: key,
-      lat: Number(item.lat),
-      lng: Number(item.lng),
+      lat: lat,
+      lng: lng,
       type: item.type || '',
       address: item.address || ''
     };
@@ -1500,38 +1521,52 @@ function buildSiteCoordIndex() {
   console.log('SITE_COORD_INDEX READY:', Object.keys(SITE_COORD_INDEX).length);
 }
 async function ensureAppsDataReady() {
-if (appsDataPromise) {
-await appsDataPromise;
-} else {
-appsDataPromise = loadDataFromAppsScript();
-await appsDataPromise;
-}
-// ถ้า SITE_COORD ยังว่าง ให้โหลดแยก
-if (!SITE_COORD || Object.keys(SITE_COORD).length === 0) {
-console.warn('SITE_COORD ว่าง กำลังโหลด action=siteCoords แยก');
-let ok = await loadSiteCoordsFromAppsScript();
-if (!ok) {
-let cached = localStorage.getItem('siteCoordsCache');
-if (cached) {
-try {
-SITE_COORD = JSON.parse(cached) || {};
-buildSiteCoordIndex();
-console.warn('ใช้ SITE_COORD จาก cache');
-} catch (e) {
-console.warn('siteCoordsCache parse failed:', e);
-}
-}
-}
-}
-if (!SITE_COORD_INDEX || Object.keys(SITE_COORD_INDEX).length === 0) {
-buildSiteCoordIndex();
-}
-APPS_DATA_READY = true;
-console.log('ENSURE APPS DATA READY:', {
-siteCoordCount: Object.keys(SITE_COORD || {}).length,
-siteIndexCount: Object.keys(SITE_COORD_INDEX || {}).length
-});
-return true;
+  try {
+    if (appsDataPromise) {
+      await appsDataPromise;
+    } else {
+      appsDataPromise = loadDataFromAppsScript();
+      await appsDataPromise;
+    }
+
+    if (!SITE_COORD || Object.keys(SITE_COORD).length === 0) {
+      console.warn('SITE_COORD ว่าง กำลังโหลด action=siteCoords แยก');
+
+      const ok = await loadSiteCoordsFromAppsScript();
+
+      if (!ok) {
+        const cached = localStorage.getItem('siteCoordsCache');
+
+        if (cached) {
+          try {
+            SITE_COORD = JSON.parse(cached) || {};
+            console.warn('ใช้ SITE_COORD จาก cache');
+          } catch (e) {
+            console.warn('siteCoordsCache parse failed:', e);
+          }
+        }
+      }
+    }
+
+    buildSiteCoordIndex();
+
+    const siteCoordCount = Object.keys(SITE_COORD || {}).length;
+    const siteIndexCount = Object.keys(SITE_COORD_INDEX || {}).length;
+
+    APPS_DATA_READY = siteCoordCount > 0 && siteIndexCount > 0;
+
+    console.log('ENSURE APPS DATA READY:', {
+      siteCoordCount,
+      siteIndexCount,
+      ready: APPS_DATA_READY
+    });
+
+    return APPS_DATA_READY;
+  } catch (e) {
+    console.error('ensureAppsDataReady failed:', e);
+    APPS_DATA_READY = false;
+    return false;
+  }
 }
       function normalizeEngineerName(name) {
   return String(name || '')
