@@ -5858,16 +5858,25 @@ w.clearTravelLogAdmin = async function () {
   if (!ok) return;
 
   try {
-    let res = await fetch(APPS_SCRIPT_URL + '?action=clearTravel');
-    let json = await res.json();
+    let url = APPS_SCRIPT_URL + '?action=clearTravel';
+
+    console.log('CLEAR TRAVEL URL:', url);
+
+    let res = await fetch(url);
+    let text = await res.text();
+
+    console.log('CLEAR TRAVEL RESPONSE TEXT:', text);
+
+    let json = JSON.parse(text);
+
+    console.log('CLEAR TRAVEL RESPONSE JSON:', json);
 
     if (!json.ok) {
-      alert('ล้าง Travel Log ไม่สำเร็จ');
+      alert('ล้าง Travel Log ไม่สำเร็จ: ' + (json.message || 'unknown error'));
       return;
     }
 
     TRAVEL_HISTORY = {};
-
     localStorage.removeItem('aiLastOnsiteByEngineer');
 
     clearEngineerTravel();
@@ -5887,10 +5896,14 @@ w.clearTravelLogAdmin = async function () {
     buildOnsiteEngineerSelect();
     buildDepartedEngineerSelect();
 
-    alert('ล้าง Travel Log เรียบร้อยแล้ว');
+    alert(
+      'ล้าง Travel Log เรียบร้อยแล้ว\n\n' +
+      'Sheet: ' + (json.sheetName || '-') + '\n' +
+      'Rows ก่อนล้าง: ' + (json.lastRowBeforeClear || '-')
+    );
   } catch (err) {
-    console.error(err);
-    alert('เกิดข้อผิดพลาดขณะล้าง Travel Log');
+    console.error('CLEAR TRAVEL ERROR:', err);
+    alert('เกิดข้อผิดพลาดขณะล้าง Travel Log ดูรายละเอียดใน Console');
   }
 };
         w.toggleMapToolsMenu = function () {
