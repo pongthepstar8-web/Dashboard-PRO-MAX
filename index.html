@@ -3689,39 +3689,45 @@ Object.entries(engineers)
     </div>
   </div>
 </div><div id="aiMap"></div></div><script>window.AI_JOBS=${safeJobsJson};<\/script></body></html>`;
-        let w = window.open();
-        w.document.write(html);
-        w.document.close();
-        let aiMapInited = false,
-          aiMap = null,
-          aiMarkers = [],
-          aiAllPoints = [],
-          onsiteEngineerIndex = {};
-          departedEngineerIndex = {};
-          aiRoutePoints = [],
-          aiRouteLine = null,
-          aiRouteMarkers = [],
-          measureMode = false,
-measurePoints = [],
-measureMarkers = [],
-measureLine = null,
-measureLabel = null,
-routeSimMode = false,
-routeSimPoints = [],
-routeSimMarkers = [],
-routeSimLine = null,
-routeSimLines = [],
-routeSimLabel = null;
-aiDistrictSourceGroups = [];
-aiSourceCounter = {
-  gps: 0,
-  site: 0,
-  district: 0,
-  total: 0
-};
-engineerTravelLines = [],
-engineerTravelMarkers = [],
-engineerTravelOn = false;
+  let w = window.open('', '_blank');
+
+if (!w || !w.document) {
+  alert('ไม่สามารถเปิด AI Action Board ได้ กรุณาอนุญาต Popup ใน Browser');
+  return;
+}
+
+w.document.write(html);
+w.document.close();
+let aiMapInited = false,
+  aiMap = null,
+  aiMarkers = [],
+  aiAllPoints = [],
+  onsiteEngineerIndex = {},
+  departedEngineerIndex = {},
+  aiRoutePoints = [],
+  aiRouteLine = null,
+  aiRouteMarkers = [],
+  measureMode = false,
+  measurePoints = [],
+  measureMarkers = [],
+  measureLine = null,
+  measureLabel = null,
+  routeSimMode = false,
+  routeSimPoints = [],
+  routeSimMarkers = [],
+  routeSimLine = null,
+  routeSimLines = [],
+  routeSimLabel = null,
+  aiDistrictSourceGroups = [],
+  aiSourceCounter = {
+    gps: 0,
+    site: 0,
+    district: 0,
+    total: 0
+  },
+  engineerTravelLines = [],
+  engineerTravelMarkers = [],
+  engineerTravelOn = false;
 
         w.initAIMap = function () {
           if (aiMapInited) {
