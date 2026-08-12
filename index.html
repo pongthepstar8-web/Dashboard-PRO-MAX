@@ -1168,10 +1168,33 @@ let networkGroupSubFilters = [];
 
       let shiftDailyText = '';
       const APPS_SCRIPT_URL =
-        'https://script.google.com/macros/s/AKfycbyKED88K86X4eu2ycnl1ib0VY74iheDAWInvrRrQU7zarDu2fB_zNKTaW_TN6DGvAkxzw/exec';
+  'https://script.google.com/macros/s/AKfycbyKED88K86X4eu2ycnl1ib0VY74iheDAWInvrRrQU7zarDu2fB_zNKTaW_TN6DGvAkxzw/exec';
 
-      const SHEET_URL =
-        'https://docs.google.com/spreadsheets/d/1XSR52b9wrzsBDys3PZUQTCYexOOZFa6J-bz-jR-6jaM/edit?gid=365350498#gid=365350498';
+const SHEET_URL =
+  'https://docs.google.com/spreadsheets/d/1XSR52b9wrzsBDys3PZUQTCYexOOZFa6J-bz-jR-6jaM/edit?gid=365350498#gid=365350498';
+  function getAppsScriptUrl() {
+  let url = String(APPS_SCRIPT_URL || '').trim();
+
+  if (url.includes('<') || url.includes('>') || url.includes('</a>')) {
+    console.error('APPS_SCRIPT_URL มี HTML ปนอยู่:', url);
+    alert('APPS_SCRIPT_URL มี HTML ปนอยู่ ต้องใส่เป็น URL ธรรมดาเท่านั้น');
+    return '';
+  }
+
+  if (url.includes('script.googleusercontent.com')) {
+    console.error('APPS_SCRIPT_URL ผิด ห้ามใช้ googleusercontent:', url);
+    alert('APPS_SCRIPT_URL ผิด: ห้ามใช้ script.googleusercontent.com ให้ใช้ URL /exec เท่านั้น');
+    return '';
+  }
+
+  if (!url.includes('script.google.com/macros/s/') || !url.endsWith('/exec')) {
+    console.error('APPS_SCRIPT_URL ต้องเป็น Apps Script Web App URL ที่ลงท้ายด้วย /exec:', url);
+    alert('APPS_SCRIPT_URL ต้องเป็นลิงก์ Apps Script Web App ที่ลงท้ายด้วย /exec');
+    return '';
+  }
+
+  return url;
+}
       
         function checkFactoryAuth() {
         const auth = JSON.parse(localStorage.getItem('factoryAuth'));
@@ -1252,13 +1275,13 @@ let networkGroupSubFilters = [];
       }
 
       function openGoogleSheet() {
-        if (!isApproved('OpenSheet')) {
-          alert('คุณยังไม่มีสิทธิ์เปิด Google Sheet');
-          return;
-        }
+  if (!isApproved('OpenSheet')) {
+    alert('คุณยังไม่มีสิทธิ์เปิด Google Sheet');
+    return;
+  }
 
-        window.open(SHEET_URL, '_blank');
-      }
+  window.open(SHEET_URL, '_blank');
+}
       async function loadDataFromAppsScript() {
         try {
           let res = await fetch(APPS_SCRIPT_URL + '?action=all');
