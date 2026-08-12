@@ -1278,19 +1278,11 @@ let networkGroupSubFilters = [];
       }
       async function loadDataFromAppsScript() {
   try {
-    APPS_DATA_READY = false;
+    let url = getAppsScriptUrl() + '?action=all&ts=' + Date.now();
 
-    let baseUrl = getAppsScriptUrl();
+    console.log('LOAD APPS SCRIPT URL:', url);
 
-if (!baseUrl) {
-  return;
-}
-
-let url = baseUrl + '?action=clearTravel';
-
-console.log('CLEAR TRAVEL URL:', url);
-
-let res = await fetch(url);
+    let res = await fetch(url);
 
     console.log('LOAD APPS SCRIPT STATUS:', res.status);
 
@@ -1304,6 +1296,24 @@ let res = await fetch(url);
       alert('โหลดข้อมูลจาก Apps Script ไม่สำเร็จ');
       return;
     }
+
+    shiftDailyText = json.shiftText || '';
+
+    localStorage.setItem('shiftDaily', shiftDailyText);
+
+    DISTRICT_COORD = json.districtCoords || {};
+    PROVINCE_COORD_REMOTE = json.provinceCoords || {};
+    SITE_COORD = json.siteCoords || {};
+    TRAVEL_HISTORY = json.travelHistory || {};
+
+    APPS_DATA_READY = true;
+
+    render();
+  } catch (err) {
+    console.error('LOAD APPS SCRIPT ERROR:', err);
+    alert('ไม่สามารถโหลดข้อมูลจาก Apps Script ได้');
+  }
+}
 
     shiftDailyText = json.shiftText || '';
 
