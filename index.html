@@ -1278,6 +1278,8 @@ let networkGroupSubFilters = [];
       }
       async function loadDataFromAppsScript() {
   try {
+    APPS_DATA_READY = false;
+
     let url = getAppsScriptUrl() + '?action=all&ts=' + Date.now();
 
     console.log('LOAD APPS SCRIPT URL:', url);
@@ -1297,59 +1299,14 @@ let networkGroupSubFilters = [];
       return;
     }
 
-    shiftDailyText = json.shiftText || '';
-
-    localStorage.setItem('shiftDaily', shiftDailyText);
-
-    DISTRICT_COORD = json.districtCoords || {};
-    PROVINCE_COORD_REMOTE = json.provinceCoords || {};
-    SITE_COORD = json.siteCoords || {};
-    TRAVEL_HISTORY = json.travelHistory || {};
-
-    APPS_DATA_READY = true;
-
-    render();
-  } catch (err) {
-    console.error('LOAD APPS SCRIPT ERROR:', err);
-    alert('ไม่สามารถโหลดข้อมูลจาก Apps Script ได้');
-  }
-}
-
-    shiftDailyText = json.shiftText || '';
-
-    localStorage.setItem('shiftDaily', shiftDailyText);
-
-    DISTRICT_COORD = json.districtCoords || {};
-    PROVINCE_COORD_REMOTE = json.provinceCoords || {};
-    SITE_COORD = json.siteCoords || {};
-    TRAVEL_HISTORY = json.travelHistory || {};
-
-    if (SITE_COORD && Object.keys(SITE_COORD).length > 0) {
-      localStorage.setItem('siteCoordsCache', JSON.stringify(SITE_COORD));
-    }
-
-    APPS_DATA_READY = true;
-
-    console.log('APPS DATA READY:', {
-      districtCoords: Object.keys(DISTRICT_COORD || {}).length,
-      provinceCoords: Object.keys(PROVINCE_COORD_REMOTE || {}).length,
-      siteCoords: Object.keys(SITE_COORD || {}).length,
-      travelHistory: Object.keys(TRAVEL_HISTORY || {}).length
-    });
-
-    render();
-  } catch (err) {
-    console.error('LOAD APPS SCRIPT ERROR:', err);
-    alert('ไม่สามารถโหลดข้อมูลจาก Apps Script ได้');
-  }
-}
-      function normalizeEngineerName(name) {
+    
+function normalizeEngineerName(name) {
   return String(name || '')
     .trim()
     .toLowerCase()
-    .replace(/\u00a0/g, ' ')        // กัน space แปลก
-    .replace(/\s+/g, ' ')           // รวม space หลายตัว
-    .replace(/[()]/g, '')           // กันวงเล็บ
+    .replace(/\u00a0/g, ' ')
+    .replace(/\s+/g, ' ')
+    .replace(/[()]/g, '')
     .trim();
 }
 function cleanMobileNumber(v) {
