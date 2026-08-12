@@ -3903,11 +3903,12 @@ let aiMapInited = false,
 
   console.log('District Coordinate Source Jobs:', aiDistrictSourceGroups);
 
-  alert(
-    `พบ Source: District Coordinate ${aiDistrictSourceGroups.length} จุด / ${totalJobs} งาน\n\n` +
-    lines.slice(0, 40).join('\n') +
+  w.showAIOperationsNotice(
+  `พบ Source: District Coordinate ${aiDistrictSourceGroups.length} จุด / ${totalJobs} งาน`,
+  lines.slice(0, 40).join('\n') +
     (lines.length > 40 ? '\n\nดูรายละเอียดทั้งหมดใน Console' : '')
-  );
+);
+
 
   let bounds = [];
 
