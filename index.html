@@ -5664,14 +5664,24 @@ function findSiteCoordFromTitle(title) {
 }
 
 async function getJobCoord(job) {
-  if (String(title).includes('3702_087')) {
-  debugFindSite(title, '3702_087');
-}
+  let title = job['Job Title'] || '';
 
   let gps = extractGPS(title);
 
-  let province = job['Province Name'] || '';
+  // ✅ 1. ถ้า Title มี GPS ใช้ GPS ก่อน
+  if (gps) {
+    return [gps.lat, gps.lng];
+  }
 
+  // ✅ 2. ถ้าไม่มี GPS ให้หา Site จาก OLT / ME / MME Sheet
+  let siteCoord = findSiteCoordFromTitle(title);
+
+  if (siteCoord) {
+    return [siteCoord.lat, siteCoord.lng];
+  }
+
+  // ✅ 3. สุดท้ายค่อย fallback ไปอำเภอ
+  let province = job['Province Name'] || '';
   let district = job['District Name'] || '';
 
   let areaCoord = getAreaCoord(province, district);
@@ -5680,26 +5690,12 @@ async function getJobCoord(job) {
     areaCoord = await geocodeArea(province, district);
   }
 
-  // ✅ 1. ถ้า Title มี GPS ให้ใช้ GPS ก่อนเสมอ
-  if (gps) {
-    return [gps.lat, gps.lng];
-  }
-
-  // ✅ 2. ถ้า Title ไม่มี GPS ให้หา OLT / ME / MME จาก Google Sheet
-  let siteCoord = findSiteCoordFromTitle(title);
-
-  if (siteCoord) {
-    return [siteCoord.lat, siteCoord.lng];
-  }
-
-  // ✅ 3. fallback ใช้พิกัดอำเภอ
   if (areaCoord) {
     return areaCoord;
   }
 
   return null;
 }
-
 
         function getLatestOnsiteJob() {
           let selected = (w.selectedEngineer || '').toLowerCase().trim();
