@@ -1287,92 +1287,8 @@ const SHEET_URL =
 
   window.open(SHEET_URL, '_blank');
 }
-async function loadSiteCoordsFromAppsScript() {
-  try {
-    let baseUrl = getAppsScriptUrl();
 
-    if (!baseUrl) {
-      return false;
-    }
 
-    let url = baseUrl + '?action=siteCoords&ts=' + Date.now();
-
-    console.log('LOAD SITE COORDS URL:', url);
-
-    let res = await fetch(url);
-
-    console.log('LOAD SITE COORDS STATUS:', res.status);
-
-    let text = await res.text();
-
-    console.log('LOAD SITE COORDS RESPONSE:', text.slice(0, 500));
-
-    if (!text.trim().startsWith('{')) {
-      console.error('siteCoords response is not JSON');
-      return false;
-    }
-
-    let json = JSON.parse(text);
-
-    if (!json.ok) {
-      console.error('siteCoords not ok:', json);
-      return false;
-    }
-
-    SITE_COORD = json.siteCoords || {};
-
-    if (SITE_COORD && Object.keys(SITE_COORD).length > 0) {
-      localStorage.setItem('siteCoordsCache', JSON.stringify(SITE_COORD));
-    }
-
-    buildSiteCoordIndex();
-
-    console.log('SITE_COORD LOADED:', {
-      siteCoordCount: Object.keys(SITE_COORD || {}).length,
-      siteIndexCount: Object.keys(SITE_COORD_INDEX || {}).length,
-      test3702087: SITE_COORD_INDEX[normalizeSiteCodeKey('3702_087')]
-    });
-
-    return true;
-  } catch (err) {
-    console.error('LOAD SITE COORDS ERROR:', err);
-    return false;
-  }
-}
-async function ensureAppsDataReady() {
-if (appsDataPromise) {
-await appsDataPromise;
-} else {
-appsDataPromise = loadDataFromAppsScript();
-await appsDataPromise;
-}
-// ถ้า SITE_COORD ยังว่าง ให้โหลดแยก
-if (!SITE_COORD || Object.keys(SITE_COORD).length === 0) {
-console.warn('SITE_COORD ว่าง กำลังโหลด action=siteCoords แยก');
-let ok = await loadSiteCoordsFromAppsScript();
-if (!ok) {
-let cached = localStorage.getItem('siteCoordsCache');
-if (cached) {
-try {
-SITE_COORD = JSON.parse(cached) || {};
-buildSiteCoordIndex();
-console.warn('ใช้ SITE_COORD จาก cache');
-} catch (e) {
-console.warn('siteCoordsCache parse failed:', e);
-}
-}
-}
-}
-if (!SITE_COORD_INDEX || Object.keys(SITE_COORD_INDEX).length === 0) {
-buildSiteCoordIndex();
-}
-APPS_DATA_READY = true;
-console.log('ENSURE APPS DATA READY:', {
-siteCoordCount: Object.keys(SITE_COORD || {}).length,
-siteIndexCount: Object.keys(SITE_COORD_INDEX || {}).length
-});
-return true;
-}
 
 async function loadDataFromAppsScript() {
   try {
@@ -1479,6 +1395,143 @@ async function loadDataFromAppsScript() {
 
     render();
   }
+}
+async function loadSiteCoordsFromAppsScript() {
+  try {
+    let baseUrl = getAppsScriptUrl();
+
+    if (!baseUrl) {
+      return false;
+    }
+
+    let url = baseUrl + '?action=siteCoords&ts=' + Date.now();
+
+    console.log('LOAD SITE COORDS URL:', url);
+
+    let res = await fetch(url);
+
+    console.log('LOAD SITE COORDS STATUS:', res.status);
+
+    let text = await res.text();
+
+    console.log('LOAD SITE COORDS RESPONSE:', text.slice(0, 500));
+
+    if (!text.trim().startsWith('{')) {
+      console.error('siteCoords response is not JSON');
+      return false;
+    }
+
+    let json = JSON.parse(text);
+
+    if (!json.ok) {
+      console.error('siteCoords not ok:', json);
+      return false;
+    }
+
+    SITE_COORD = json.siteCoords || {};
+
+    if (SITE_COORD && Object.keys(SITE_COORD).length > 0) {
+      localStorage.setItem('siteCoordsCache', JSON.stringify(SITE_COORD));
+    }
+
+    buildSiteCoordIndex();
+
+    console.log('SITE_COORD LOADED:', {
+      siteCoordCount: Object.keys(SITE_COORD || {}).length,
+      siteIndexCount: Object.keys(SITE_COORD_INDEX || {}).length,
+      test3702087: SITE_COORD_INDEX[normalizeSiteCodeKey('3702_087')]
+    });
+
+    return true;
+  } catch (err) {
+    console.error('LOAD SITE COORDS ERROR:', err);
+    return false;
+  }
+}
+function normalizeSiteCodeKey(v) {
+  let parts =
+    String(v || '')
+      .toUpperCase()
+      .match(/[A-Z]*\d+[A-Z]*|[A-Z]+/g) || [];
+
+  parts = parts
+    .map((p) => {
+      if (/^\d+$/.test(p)) {
+        return String(Number(p));
+      }
+
+      if (/^0+\d+[A-Z]+$/.test(p)) {
+        return p.replace(/^0+(?=\d)/, '');
+      }
+
+      return p;
+    })
+    .filter(Boolean);
+
+  return parts.join('|');
+}
+function buildSiteCoordIndex() {
+  SITE_COORD_INDEX = {};
+
+  Object.keys(SITE_COORD || {}).forEach((key) => {
+    let item = SITE_COORD[key];
+
+    if (
+      !item ||
+      isNaN(Number(item.lat)) ||
+      isNaN(Number(item.lng))
+    ) {
+      return;
+    }
+
+    let norm = normalizeSiteCodeKey(key);
+
+    if (!norm) return;
+
+    SITE_COORD_INDEX[norm] = {
+      key: key,
+      lat: Number(item.lat),
+      lng: Number(item.lng),
+      type: item.type || '',
+      address: item.address || ''
+    };
+  });
+
+  console.log('SITE_COORD_INDEX READY:', Object.keys(SITE_COORD_INDEX).length);
+}
+async function ensureAppsDataReady() {
+if (appsDataPromise) {
+await appsDataPromise;
+} else {
+appsDataPromise = loadDataFromAppsScript();
+await appsDataPromise;
+}
+// ถ้า SITE_COORD ยังว่าง ให้โหลดแยก
+if (!SITE_COORD || Object.keys(SITE_COORD).length === 0) {
+console.warn('SITE_COORD ว่าง กำลังโหลด action=siteCoords แยก');
+let ok = await loadSiteCoordsFromAppsScript();
+if (!ok) {
+let cached = localStorage.getItem('siteCoordsCache');
+if (cached) {
+try {
+SITE_COORD = JSON.parse(cached) || {};
+buildSiteCoordIndex();
+console.warn('ใช้ SITE_COORD จาก cache');
+} catch (e) {
+console.warn('siteCoordsCache parse failed:', e);
+}
+}
+}
+}
+if (!SITE_COORD_INDEX || Object.keys(SITE_COORD_INDEX).length === 0) {
+buildSiteCoordIndex();
+}
+APPS_DATA_READY = true;
+console.log('ENSURE APPS DATA READY:', {
+siteCoordCount: Object.keys(SITE_COORD || {}).length,
+siteIndexCount: Object.keys(SITE_COORD_INDEX || {}).length
+});
+return true;
 }
       function normalizeEngineerName(name) {
   return String(name || '')
@@ -5102,58 +5155,9 @@ w.focusDepartedEngineer = async function (name) {
     }
   }, 350);
 };
-function normalizeSiteCodeKey(v) {
-  let parts =
-    String(v || '')
-      .toUpperCase()
-      .match(/[A-Z]*\d+[A-Z]*|[A-Z]+/g) || [];
 
-  parts = parts
-    .map((p) => {
-      if (/^\d+$/.test(p)) {
-        return String(Number(p));
-      }
 
-      if (/^0+\d+[A-Z]+$/.test(p)) {
-        return p.replace(/^0+(?=\d)/, '');
-      }
 
-      return p;
-    })
-    .filter(Boolean);
-
-  return parts.join('|');
-}
-
-function buildSiteCoordIndex() {
-  SITE_COORD_INDEX = {};
-
-  Object.keys(SITE_COORD || {}).forEach((key) => {
-    let item = SITE_COORD[key];
-
-    if (
-      !item ||
-      isNaN(Number(item.lat)) ||
-      isNaN(Number(item.lng))
-    ) {
-      return;
-    }
-
-    let norm = normalizeSiteCodeKey(key);
-
-    if (!norm) return;
-
-    SITE_COORD_INDEX[norm] = {
-      key: key,
-      lat: Number(item.lat),
-      lng: Number(item.lng),
-      type: item.type || '',
-      address: item.address || ''
-    };
-  });
-
-  console.log('SITE_COORD_INDEX READY:', Object.keys(SITE_COORD_INDEX).length);
-}
 function normalizeSiteSearchText(v) {
   let tokens =
     String(v || '')
