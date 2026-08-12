@@ -1319,13 +1319,14 @@ async function loadDataFromAppsScript() {
       let cachedSite = localStorage.getItem('siteCoordsCache');
 
       if (cachedSite) {
-        try {
-          SITE_COORD = JSON.parse(cachedSite) || {};
-          console.warn('Apps Script failed, ใช้ SITE_COORD จาก cache');
-        } catch (e) {
-          console.warn('siteCoordsCache parse failed:', e);
-        }
-      }
+  try {
+    SITE_COORD = JSON.parse(cachedSite) || {};
+    buildSiteCoordIndex();
+    console.warn('Apps Script failed, ใช้ SITE_COORD จาก cache');
+  } catch (e) {
+    console.warn('siteCoordsCache parse failed:', e);
+  }
+}
 
       APPS_DATA_READY = true;
 
@@ -1337,9 +1338,11 @@ async function loadDataFromAppsScript() {
     let json = JSON.parse(text);
 
     if (!json.ok) {
-      alert('โหลดข้อมูลจาก Apps Script ไม่สำเร็จ: ' + (json.message || 'unknown error'));
-      return;
-    }
+  alert('โหลดข้อมูลจาก Apps Script ไม่สำเร็จ: ' + (json.message || 'unknown error'));
+  APPS_DATA_READY = true;
+  render();
+  return;
+}
 
     shiftDailyText = json.shiftText || '';
 
@@ -1383,13 +1386,14 @@ async function loadDataFromAppsScript() {
     let cached = localStorage.getItem('siteCoordsCache');
 
     if (cached) {
-      try {
-        SITE_COORD = JSON.parse(cached) || {};
-        console.warn('Apps Script failed, ใช้ SITE_COORD จาก cache');
-      } catch (e) {
-        console.warn('siteCoordsCache parse failed:', e);
-      }
-    }
+  try {
+    SITE_COORD = JSON.parse(cached) || {};
+    buildSiteCoordIndex();
+    console.warn('Apps Script failed, ใช้ SITE_COORD จาก cache');
+  } catch (e) {
+    console.warn('siteCoordsCache parse failed:', e);
+  }
+}
 
     APPS_DATA_READY = true;
 
