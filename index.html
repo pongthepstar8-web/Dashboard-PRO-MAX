@@ -2211,34 +2211,12 @@ render();
 
         return '#64748b'; // เทา
       }
-      async function ensureAppsDataReady() {
-  if (APPS_DATA_READY) {
-    return true;
-  }
-
-  if (appsDataPromise) {
-    await appsDataPromise;
-  } else {
-    appsDataPromise = loadDataFromAppsScript();
-    await appsDataPromise;
-  }
-
-  // ✅ ถ้า siteCoords ยังว่าง ลองโหลดซ้ำอีก 1 รอบ
-  if (!SITE_COORD || Object.keys(SITE_COORD).length === 0) {
-    console.warn('SITE_COORD ว่าง ลองโหลด Apps Script ซ้ำอีกครั้ง');
-
-    appsDataPromise = loadDataFromAppsScript();
-    await appsDataPromise;
-  }
-
-  return true;
-}
-async function showAIBoard() {
+      
+      function showAIBoard() {
         if (!isApproved('AIActionBoard')) {
           alert('คุณยังไม่มีสิทธิ์ใช้งาน AI Action Board');
           return;
         }
-        
         let prov = $('#provinceFilter').val();
         let jobs = [];
         data.forEach((r) => {
