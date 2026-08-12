@@ -1167,27 +1167,8 @@ let networkGroupSubFilters = [];
       let TRAVEL_HISTORY = {};
 
       let shiftDailyText = '';
-      
       const APPS_SCRIPT_URL =
-  'https://script.google.com/macros/s/AKfycbyKED88K86X4eu2ycnl1ib0VY74iheDAWInvrRrQU7zarDu2fB_zNKTaW_TN6DGvAkxzw/exec';
-
-function getAppsScriptUrl() {
-  let url = String(APPS_SCRIPT_URL || '').trim();
-
-  if (url.includes('script.googleusercontent.com')) {
-    console.error('APPS_SCRIPT_URL ผิด ห้ามใช้ googleusercontent:', url);
-    alert('APPS_SCRIPT_URL ผิด: ห้ามใช้ script.googleusercontent.com ให้ใช้ URL /exec เท่านั้น');
-    return '';
-  }
-
-  if (!url.includes('script.google.com/macros/s/') || !url.endsWith('/exec')) {
-    console.error('APPS_SCRIPT_URL ต้องเป็น Apps Script Web App URL ที่ลงท้ายด้วย /exec:', url);
-    alert('APPS_SCRIPT_URL ต้องเป็นลิงก์ Apps Script Web App ที่ลงท้ายด้วย /exec');
-    return '';
-  }
-
-  return url;
-}
+        'https://script.google.com/macros/s/AKfycbyKED88K86X4eu2ycnl1ib0VY74iheDAWInvrRrQU7zarDu2fB_zNKTaW_TN6DGvAkxzw/exec';
 
       const SHEET_URL =
         'https://docs.google.com/spreadsheets/d/1XSR52b9wrzsBDys3PZUQTCYexOOZFa6J-bz-jR-6jaM/edit?gid=365350498#gid=365350498';
@@ -1279,92 +1260,38 @@ function getAppsScriptUrl() {
         window.open(SHEET_URL, '_blank');
       }
       async function loadDataFromAppsScript() {
-  try {
-    APPS_DATA_READY = false;
-
-    let url = getAppsScriptUrl() + '?action=all&ts=' + Date.now();
-
-    console.log('LOAD APPS SCRIPT URL:', url);
-
-    let res = await fetch(url);
-
-    console.log('LOAD APPS SCRIPT STATUS:', res.status);
-
-    let text = await res.text();
-
-    console.log('LOAD APPS SCRIPT RESPONSE:', text);
-
-    // ✅ กันกรณี response เป็น HTML เช่น Google Drive error page
-    if (!text.trim().startsWith('{')) {
-      console.error('Apps Script response is not JSON. URL may be wrong:', url);
-      throw new Error('Apps Script response is not JSON');
-    }
-
-    let json = JSON.parse(text);
-
-    if (!json.ok) {
-      alert('โหลดข้อมูลจาก Apps Script ไม่สำเร็จ');
-      return;
-    }
-
-    shiftDailyText = json.shiftText || '';
-
-    localStorage.setItem('shiftDaily', shiftDailyText);
-
-    DISTRICT_COORD = json.districtCoords || {};
-    PROVINCE_COORD_REMOTE = json.provinceCoords || {};
-    SITE_COORD = json.siteCoords || {};
-    TRAVEL_HISTORY = json.travelHistory || {};
-
-    if (SITE_COORD && Object.keys(SITE_COORD).length > 0) {
-      localStorage.setItem('siteCoordsCache', JSON.stringify(SITE_COORD));
-    } else {
-      let cached = localStorage.getItem('siteCoordsCache');
-
-      if (cached) {
         try {
-          SITE_COORD = JSON.parse(cached) || {};
-          console.warn('ใช้ SITE_COORD จาก cache เพราะ Apps Script ส่งว่าง');
-        } catch (e) {
-          console.warn('siteCoordsCache parse failed:', e);
+          let res = await fetch(APPS_SCRIPT_URL + '?action=all');
+
+          let json = await res.json();
+
+          if (!json.ok) {
+            alert('โหลดข้อมูลจาก Apps Script ไม่สำเร็จ');
+            return;
+          }
+
+          shiftDailyText = json.shiftText || '';
+
+          localStorage.setItem('shiftDaily', shiftDailyText);
+
+          DISTRICT_COORD = json.districtCoords || {};
+          PROVINCE_COORD_REMOTE = json.provinceCoords || {};
+          SITE_COORD = json.siteCoords || {};
+          TRAVEL_HISTORY = json.travelHistory || {};
+
+          render();
+        } catch (err) {
+          console.error(err);
+          alert('ไม่สามารถโหลดข้อมูลจาก Apps Script ได้');
         }
       }
-    }
-
-    APPS_DATA_READY = true;
-
-    console.log('APPS DATA READY:', {
-      districtCoords: Object.keys(DISTRICT_COORD || {}).length,
-      provinceCoords: Object.keys(PROVINCE_COORD_REMOTE || {}).length,
-      siteCoords: Object.keys(SITE_COORD || {}).length,
-      travelHistory: Object.keys(TRAVEL_HISTORY || {}).length
-    });
-
-    render();
-  } catch (err) {
-    console.error('LOAD APPS SCRIPT ERROR:', err);
-
-    let cached = localStorage.getItem('siteCoordsCache');
-
-    if (cached) {
-      try {
-        SITE_COORD = JSON.parse(cached) || {};
-        console.warn('Apps Script failed, ใช้ SITE_COORD จาก cache');
-      } catch (e) {
-        console.warn('siteCoordsCache parse failed:', e);
-      }
-    }
-
-    alert('ไม่สามารถโหลดข้อมูลจาก Apps Script ได้');
-  }
-}
-function normalizeEngineerName(name) {
+      function normalizeEngineerName(name) {
   return String(name || '')
     .trim()
     .toLowerCase()
-    .replace(/\u00a0/g, ' ')
-    .replace(/\s+/g, ' ')
-    .replace(/[()]/g, '')
+    .replace(/\u00a0/g, ' ')        // กัน space แปลก
+    .replace(/\s+/g, ' ')           // รวม space หลายตัว
+    .replace(/[()]/g, '')           // กันวงเล็บ
     .trim();
 }
 function cleanMobileNumber(v) {
@@ -4714,22 +4641,14 @@ if (!groups[key]) {
           }
 
           let groupList = Object.values(groups);
-
-aiDistrictSourceGroups = groupList.filter((g) => {
+          aiDistrictSourceGroups = groupList.filter((g) => {
   return g.source === 'AREA_COORD';
 });
 
-console.log('AI MAP SOURCE SUMMARY:', {
-  gps: groupList.filter((g) => g.source === 'GPS_TITLE').length,
-  site: groupList.filter((g) => g.source === 'SITE_SHEET').length,
-  district: aiDistrictSourceGroups.length,
-  total: groupList.length,
-  siteCoordCount: Object.keys(SITE_COORD || {}).length
-});
-
 updateDistrictSourceButton();
+          
 
-let buckets = {};
+          let buckets = {};
 
           groupList.forEach((group) => {
             let key = group.lat.toFixed(5) + '|' + group.lng.toFixed(5);
@@ -5939,16 +5858,25 @@ w.clearTravelLogAdmin = async function () {
   if (!ok) return;
 
   try {
-    let res = await fetch(APPS_SCRIPT_URL + '?action=clearTravel');
-    let json = await res.json();
+    let url = APPS_SCRIPT_URL + '?action=clearTravel';
+
+    console.log('CLEAR TRAVEL URL:', url);
+
+    let res = await fetch(url);
+    let text = await res.text();
+
+    console.log('CLEAR TRAVEL RESPONSE TEXT:', text);
+
+    let json = JSON.parse(text);
+
+    console.log('CLEAR TRAVEL RESPONSE JSON:', json);
 
     if (!json.ok) {
-      alert('ล้าง Travel Log ไม่สำเร็จ');
+      alert('ล้าง Travel Log ไม่สำเร็จ: ' + (json.message || 'unknown error'));
       return;
     }
 
     TRAVEL_HISTORY = {};
-
     localStorage.removeItem('aiLastOnsiteByEngineer');
 
     clearEngineerTravel();
@@ -5968,10 +5896,14 @@ w.clearTravelLogAdmin = async function () {
     buildOnsiteEngineerSelect();
     buildDepartedEngineerSelect();
 
-    alert('ล้าง Travel Log เรียบร้อยแล้ว');
+    alert(
+      'ล้าง Travel Log เรียบร้อยแล้ว\n\n' +
+      'Sheet: ' + (json.sheetName || '-') + '\n' +
+      'Rows ก่อนล้าง: ' + (json.lastRowBeforeClear || '-')
+    );
   } catch (err) {
-    console.error(err);
-    alert('เกิดข้อผิดพลาดขณะล้าง Travel Log');
+    console.error('CLEAR TRAVEL ERROR:', err);
+    alert('เกิดข้อผิดพลาดขณะล้าง Travel Log ดูรายละเอียดใน Console');
   }
 };
         w.toggleMapToolsMenu = function () {
