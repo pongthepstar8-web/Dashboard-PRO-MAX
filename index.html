@@ -4463,8 +4463,12 @@ let savedOnsiteKeys = new Set();
 function saveOnsiteToAppsScript(item) {
   if (!item || !item.assign || !item.jobId) return;
 
-  let key = String(item.assign || '').toLowerCase().trim() + '|' + String(item.jobId || '').trim();
+  let key =
+    String(item.assign || '').toLowerCase().trim() +
+    '|' +
+    String(item.jobId || '').trim();
 
+  // ✅ กันยิงซ้ำหลายรอบใน map เดียวกัน
   if (savedOnsiteKeys.has(key)) {
     return;
   }
@@ -4478,26 +4482,33 @@ function saveOnsiteToAppsScript(item) {
   let url =
     baseUrl +
     '?action=saveOnsite' +
-    '&assign=' + encodeURIComponent(item.assign) +
-    '&jobId=' + encodeURIComponent(item.jobId) +
+    '&assign=' + encodeURIComponent(item.assign || '') +
+    '&jobId=' + encodeURIComponent(item.jobId || '') +
     '&title=' + encodeURIComponent(item.title || '') +
     '&province=' + encodeURIComponent(item.province || '') +
     '&district=' + encodeURIComponent(item.district || '') +
-    '&lat=' + encodeURIComponent(item.lat) +
-    '&lng=' + encodeURIComponent(item.lng) +
+    '&lat=' + encodeURIComponent(item.lat || '') +
+    '&lng=' + encodeURIComponent(item.lng || '') +
     '&status=' + encodeURIComponent(item.status || '') +
-    '&createTime=' + encodeURIComponent(item.createTime || '');
+    '&createTime=' + encodeURIComponent(item.createTime || '') +
+    '&ts=' + Date.now();
 
-  console.log('SAVE ONSITE URL:', url);
+  console.log('SAVE ONSITE BEACON URL:', url);
 
-  fetch(url)
-    .then((res) => res.text())
-    .then((text) => {
-      console.log('SAVE ONSITE RESPONSE:', text);
-    })
-    .catch((err) => {
-      console.warn('Save onsite history failed:', err);
-    });
+  // ✅ ใช้ Image beacon แทน fetch เพื่อเลี่ยง CORS
+  let img = new Image();
+
+  img.onload = function () {
+    console.log('SAVE ONSITE BEACON SENT:', item.assign, item.jobId);
+  };
+
+  img.onerror = function () {
+    // บางครั้ง Apps Script ไม่ได้คืน image จริง จึงอาจเข้า error
+    // แต่ request ถูกส่งไปแล้ว ไม่ต้องถือว่า fail เสมอ
+    console.warn('SAVE ONSITE BEACON FINISHED/NO IMAGE:', item.assign, item.jobId);
+  };
+
+  img.src = url;
 }
 function isOnsiteStatus(status) {
   let s = String(status || '').toLowerCase();
