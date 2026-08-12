@@ -4005,6 +4005,113 @@ let aiMapInited = false,
   'Route Simulator ON',
   'เลือกต้นทางจากหมุด Job หรือคลิกบนแผนที่\nจากนั้นเลือกปลายทางจากหมุด Job หรือคลิกบนแผนที่'
 );
+w.showAIOperationsConfirm = function (title, message) {
+  return new Promise((resolve) => {
+    let old = w.document.getElementById('aiOperationsConfirm');
+
+    if (old) {
+      old.remove();
+    }
+
+    let box = w.document.createElement('div');
+
+    box.id = 'aiOperationsConfirm';
+
+    box.innerHTML = `
+      <div style="
+        position:fixed;
+        inset:0;
+        background:rgba(2,6,23,.68);
+        z-index:999999;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        font-family:Arial;
+      ">
+        <div style="
+          width:min(560px,92vw);
+          background:#020617;
+          color:#e5e7eb;
+          border:1px solid #334155;
+          border-radius:18px;
+          box-shadow:0 20px 60px rgba(0,0,0,.6);
+          padding:22px;
+        ">
+          <div style="
+            font-size:20px;
+            font-weight:900;
+            margin-bottom:12px;
+            color:#a78bfa;
+          ">
+            🧠 AI OPERATIONS BOARD
+          </div>
+
+          <div style="
+            font-size:17px;
+            font-weight:900;
+            color:#ffffff;
+            margin-bottom:14px;
+          ">
+            ${title}
+          </div>
+
+          <div style="
+            white-space:pre-line;
+            line-height:1.65;
+            font-size:15px;
+            color:#dbeafe;
+            margin-bottom:22px;
+          ">
+            ${message}
+          </div>
+
+          <div style="
+            display:flex;
+            justify-content:flex-end;
+            gap:10px;
+          ">
+            <button id="aiConfirmCancelBtn" style="
+              background:#334155;
+              color:white;
+              border:none;
+              border-radius:12px;
+              padding:9px 18px;
+              font-weight:800;
+              cursor:pointer;
+            ">
+              Cancel
+            </button>
+
+            <button id="aiConfirmOkBtn" style="
+              background:#dc2626;
+              color:white;
+              border:none;
+              border-radius:12px;
+              padding:9px 18px;
+              font-weight:900;
+              cursor:pointer;
+            ">
+              OK
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    w.document.body.appendChild(box);
+
+    w.document.getElementById('aiConfirmOkBtn').onclick = function () {
+      box.remove();
+      resolve(true);
+    };
+
+    w.document.getElementById('aiConfirmCancelBtn').onclick = function () {
+      box.remove();
+      resolve(false);
+    };
+  });
+};
+
   } else {
     if (btn) {
       btn.innerHTML = '🧭 Route Simulator OFF';
@@ -6338,11 +6445,12 @@ w.clearTravelLogAdmin = async function () {
     return;
   }
 
-  let ok = confirm(
-    'ยืนยันล้าง ENGINEER_TRAVEL_LOG?\n\nระบบจะลบประวัติ Travel ทั้งหมด แต่จะไม่ลบหัวตาราง'
-  );
+  let ok = await w.showAIOperationsConfirm(
+  'ยืนยันล้าง ENGINEER_TRAVEL_LOG?',
+  'ระบบจะลบประวัติ Travel ทั้งหมด แต่จะไม่ลบหัวตาราง'
+);
 
-  if (!ok) return;
+if (!ok) return;
 
   try {
     let url = APPS_SCRIPT_URL + '?action=clearTravel';
