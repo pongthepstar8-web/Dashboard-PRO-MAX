@@ -1165,6 +1165,7 @@ let networkGroupSubFilters = [];
       let PROVINCE_COORD_REMOTE = {};
       let SITE_COORD = {};
       let TRAVEL_HISTORY = {};
+      let SITE_COORD_INDEX = {};
 
       let shiftDailyText = '';
       const APPS_SCRIPT_URL =
@@ -1342,6 +1343,7 @@ async function loadDataFromAppsScript() {
     DISTRICT_COORD = json.districtCoords || {};
     PROVINCE_COORD_REMOTE = json.provinceCoords || {};
     SITE_COORD = json.siteCoords || {};
+    buildSiteCoordIndex();
     TRAVEL_HISTORY = json.travelHistory || {};
 
     if (SITE_COORD && Object.keys(SITE_COORD).length > 0) {
@@ -1352,6 +1354,7 @@ async function loadDataFromAppsScript() {
       if (cached) {
         try {
           SITE_COORD = JSON.parse(cached) || {};
+          buildSiteCoordIndex();
           console.warn('ใช้ SITE_COORD จาก cache เพราะ Apps Script ส่งว่าง');
         } catch (e) {
           console.warn('siteCoordsCache parse failed:', e);
@@ -5005,6 +5008,58 @@ w.focusDepartedEngineer = async function (name) {
     }
   }, 350);
 };
+function normalizeSiteCodeKey(v) {
+  let parts =
+    String(v || '')
+      .toUpperCase()
+      .match(/[A-Z]*\d+[A-Z]*|[A-Z]+/g) || [];
+
+  parts = parts
+    .map((p) => {
+      if (/^\d+$/.test(p)) {
+        return String(Number(p));
+      }
+
+      if (/^0+\d+[A-Z]+$/.test(p)) {
+        return p.replace(/^0+(?=\d)/, '');
+      }
+
+      return p;
+    })
+    .filter(Boolean);
+
+  return parts.join('|');
+}
+
+function buildSiteCoordIndex() {
+  SITE_COORD_INDEX = {};
+
+  Object.keys(SITE_COORD || {}).forEach((key) => {
+    let item = SITE_COORD[key];
+
+    if (
+      !item ||
+      isNaN(Number(item.lat)) ||
+      isNaN(Number(item.lng))
+    ) {
+      return;
+    }
+
+    let norm = normalizeSiteCodeKey(key);
+
+    if (!norm) return;
+
+    SITE_COORD_INDEX[norm] = {
+      key: key,
+      lat: Number(item.lat),
+      lng: Number(item.lng),
+      type: item.type || '',
+      address: item.address || ''
+    };
+  });
+
+  console.log('SITE_COORD_INDEX READY:', Object.keys(SITE_COORD_INDEX).length);
+}
 function normalizeSiteSearchText(v) {
   let tokens =
     String(v || '')
@@ -5599,36 +5654,75 @@ function findSiteCoordFromTitle(title) {
     return null;
   }
 
+  let text = String(title || '').toUpperCase();
+
+  let candidates = [];
+
+  // ✅ จับ site code แบบ 3702_087 / 3702-087 / 3702_87 / 3702-87
+  let re = /\b\d{4}[_-]\d{2,3}\b/g;
+  let m;
+
+  while ((m = re.exec(text)) !== null) {
+    candidates.push({
+      raw: m[0],
+      pos: m.index,
+      norm: normalizeSiteCodeKey(m[0])
+    });
+  }
+
+  // ✅ จับกรณีอยู่ในชื่อ NE เช่น NE_WCO_3702_087_...
+  let re2 = /(?:NE|ME|OLT|OX|AN|HCU|WCO|WAC)?[_-]*[A-Z]*[_-]*(\d{4}[_-]\d{2,3})/g;
+
+  while ((m = re2.exec(text)) !== null) {
+    candidates.push({
+      raw: m[1],
+      pos: m.index,
+      norm: normalizeSiteCodeKey(m[1])
+    });
+  }
+
+  // เรียงตามตำแหน่งที่เจอใน Title
+  candidates.sort((a, b) => a.pos - b.pos);
+
+  for (const c of candidates) {
+    let item = SITE_COORD_INDEX[c.norm];
+
+    if (item) {
+      return {
+        key: item.key,
+        lat: item.lat,
+        lng: item.lng,
+        type: item.type || '',
+        address: item.address || ''
+      };
+    }
+  }
+
+  // fallback แบบ scan ทุก key เผื่อ code รูปแบบพิเศษ
   const titleNorm = normalizeSiteSearchText(title);
 
   let bestMatch = null;
 
-  const keys = Object.keys(SITE_COORD || {}).filter(Boolean);
+  Object.keys(SITE_COORD || {}).forEach((key) => {
+    let keyNorm = normalizeSiteSearchText(key);
 
-  for (const key of keys) {
-    const keyNorm = normalizeSiteSearchText(key);
+    if (!keyNorm || keyNorm === '||') return;
 
-    if (!keyNorm || keyNorm === '||') {
-      continue;
-    }
+    let pos = titleNorm.indexOf(keyNorm);
 
-    const pos = titleNorm.indexOf(keyNorm);
+    if (pos === -1) return;
 
-    if (pos === -1) {
-      continue;
-    }
-
-    const item = SITE_COORD[key];
+    let item = SITE_COORD[key];
 
     if (
       !item ||
       isNaN(Number(item.lat)) ||
       isNaN(Number(item.lng))
     ) {
-      continue;
+      return;
     }
 
-    const candidate = {
+    let candidate = {
       key: key,
       lat: Number(item.lat),
       lng: Number(item.lng),
@@ -5648,7 +5742,7 @@ function findSiteCoordFromTitle(title) {
     ) {
       bestMatch = candidate;
     }
-  }
+  });
 
   if (!bestMatch) {
     return null;
@@ -5665,22 +5759,27 @@ function findSiteCoordFromTitle(title) {
 
 async function getJobCoord(job) {
   let title = job['Job Title'] || '';
-
+  if (String(title).includes('3702_087')) {
+  console.log('CHECK 3702_087:', {
+    title: title,
+    siteCoordCount: Object.keys(SITE_COORD || {}).length,
+    siteIndexCount: Object.keys(SITE_COORD_INDEX || {}).length,
+    directIndex: SITE_COORD_INDEX[normalizeSiteCodeKey('3702_087')],
+    found: findSiteCoordFromTitle(title)
+  });
+}
   let gps = extractGPS(title);
 
-  // ✅ 1. ถ้า Title มี GPS ใช้ GPS ก่อน
   if (gps) {
     return [gps.lat, gps.lng];
   }
 
-  // ✅ 2. ถ้าไม่มี GPS ให้หา Site จาก OLT / ME / MME Sheet
   let siteCoord = findSiteCoordFromTitle(title);
 
   if (siteCoord) {
     return [siteCoord.lat, siteCoord.lng];
   }
 
-  // ✅ 3. สุดท้ายค่อย fallback ไปอำเภอ
   let province = job['Province Name'] || '';
   let district = job['District Name'] || '';
 
