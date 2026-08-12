@@ -1290,7 +1290,9 @@ async function loadDataFromAppsScript() {
 
     let baseUrl = getAppsScriptUrl();
 
-    if (!baseUrl) return;
+    if (!baseUrl) {
+      return;
+    }
 
     let url = baseUrl + '?action=all&ts=' + Date.now();
 
@@ -1304,15 +1306,32 @@ async function loadDataFromAppsScript() {
 
     console.log('LOAD APPS SCRIPT RESPONSE:', text);
 
+    // ✅ ถ้า Apps Script ตอบ HTML / Drive error / 404 ไม่ใช่ JSON
     if (!text.trim().startsWith('{')) {
       console.error('Apps Script response is not JSON. URL may be wrong:', url);
-      throw new Error('Apps Script response is not JSON');
+
+      let cachedSite = localStorage.getItem('siteCoordsCache');
+
+      if (cachedSite) {
+        try {
+          SITE_COORD = JSON.parse(cachedSite) || {};
+          console.warn('Apps Script failed, ใช้ SITE_COORD จาก cache');
+        } catch (e) {
+          console.warn('siteCoordsCache parse failed:', e);
+        }
+      }
+
+      APPS_DATA_READY = true;
+
+      render();
+
+      return;
     }
 
     let json = JSON.parse(text);
 
     if (!json.ok) {
-      alert('โหลดข้อมูลจาก Apps Script ไม่สำเร็จ');
+      alert('โหลดข้อมูลจาก Apps Script ไม่สำเร็จ: ' + (json.message || 'unknown error'));
       return;
     }
 
@@ -1327,9 +1346,27 @@ async function loadDataFromAppsScript() {
 
     if (SITE_COORD && Object.keys(SITE_COORD).length > 0) {
       localStorage.setItem('siteCoordsCache', JSON.stringify(SITE_COORD));
+    } else {
+      let cached = localStorage.getItem('siteCoordsCache');
+
+      if (cached) {
+        try {
+          SITE_COORD = JSON.parse(cached) || {};
+          console.warn('ใช้ SITE_COORD จาก cache เพราะ Apps Script ส่งว่าง');
+        } catch (e) {
+          console.warn('siteCoordsCache parse failed:', e);
+        }
+      }
     }
 
     APPS_DATA_READY = true;
+
+    console.log('APPS DATA READY:', {
+      districtCoords: Object.keys(DISTRICT_COORD || {}).length,
+      provinceCoords: Object.keys(PROVINCE_COORD_REMOTE || {}).length,
+      siteCoords: Object.keys(SITE_COORD || {}).length,
+      travelHistory: Object.keys(TRAVEL_HISTORY || {}).length
+    });
 
     render();
   } catch (err) {
@@ -1341,10 +1378,14 @@ async function loadDataFromAppsScript() {
       try {
         SITE_COORD = JSON.parse(cached) || {};
         console.warn('Apps Script failed, ใช้ SITE_COORD จาก cache');
-      } catch (e) {}
+      } catch (e) {
+        console.warn('siteCoordsCache parse failed:', e);
+      }
     }
 
-    alert('ไม่สามารถโหลดข้อมูลจาก Apps Script ได้');
+    APPS_DATA_READY = true;
+
+    render();
   }
 }
       function normalizeEngineerName(name) {
@@ -4417,8 +4458,18 @@ ${remain}
     JSON.stringify(cache)
   );
 }
+let savedOnsiteKeys = new Set();
+
 function saveOnsiteToAppsScript(item) {
   if (!item || !item.assign || !item.jobId) return;
+
+  let key = String(item.assign || '').toLowerCase().trim() + '|' + String(item.jobId || '').trim();
+
+  if (savedOnsiteKeys.has(key)) {
+    return;
+  }
+
+  savedOnsiteKeys.add(key);
 
   let baseUrl = getAppsScriptUrl();
 
