@@ -1167,9 +1167,11 @@ let networkGroupSubFilters = [];
       let TRAVEL_HISTORY = {};
 
       let shiftDailyText = '';
+      
       const APPS_SCRIPT_URL =
   'https://script.google.com/macros/s/AKfycbyKED88K86X4eu2ycnl1ib0VY74iheDAWInvrRrQU7zarDu2fB_zNKTaW_TN6DGvAkxzw/exec';
-  function getAppsScriptUrl() {
+
+function getAppsScriptUrl() {
   let url = String(APPS_SCRIPT_URL || '').trim();
 
   if (url.includes('script.googleusercontent.com')) {
@@ -1178,8 +1180,8 @@ let networkGroupSubFilters = [];
     return '';
   }
 
-  if (!url.includes('/exec')) {
-    console.error('APPS_SCRIPT_URL ต้องลงท้ายด้วย /exec:', url);
+  if (!url.includes('script.google.com/macros/s/') || !url.endsWith('/exec')) {
+    console.error('APPS_SCRIPT_URL ต้องเป็น Apps Script Web App URL ที่ลงท้ายด้วย /exec:', url);
     alert('APPS_SCRIPT_URL ต้องเป็นลิงก์ Apps Script Web App ที่ลงท้ายด้วย /exec');
     return '';
   }
@@ -1291,6 +1293,12 @@ let networkGroupSubFilters = [];
     let text = await res.text();
 
     console.log('LOAD APPS SCRIPT RESPONSE:', text);
+
+    // ✅ กันกรณี response เป็น HTML เช่น Google Drive error page
+    if (!text.trim().startsWith('{')) {
+      console.error('Apps Script response is not JSON. URL may be wrong:', url);
+      throw new Error('Apps Script response is not JSON');
+    }
 
     let json = JSON.parse(text);
 
