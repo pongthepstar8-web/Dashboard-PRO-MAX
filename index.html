@@ -1168,7 +1168,7 @@ let networkGroupSubFilters = [];
 
       let shiftDailyText = '';
       const APPS_SCRIPT_URL =
-        'https://script.google.com/macros/s/AKfycbyKED88K86X4eu2ycnl1ib0VY74iheDAWInvrRrQU7zarDu2fB_zNKTaW_TN6DGvAkxzw/exec';
+  'https://script.google.com/macros/s/AKfycbyKED88K86X4eu2ycnl1ib0VY74iheDAWInvrRrQU7zarDu2fB_zNKTaW_TN6DGvAkxzw/exec';
 
       const SHEET_URL =
         'https://docs.google.com/spreadsheets/d/1XSR52b9wrzsBDys3PZUQTCYexOOZFa6J-bz-jR-6jaM/edit?gid=365350498#gid=365350498';
@@ -1261,6 +1261,11 @@ let networkGroupSubFilters = [];
       }
       async function loadDataFromAppsScript() {
         try {
+          let url = APPS_SCRIPT_URL + '?action=all&ts=' + Date.now();
+
+console.log('LOAD APPS SCRIPT URL:', url);
+
+let res = await fetch(url);
           let res = await fetch(APPS_SCRIPT_URL + '?action=all');
 
           let json = await res.json();
