@@ -5690,28 +5690,55 @@ group.jobs.forEach((job) => {
     });
 
     let marker = w.L.circleMarker(coord, {
-      radius: 22,
-      color: '#38bdf8',
-      fillColor: '#38bdf8',
-      fillOpacity: 0.18,
-      opacity: 0.9,
-      weight: 3,
-      dashArray: '6,6'
-    }).addTo(aiMap).bindPopup(`
-      <div style="color:#111;font-family:Arial">
-        <b>🕘 Last On-site From Travel Log</b><br>
-        ${history.assign || '-'}<br>
-        Job: ${history.jobId || '-'}<br>
-        ${history.province || '-'} / ${history.district || '-'}<br>
-        Saved: ${history.savedAt || '-'}
-      </div>
-    `);
+  radius: 22,
+  color: '#38bdf8',
+  fillColor: '#38bdf8',
+  fillOpacity: 0.18,
+  opacity: 0.9,
+  weight: 3,
+  dashArray: '6,6'
+}).addTo(aiMap).bindPopup(`
+  <div style="color:#111;font-family:Arial">
+    <b>🕘 Last On-site From Travel Log</b><br>
+    ${history.assign || '-'}<br>
+    Job: ${history.jobId || '-'}<br>
+    ${history.province || '-'} / ${history.district || '-'}<br>
+    Saved: ${history.savedAt || '-'}
+  </div>
+`);
 
-    marker.openPopup();
+marker.on('click', function (e) {
+  if (!routeSimMode) return;
 
-    aiRouteMarkers.push(marker);
+  if (e && e.originalEvent) {
+    w.L.DomEvent.stopPropagation(e.originalEvent);
+  }
 
-    return;
+  selectRouteSimPoint(
+    coord,
+    {
+      name:
+        (history.jobId || 'Last On-site') +
+        ' | ' +
+        (history.district || ''),
+      source: 'TRAVEL_HISTORY',
+      job: {
+        'Job ID': history.jobId || '',
+        'Assign to': history.assign || '',
+        'Province Name': history.province || '',
+        'District Name': history.district || '',
+        'Job Title': history.title || '',
+        'Status': history.status || ''
+      }
+    }
+  );
+});
+
+marker.openPopup();
+
+aiRouteMarkers.push(marker);
+
+return;
   }
 
   alert('ไม่พบ On-site ปัจจุบันหรือ On-site ล่าสุดของช่างในจังหวัดที่เลือก');
