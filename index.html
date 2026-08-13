@@ -2795,98 +2795,6 @@ let staff = shiftStaffMap[key] || {};
       <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"><\/script>
 
       <style>
-
-        .search-dropdown {
-  position: relative;
-  min-width: 290px;
-  height: 46px;
-  font-family: Arial, sans-serif;
-}
-
-.search-dropdown-btn {
-  width: 100%;
-  height: 46px;
-  background: #1e293b;
-  color: #ffffff;
-  border: 1px solid #334155;
-  border-radius: 14px;
-  padding: 0 14px;
-  font-weight: 900;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-}
-
-.search-dropdown-btn:hover {
-  border-color: #64748b;
-}
-
-.search-dropdown.show .search-dropdown-btn {
-  border-color: #e5e7eb;
-  box-shadow: 0 0 0 2px rgba(148, 163, 184, 0.25);
-}
-
-.search-dropdown-panel {
-  display: none;
-  position: absolute;
-  top: 52px;
-  left: 0;
-  width: 100%;
-  background: #1e293b;
-  border: 1px solid #334155;
-  border-radius: 10px;
-  z-index: 999999;
-  overflow: hidden;
-  box-shadow: 0 16px 35px rgba(0, 0, 0, 0.45);
-}
-
-.search-dropdown.show .search-dropdown-panel {
-  display: block;
-}
-
-.search-dropdown-input {
-  width: calc(100% - 10px);
-  height: 34px;
-  margin: 5px;
-  background: #020617;
-  color: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
-  padding: 0 9px;
-  outline: none;
-  font-weight: 800;
-}
-
-.search-dropdown-input::placeholder {
-  color: #94a3b8;
-}
-
-.search-dropdown-list {
-  max-height: 260px;
-  overflow-y: auto;
-}
-
-.search-dropdown-item {
-  padding: 10px 12px;
-  color: #e5e7eb;
-  font-weight: 900;
-  cursor: pointer;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.search-dropdown-item:hover {
-  background: #334155;
-}
-
-.search-dropdown-item.active {
-  background: #22c55e;
-  color: #ffffff;
-}
-
         .map-tools-item.admin-only {
   color: #fecaca;
 }
@@ -3857,38 +3765,20 @@ Object.entries(engineers)
   >
     👣 Travel OFF
   </button>
-  <div class="search-dropdown" id="departedEngineerDropdown">
-    <button class="search-dropdown-btn" onclick="window.toggleSearchDropdown('departedEngineerDropdown', event)">
-    <span id="departedEngineerDropdownLabel">🚗 Departed ล่าสุด</span>
-    <span>⌄</span>
-  </button>
-
-  <div class="search-dropdown-panel">
-    <input
-      class="search-dropdown-input"
-      type="text"
-      placeholder="ค้นหา..."
-      oninput="window.filterSearchDropdown('departedEngineerDropdown', this.value)"
-    >
-    <div class="search-dropdown-list" id="departedEngineerDropdownList"></div>
-  </div>
-</div>
-<div class="search-dropdown" id="onsiteEngineerDropdown">
-  <button class="search-dropdown-btn" onclick="window.toggleSearchDropdown('onsiteEngineerDropdown', event)">
-    <span id="onsiteEngineerDropdownLabel">🧑‍🔧 On-site ล่าสุด</span>
-    <span>⌄</span>
-  </button>
-
-  <div class="search-dropdown-panel">
-    <input
-      class="search-dropdown-input"
-      type="text"
-      placeholder="ค้นหา..."
-      oninput="window.filterSearchDropdown('onsiteEngineerDropdown', this.value)"
-    >
-    <div class="search-dropdown-list" id="onsiteEngineerDropdownList"></div>
-  </div>
-</div>
+<select
+  id="departedEngineerSelect"
+  class="map-btn"
+  onchange="window.focusDepartedEngineer(this.value)"
+>
+  <option value="">🚗 Departed ล่าสุด</option>
+</select>
+<select
+  id="onsiteEngineerSelect"
+  class="map-btn"
+  onchange="window.focusOnsiteEngineer(this.value)"
+>
+  <option value="">🧑‍🔧 On-site ล่าสุด</option>
+</select>
   <div class="map-tools-wrap">
     <button
       class="map-btn"
@@ -5138,90 +5028,10 @@ function isMatchSelectedProvince(provinceName) {
 
   return normalizeProvinceName(provinceName) === normalizeProvinceName(prov);
 }
-
-w.selectSearchDropdownItem = function (dropdownId, labelId, value, text, mode) {
-  let label = w.document.getElementById(labelId);
-
-  if (label) {
-    label.textContent = text;
-  }
-
-  w.closeSearchDropdowns();
-
-  if (mode === 'onsite') {
-    w.focusOnsiteEngineer(value);
-  }
-
-  if (mode === 'departed') {
-    w.focusDepartedEngineer(value);
-  }
-};
-
-w.toggleSearchDropdown = function (dropdownId, event) {
-  if (event) {
-    event.preventDefault();
-    event.stopPropagation();
-  }
-
-  let box = w.document.getElementById(dropdownId);
-
-  if (!box) return;
-
-  let willOpen = !box.classList.contains('show');
-
-  w.document.querySelectorAll('.search-dropdown').forEach((item) => {
-    item.classList.remove('show');
-  });
-
-  if (willOpen) {
-    box.classList.add('show');
-
-    let input = box.querySelector('.search-dropdown-input');
-
-    if (input) {
-      input.value = '';
-      w.filterSearchDropdown(dropdownId, '');
-
-      setTimeout(() => {
-        input.focus();
-      }, 50);
-    }
-  }
-};
-
-w.filterSearchDropdown = function (dropdownId, keyword) {
-  let box = w.document.getElementById(dropdownId);
-
-  if (!box) return;
-
-  let q = String(keyword || '').toLowerCase().trim();
-
-  box.querySelectorAll('.search-dropdown-item').forEach((item) => {
-    let text = String(item.textContent || '').toLowerCase();
-
-    item.style.display = !q || text.includes(q) ? '' : 'none';
-  });
-};
-
-w.closeSearchDropdowns = function () {
-  w.document.querySelectorAll('.search-dropdown').forEach((box) => {
-    box.classList.remove('show');
-  });
-};
-w.document.addEventListener('click', function (event) {
-  let clickedDropdown = event.target.closest('.search-dropdown');
-
-  if (clickedDropdown) {
-    return;
-  }
-
-  w.closeSearchDropdowns();
-});
 function buildOnsiteEngineerSelect() {
-  let list = w.document.getElementById('onsiteEngineerDropdownList');
-  let label = w.document.getElementById('onsiteEngineerDropdownLabel');
+  let select = w.document.getElementById('onsiteEngineerSelect');
 
-  if (!list) return;
+  if (!select) return;
 
   let map = {};
 
@@ -5321,18 +5131,11 @@ function buildOnsiteEngineerSelect() {
   });
 
   select.innerHTML = html;
-  let search = w.document.getElementById('onsiteEngineerSearch');
-
-if (search) {
-  search.value = '';
 }
-}
-
 function buildDepartedEngineerSelect() {
-  let list = w.document.getElementById('departedEngineerDropdownList');
-  let label = w.document.getElementById('departedEngineerDropdownLabel');
+  let select = w.document.getElementById('departedEngineerSelect');
 
-  if (!list) return;
+  if (!select) return;
 
   let latestByEngineer = {};
 
@@ -5386,42 +5189,15 @@ function buildDepartedEngineerSelect() {
         .filter(Boolean)
         .join(' / ') || '-';
 
-        html += `
-  <div
-    class="search-dropdown-item"
-    onclick="window.selectSearchDropdownItem('departedEngineerDropdown','departedEngineerDropdownLabel','${safeValue}','${safeText}','departed')"
-  >
-    ${text}
-  </div>
-`;
+    html += `
+      <option value="${safeValue}">
+        🚗 ${safeValue} | ${area}
+      </option>
+    `;
   });
 
   select.innerHTML = html;
-  let search = w.document.getElementById('onsiteEngineerSearch');
-
-if (search) {
-  search.value = '';
 }
-}
-
-w.filterEngineerDropdown = function (selectId, keyword) {
-  let select = w.document.getElementById(selectId);
-
-  if (!select) return;
-
-  let q = String(keyword || '').toLowerCase().trim();
-
-  Array.from(select.options).forEach((option, index) => {
-    if (index === 0) {
-      option.hidden = false;
-      return;
-    }
-
-    let text = String(option.textContent || '').toLowerCase();
-
-    option.hidden = q && !text.includes(q);
-  });
-};
 function updateDistrictSourceButton() {
   let btn = w.document.getElementById('districtSourceBtn');
 
