@@ -5640,7 +5640,10 @@ engineerTravelLines.push(fallbackFlowLine);
       padding: [60, 60],
     });
   } else {
-    alert('ยังไม่พบข้อมูล On-site เดิมและ Departed ของช่างคนเดียวกัน');
+    w.showAIOperationsNotice(
+  'ไม่พบข้อมูล Travel',
+  'ยังไม่พบข้อมูล On-site เดิมและ Departed ของช่างคนเดียวกัน'
+);
   }
 };
 async function drawDepartedTravelForEngineer(assignKey) {
@@ -5661,12 +5664,18 @@ async function drawDepartedTravelForEngineer(assignKey) {
   let departedItem = departedEngineerIndex[assignKey];
 
   if (!departedItem) {
-    alert('ไม่พบ Departed ล่าสุดของช่างคนนี้');
+    w.showAIOperationsNotice(
+  'ไม่พบข้อมูล Departed',
+  'ไม่พบ Departed ล่าสุดของช่างคนนี้'
+);
     return;
   }
 
   if (!oldOnsite) {
-    alert('ไม่พบ On-site ล่าสุดของช่างคนนี้จาก Travel Log');
+    w.showAIOperationsNotice(
+  'ไม่พบข้อมูล Travel',
+  'ไม่พบ On-site ล่าสุดของช่างคนนี้จาก Travel Log'
+);
     return;
   }
 
@@ -5674,7 +5683,10 @@ async function drawDepartedTravelForEngineer(assignKey) {
   let departedCoord = await getJobCoord(departedJob);
 
   if (!departedCoord) {
-    alert('ไม่พบพิกัด Departed ล่าสุดของช่างคนนี้');
+    w.showAIOperationsNotice(
+  'ไม่พบพิกัด',
+  'ไม่พบพิกัด Departed ล่าสุดของช่างคนนี้'
+);
     return;
   }
 
@@ -5691,13 +5703,19 @@ async function drawDepartedTravelForEngineer(assignKey) {
     isNaN(end[0]) ||
     isNaN(end[1])
   ) {
-    alert('พิกัด On-site หรือ Departed ไม่ถูกต้อง');
+    w.showAIOperationsNotice(
+  'พิกัดไม่ถูกต้อง',
+  'พิกัด On-site หรือ Departed ไม่ถูกต้อง'
+);
     return;
   }
 
   // ถ้า On-site ล่าสุดกับ Departed คือ Job เดียวกัน ไม่ต้องวาดเส้น
   if (String(oldOnsite.jobId || '') === String(departedJob['Job ID'] || '')) {
-    alert('ช่างคนนี้ถึงปลายทางแล้ว หรือ On-site ล่าสุดเป็น Job เดียวกับ Departed');
+    w.showAIOperationsNotice(
+  'ไม่ต้องวาดเส้นทาง',
+  'ช่างคนนี้ถึงปลายทางแล้ว หรือ On-site ล่าสุดเป็น Job เดียวกับ Departed'
+);
     return;
   }
 
