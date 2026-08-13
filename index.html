@@ -5248,14 +5248,12 @@ if (!w.__engineerRouteDropdownOutsideClickBound) {
 
 function buildOnsiteEngineerSelect() {
   let list = w.document.getElementById('onsiteEngineerDropdownList');
-let label = w.document.getElementById('onsiteEngineerDropdownLabel');
+  let labelEl = w.document.getElementById('onsiteEngineerDropdownLabel');
 
-if (!list) return;
+  if (!list) return;
 
   let map = {};
 
-  // ✅ 1. On-site ปัจจุบันจาก jobs
-  // jobs ใน AI Board ถูกกรองจังหวัดไว้แล้ว แต่ใส่กันซ้ำเพื่อความชัวร์
   let onsiteJobs = jobs
     .filter((job) => {
       let assign = String(job['Assign to'] || '').trim();
@@ -5288,13 +5286,11 @@ if (!list) return;
     }
   });
 
-  // ✅ 2. On-site ล่าสุดจาก ENGINEER_TRAVEL_LOG / TRAVEL_HISTORY
   Object.keys(TRAVEL_HISTORY || {}).forEach((key) => {
     let item = TRAVEL_HISTORY[key];
 
     if (!item || !item.assign) return;
 
-    // ✅ กรองเฉพาะจังหวัดที่เลือก
     if (!isMatchSelectedProvince(item.province)) {
       return;
     }
@@ -5302,7 +5298,6 @@ if (!list) return;
     let assign = String(item.assign || '').trim();
     let normKey = assign.toLowerCase();
 
-    // ถ้ามี On-site ปัจจุบันอยู่แล้ว ใช้ข้อมูลปัจจุบันก่อน
     if (map[normKey]) return;
 
     map[normKey] = {
@@ -5319,48 +5314,64 @@ if (!list) return;
     return a.assign.localeCompare(b.assign);
   });
 
-  let label = prov
-    ? `🧑‍🔧 On-site ล่าสุด: ${prov}`
+  let defaultLabel = prov
+    ? `🧑‍🔧 On-site ปัจจุบัน / ล่าสุด: ${prov}`
     : '🧑‍🔧 On-site ปัจจุบัน / ล่าสุด';
 
-  let html = `<option value="">${label}</option>`;
+  if (labelEl) {
+    labelEl.textContent = defaultLabel;
+  }
+
+  let html = `
+    <div
+      class="engineer-route-dd-item active"
+      data-value=""
+      data-label="${escapeEngineerDropdownText(defaultLabel)}"
+    >
+      ${escapeEngineerDropdownText(defaultLabel)}
+    </div>
+  `;
 
   items.forEach((item) => {
-    let safeValue = String(item.assign)
-      .replace(/&/g, '&amp;')
-      .replace(/"/g, '&quot;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;');
-
-    let badge =
-      item.source === 'CURRENT_ONSITE'
-        ? '🟢 ปัจจุบัน'
-        : '🕘 ล่าสุด';
+    let assign = String(item.assign || '').trim();
 
     let area =
       [item.province, item.district]
         .filter(Boolean)
         .join(' / ') || '-';
 
+    let badge =
+      item.source === 'CURRENT_ONSITE'
+        ? '🟢 ปัจจุบัน'
+        : '🕘 ล่าสุด';
+
+    let text = `${badge} | ${assign} | ${area}`;
+
     html += `
-      <option value="${safeValue}">
-        ${badge} | ${safeValue} | ${area}
-      </option>
+      <div
+        class="engineer-route-dd-item"
+        data-value="${escapeEngineerDropdownText(assign)}"
+        data-label="${escapeEngineerDropdownText(text)}"
+      >
+        ${escapeEngineerDropdownText(text)}
+      </div>
     `;
   });
 
   list.innerHTML = html;
-w.bindEngineerRouteDropdownItems(
-  'onsiteEngineerDropdownList',
-  'onsiteEngineerDropdownLabel',
-  'onsite'
-);
+
+  w.bindEngineerRouteDropdownItems(
+    'onsiteEngineerDropdownList',
+    'onsiteEngineerDropdownLabel',
+    'onsite'
+  );
 }
+
 function buildDepartedEngineerSelect() {
   let list = w.document.getElementById('departedEngineerDropdownList');
-let label = w.document.getElementById('departedEngineerDropdownLabel');
+  let labelEl = w.document.getElementById('departedEngineerDropdownLabel');
 
-if (!list) return;
+  if (!list) return;
 
   let latestByEngineer = {};
 
@@ -5394,40 +5405,54 @@ if (!list) return;
     );
   });
 
-  let label = prov
+  let defaultLabel = prov
     ? `🚗 Departed ล่าสุด: ${prov}`
     : '🚗 Departed ล่าสุด';
 
-  let html = `<option value="">${label}</option>`;
+  if (labelEl) {
+    labelEl.textContent = defaultLabel;
+  }
+
+  let html = `
+    <div
+      class="engineer-route-dd-item active"
+      data-value=""
+      data-label="${escapeEngineerDropdownText(defaultLabel)}"
+    >
+      ${escapeEngineerDropdownText(defaultLabel)}
+    </div>
+  `;
 
   items.forEach((job) => {
     let assign = String(job['Assign to'] || '').trim();
-
-    let safeValue = assign
-      .replace(/&/g, '&amp;')
-      .replace(/"/g, '&quot;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;');
 
     let area =
       [job['Province Name'], job['District Name']]
         .filter(Boolean)
         .join(' / ') || '-';
 
+    let text = `🚗 ${assign} | ${area}`;
+
     html += `
-      <option value="${safeValue}">
-        🚗 ${safeValue} | ${area}
-      </option>
+      <div
+        class="engineer-route-dd-item"
+        data-value="${escapeEngineerDropdownText(assign)}"
+        data-label="${escapeEngineerDropdownText(text)}"
+      >
+        ${escapeEngineerDropdownText(text)}
+      </div>
     `;
   });
 
   list.innerHTML = html;
-w.bindEngineerRouteDropdownItems(
-  'departedEngineerDropdownList',
-  'departedEngineerDropdownLabel',
-  'departed'
-);
+
+  w.bindEngineerRouteDropdownItems(
+    'departedEngineerDropdownList',
+    'departedEngineerDropdownLabel',
+    'departed'
+  );
 }
+
 function updateDistrictSourceButton() {
   let btn = w.document.getElementById('districtSourceBtn');
 
