@@ -1590,7 +1590,15 @@ function cleanMobileNumber(v) {
 }
 
 function formatMobileDisplay(v) {
-  return String(v || '').trim() || '-';
+  let s = String(v || '').trim();
+
+  s = s.replace(/^tel:\S*\s*/i, '').trim();
+
+  if (s.includes(' ')) {
+    s = s.split(/\s+/).pop();
+  }
+
+  return s || '-';
 }
 
 function renderMobileLink(mobile) {
@@ -1728,12 +1736,12 @@ function getShiftStaffMapByProvince(province) {
       if (!key) return;
 
       map[key] = {
-        name: x.name || '',
-        mobile: x.mobile || '',
-        province: x.province || '',
-        local: x.local || '',
-        shift: x.shift || ''
-      };
+  name: x.name || '',
+  mobile: formatMobileDisplay(x.mobile),
+  province: x.province || '',
+  local: x.local || '',
+  shift: x.shift || ''
+};
     });
 
   return map;
