@@ -4141,6 +4141,25 @@ function selectRouteSimPoint(coord, meta) {
     drawRouteSimulator();
   }
 }
+function formatRouteLabelJobId(jobId) {
+  let s = String(jobId || '').trim();
+
+  if (!s) {
+    return '-';
+  }
+
+  let m = s.match(/^JB\d+-(.+)$/i);
+
+  if (m && m[1]) {
+    return 'JB' + m[1];
+  }
+
+  if (s.length > 12) {
+    return s.slice(0, 4) + '…' + s.slice(-6);
+  }
+
+  return s;
+}
 
 function getRouteSimPointJobId(point, pointNo) {
   let meta = point && point.meta ? point.meta : {};
@@ -4235,8 +4254,13 @@ routeSimLine = routeSimBaseLine;
     return;
   }
 
-  let fromJb = getRouteSimPointJobId(startPoint, leg.from);
-  let toJb = getRouteSimPointJobId(endPoint, leg.to);
+  let fromJb = formatRouteLabelJobId(
+  getRouteSimPointJobId(startPoint, leg.from)
+);
+
+let toJb = formatRouteLabelJobId(
+  getRouteSimPointJobId(endPoint, leg.to)
+);
 
   let mid = [
     (Number(startPoint.lat) + Number(endPoint.lat)) / 2,
@@ -4261,12 +4285,12 @@ routeSimLine = routeSimBaseLine;
     text-align:center;
     line-height:1.45;
   ">
-    📋 ${fromJb} → ${toJb}<br>
-    🛣️ ${leg.distanceKm.toFixed(2)} km | ⏱ ${leg.durationMin.toFixed(0)} min
+  📋 ${fromJb} → ${toJb}<br>
+🛣️ ${leg.distanceKm.toFixed(2)} km | ⏱ ${leg.durationMin.toFixed(0)} min
   </div>
 `,
-iconSize: [220, 46],
-iconAnchor: [110, 23],
+iconSize: [190, 46],
+iconAnchor: [95, 23],
     }),
   }).addTo(aiMap);
 
