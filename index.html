@@ -2475,18 +2475,101 @@ render();
   }
 
   w.document.open();
-  w.document.write(`
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <title>AI Action Board</title>
-      </head>
-      <body style="background:#020617;color:white;font-family:Arial;padding:24px">
-        กำลังโหลด AI Action Board...
-      </body>
-    </html>
-  `);
-  w.document.close();
+w.document.write(`
+  <!DOCTYPE html>
+  <html>
+    <head>
+      <title>AI Action Board</title>
+      <style>
+        html,
+        body {
+          margin: 0;
+          width: 100%;
+          height: 100%;
+          background: #020617;
+          color: white;
+          font-family: Arial, sans-serif;
+        }
+
+        .ai-loading-wrap {
+          width: 100%;
+          height: 100vh;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-direction: column;
+          gap: 18px;
+        }
+
+        .ai-loading-text {
+          font-size: 24px;
+          font-weight: 900;
+          letter-spacing: 0.3px;
+          color: #e0f2fe;
+          animation: aiBounce 1.1s ease-in-out infinite;
+          text-shadow: 0 0 18px rgba(56, 189, 248, 0.75);
+        }
+
+        .ai-loading-dots {
+          display: flex;
+          gap: 8px;
+        }
+
+        .ai-loading-dots span {
+          width: 10px;
+          height: 10px;
+          border-radius: 50%;
+          background: #38bdf8;
+          display: block;
+          animation: aiDotBounce 0.9s infinite ease-in-out;
+        }
+
+        .ai-loading-dots span:nth-child(2) {
+          animation-delay: 0.15s;
+        }
+
+        .ai-loading-dots span:nth-child(3) {
+          animation-delay: 0.3s;
+        }
+
+        @keyframes aiBounce {
+          0%,
+          100% {
+            transform: translateY(0) scale(1);
+          }
+
+          50% {
+            transform: translateY(-8px) scale(1.04);
+          }
+        }
+
+        @keyframes aiDotBounce {
+          0%,
+          100% {
+            transform: translateY(0);
+            opacity: 0.45;
+          }
+
+          50% {
+            transform: translateY(-10px);
+            opacity: 1;
+          }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="ai-loading-wrap">
+        <div class="ai-loading-text">กำลังโหลด AI Action Board...</div>
+        <div class="ai-loading-dots">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+      </div>
+    </body>
+  </html>
+`);
+w.document.close();
 
   await ensureAppsDataReady();
 
