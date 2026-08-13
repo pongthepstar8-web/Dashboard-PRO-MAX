@@ -4131,20 +4131,13 @@ let aiMapInited = false,
 function selectRouteSimPoint(coord, meta) {
   if (!coord || coord.length !== 2) return;
 
-  if (routeSimPoints.length >= 2) {
-    clearRouteSimulator();
-  }
-
   routeSimPoints.push({
     lat: Number(coord[0]),
     lng: Number(coord[1]),
     meta: meta || {}
   });
 
-  // ✅ ไม่สร้าง START / END marker แล้ว
-  // ใช้ marker Job เดิมบนแผนที่ หรือจุดคลิกบนแผนที่เท่านั้น
-
-  if (routeSimPoints.length === 2) {
+  if (routeSimPoints.length >= 2) {
     drawRouteSimulator();
   }
 }
@@ -4164,21 +4157,18 @@ async function drawRouteSimulator() {
     return;
   }
 
-  let start = [
-    routeSimPoints[0].lat,
-    routeSimPoints[0].lng
+  let points = routeSimPoints.map((p) => {
+  return [
+    Number(p.lat),
+    Number(p.lng)
   ];
+});
 
-  let end = [
-    routeSimPoints[1].lat,
-    routeSimPoints[1].lng
-  ];
-
-  try {
-    let route = await getRoadRouteFromOSRM([start, end]);
+try {
+  let route = await getRoadRouteFromOSRM(points);
 
     if (!route || !route.latlngs || !route.latlngs.length) {
-      drawRouteSimulatorFallback(start, end);
+      drawRouteSimulatorFallback(points[0], points[points.length - 1]);
       return;
     }
 
