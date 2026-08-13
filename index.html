@@ -1584,32 +1584,37 @@ async function ensureAppsDataReady() {
     .trim();
 }
 function cleanMobileNumber(v) {
-  return String(v || '')
-    .trim()
-    .replace(/[^\d]/g, '');
+  let display = formatMobileDisplay(v);
+
+  if (!display || display === '-') {
+    return '';
+  }
+
+  return String(display || '').replace(/[^\d]/g, '');
 }
 
 function formatMobileDisplay(v) {
   let s = String(v || '').trim();
 
-  let matches = s.match(/0\d{2}-?\d{7}/g) || [];
+  // ถ้ามีเบอร์แบบมีขีด เช่น 065-7152310 ให้ใช้ตัวนี้ก่อน
+  let dashed = s.match(/0\d{2}-\d{7}/);
 
-  let picked =
-    matches.find((x) => x.includes('-')) ||
-    matches[matches.length - 1] ||
-    '';
+  if (dashed) {
+    return dashed[0];
+  }
 
-  if (!picked) {
+  // ถ้าไม่มีขีด ให้หาเบอร์ 10 หลัก เช่น 0657152310
+  let digits = s.replace(/[^\d]/g, '');
+
+  let match = digits.match(/0\d{9}/);
+
+  if (!match) {
     return '-';
   }
 
-  picked = picked.replace(/\s+/g, '');
+  let number = match[0];
 
-  if (!picked.includes('-') && picked.length === 10) {
-    picked = picked.replace(/^(\d{3})(\d{7})$/, '$1-$2');
-  }
-
-  return picked;
+  return number.replace(/^(\d{3})(\d{7})$/, '$1-$2');
 }
 
 function renderMobileLink(mobile) {
@@ -1622,7 +1627,7 @@ function renderMobileLink(mobile) {
   let clean = cleanMobileNumber(display);
 
   if (!clean) {
-    return '-';
+    return display;
   }
 
   return `tel:${clean}${display}</a>`;
