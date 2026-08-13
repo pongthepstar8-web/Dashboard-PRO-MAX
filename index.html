@@ -4636,7 +4636,10 @@ return {
             navigator.clipboard
               .writeText(jobId)
               .then(() => {
-                alert('คัดลอก Job ID แล้ว: ' + jobId);
+                w.showAIOperationsNotice(
+  'คัดลอก Job ID แล้ว',
+  jobId
+);
               })
               .catch(() => {
                 fallbackCopyJobId(jobId);
@@ -4659,7 +4662,10 @@ return {
 
           w.document.body.removeChild(temp);
 
-          alert('คัดลอก Job ID แล้ว: ' + jobId);
+          w.showAIOperationsNotice(
+  'คัดลอก Job ID แล้ว',
+  jobId
+);
         }
         function safeAttr(v) {
           return String(v || '')
