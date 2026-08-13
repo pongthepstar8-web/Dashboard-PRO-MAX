@@ -2795,6 +2795,27 @@ let staff = shiftStaffMap[key] || {};
       <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"><\/script>
 
       <style>
+
+        .engineer-search-input {
+  background: #111827;
+  color: #e5e7eb;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 10px 14px;
+  font-weight: 800;
+  outline: none;
+  min-width: 230px;
+  height: 42px;
+}
+
+.engineer-search-input::placeholder {
+  color: #94a3b8;
+}
+
+.engineer-search-input:focus {
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.25);
+}
         .map-tools-item.admin-only {
   color: #fecaca;
 }
@@ -3765,19 +3786,26 @@ Object.entries(engineers)
   >
     👣 Travel OFF
   </button>
-<select
-  id="departedEngineerSelect"
-  class="map-btn"
-  onchange="window.focusDepartedEngineer(this.value)"
+  <input
+  id="departedEngineerSearch"
+  class="engineer-search-input"
+  type="text"
+  placeholder="ค้นหา Departed..."
+  oninput="window.filterEngineerDropdown('departedEngineerSelect', this.value)"
 >
-  <option value="">🚗 Departed ล่าสุด</option>
+
+<select id="departedEngineerSelect" onchange="w.focusDepartedEngineer(this.value)">
 </select>
-<select
-  id="onsiteEngineerSelect"
-  class="map-btn"
-  onchange="window.focusOnsiteEngineer(this.value)"
+
+<input
+  id="onsiteEngineerSearch"
+  class="engineer-search-input"
+  type="text"
+  placeholder="ค้นหา On-site..."
+  oninput="window.filterEngineerDropdown('onsiteEngineerSelect', this.value)"
 >
-  <option value="">🧑‍🔧 On-site ล่าสุด</option>
+
+<select id="onsiteEngineerSelect" onchange="w.focusOnsiteEngineer(this.value)">
 </select>
   <div class="map-tools-wrap">
     <button
@@ -5131,7 +5159,13 @@ function buildOnsiteEngineerSelect() {
   });
 
   select.innerHTML = html;
+  let search = w.document.getElementById('onsiteEngineerSearch');
+
+if (search) {
+  search.value = '';
 }
+}
+
 function buildDepartedEngineerSelect() {
   let select = w.document.getElementById('departedEngineerSelect');
 
@@ -5198,6 +5232,25 @@ function buildDepartedEngineerSelect() {
 
   select.innerHTML = html;
 }
+
+w.filterEngineerDropdown = function (selectId, keyword) {
+  let select = w.document.getElementById(selectId);
+
+  if (!select) return;
+
+  let q = String(keyword || '').toLowerCase().trim();
+
+  Array.from(select.options).forEach((option, index) => {
+    if (index === 0) {
+      option.hidden = false;
+      return;
+    }
+
+    let text = String(option.textContent || '').toLowerCase();
+
+    option.hidden = q && !text.includes(q);
+  });
+};
 function updateDistrictSourceButton() {
   let btn = w.document.getElementById('districtSourceBtn');
 
