@@ -3786,24 +3786,38 @@ Object.entries(engineers)
   >
     👣 Travel OFF
   </button>
-  <input
-  id="departedEngineerSearch"
-  class="engineer-search-input"
-  type="text"
-  placeholder="ค้นหา Departed..."
-  oninput="window.filterEngineerDropdown('departedEngineerSelect', this.value)"
->
-<select id="departedEngineerSelect" onchange="w.focusDepartedEngineer(this.value)">
-</select>
-<input
-  id="onsiteEngineerSearch"
-  class="engineer-search-input"
-  type="text"
-  placeholder="ค้นหา On-site..."
-  oninput="window.filterEngineerDropdown('onsiteEngineerSelect', this.value)"
->
-<select id="onsiteEngineerSelect" onchange="w.focusOnsiteEngineer(this.value)">
-</select>
+  <div class="search-dropdown" id="departedEngineerDropdown">
+  <button class="search-dropdown-btn" onclick="w.toggleSearchDropdown('departedEngineerDropdown')">
+    <span id="departedEngineerDropdownLabel">🚗 Departed ล่าสุด</span>
+    <span>⌄</span>
+  </button>
+
+  <div class="search-dropdown-panel">
+    <input
+      class="search-dropdown-input"
+      type="text"
+      placeholder="ค้นหา..."
+      oninput="w.filterSearchDropdown('departedEngineerDropdown', this.value)"
+    >
+    <div class="search-dropdown-list" id="departedEngineerDropdownList"></div>
+  </div>
+</div>
+<div class="search-dropdown" id="onsiteEngineerDropdown">
+  <button class="search-dropdown-btn" onclick="w.toggleSearchDropdown('onsiteEngineerDropdown')">
+    <span id="onsiteEngineerDropdownLabel">🧑‍🔧 On-site ล่าสุด</span>
+    <span>⌄</span>
+  </button>
+
+  <div class="search-dropdown-panel">
+    <input
+      class="search-dropdown-input"
+      type="text"
+      placeholder="ค้นหา..."
+      oninput="w.filterSearchDropdown('onsiteEngineerDropdown', this.value)"
+    >
+    <div class="search-dropdown-list" id="onsiteEngineerDropdownList"></div>
+  </div>
+</div>
   <div class="map-tools-wrap">
     <button
       class="map-btn"
