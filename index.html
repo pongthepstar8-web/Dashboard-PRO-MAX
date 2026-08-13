@@ -2796,26 +2796,97 @@ let staff = shiftStaffMap[key] || {};
 
       <style>
 
-        .engineer-search-input {
-  background: #111827;
-  color: #e5e7eb;
-  border: 1px solid #334155;
-  border-radius: 14px;
-  padding: 10px 14px;
-  font-weight: 800;
-  outline: none;
-  min-width: 230px;
-  height: 42px;
+        .search-dropdown {
+  position: relative;
+  min-width: 290px;
+  height: 46px;
+  font-family: Arial, sans-serif;
 }
 
-.engineer-search-input::placeholder {
+.search-dropdown-btn {
+  width: 100%;
+  height: 46px;
+  background: #1e293b;
+  color: #ffffff;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 0 14px;
+  font-weight: 900;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.search-dropdown-btn:hover {
+  border-color: #64748b;
+}
+
+.search-dropdown.show .search-dropdown-btn {
+  border-color: #e5e7eb;
+  box-shadow: 0 0 0 2px rgba(148, 163, 184, 0.25);
+}
+
+.search-dropdown-panel {
+  display: none;
+  position: absolute;
+  top: 52px;
+  left: 0;
+  width: 100%;
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 10px;
+  z-index: 999999;
+  overflow: hidden;
+  box-shadow: 0 16px 35px rgba(0, 0, 0, 0.45);
+}
+
+.search-dropdown.show .search-dropdown-panel {
+  display: block;
+}
+
+.search-dropdown-input {
+  width: calc(100% - 10px);
+  height: 34px;
+  margin: 5px;
+  background: #020617;
+  color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  padding: 0 9px;
+  outline: none;
+  font-weight: 800;
+}
+
+.search-dropdown-input::placeholder {
   color: #94a3b8;
 }
 
-.engineer-search-input:focus {
-  border-color: #60a5fa;
-  box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.25);
+.search-dropdown-list {
+  max-height: 260px;
+  overflow-y: auto;
 }
+
+.search-dropdown-item {
+  padding: 10px 12px;
+  color: #e5e7eb;
+  font-weight: 900;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.search-dropdown-item:hover {
+  background: #334155;
+}
+
+.search-dropdown-item.active {
+  background: #22c55e;
+  color: #ffffff;
+}
+
         .map-tools-item.admin-only {
   color: #fecaca;
 }
