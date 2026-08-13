@@ -5139,6 +5139,24 @@ function isMatchSelectedProvince(provinceName) {
   return normalizeProvinceName(provinceName) === normalizeProvinceName(prov);
 }
 
+w.selectSearchDropdownItem = function (dropdownId, labelId, value, text, mode) {
+  let label = w.document.getElementById(labelId);
+
+  if (label) {
+    label.textContent = text;
+  }
+
+  w.closeSearchDropdowns();
+
+  if (mode === 'onsite') {
+    w.focusOnsiteEngineer(value);
+  }
+
+  if (mode === 'departed') {
+    w.focusDepartedEngineer(value);
+  }
+};
+
 w.toggleSearchDropdown = function (dropdownId, event) {
   if (event) {
     event.preventDefault();
@@ -5200,9 +5218,10 @@ w.document.addEventListener('click', function (event) {
   w.closeSearchDropdowns();
 });
 function buildOnsiteEngineerSelect() {
-  let select = w.document.getElementById('onsiteEngineerSelect');
+  let list = w.document.getElementById('onsiteEngineerDropdownList');
+  let label = w.document.getElementById('onsiteEngineerDropdownLabel');
 
-  if (!select) return;
+  if (!list) return;
 
   let map = {};
 
@@ -5310,9 +5329,10 @@ if (search) {
 }
 
 function buildDepartedEngineerSelect() {
-  let select = w.document.getElementById('departedEngineerSelect');
+  let list = w.document.getElementById('departedEngineerDropdownList');
+  let label = w.document.getElementById('departedEngineerDropdownLabel');
 
-  if (!select) return;
+  if (!list) return;
 
   let latestByEngineer = {};
 
@@ -5366,11 +5386,14 @@ function buildDepartedEngineerSelect() {
         .filter(Boolean)
         .join(' / ') || '-';
 
-    html += `
-      <option value="${safeValue}">
-        🚗 ${safeValue} | ${area}
-      </option>
-    `;
+        html += `
+  <div
+    class="search-dropdown-item"
+    onclick="window.selectSearchDropdownItem('departedEngineerDropdown','departedEngineerDropdownLabel','${safeValue}','${safeText}','departed')"
+  >
+    ${text}
+  </div>
+`;
   });
 
   select.innerHTML = html;
