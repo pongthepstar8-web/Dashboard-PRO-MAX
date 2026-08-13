@@ -1584,13 +1584,8 @@ async function ensureAppsDataReady() {
     .trim();
 }
 function cleanMobileNumber(v) {
-  let display = formatMobileDisplay(v);
-
-  if (!display || display === '-') {
-    return '';
-  }
-
-  return String(display || '').replace(/[^\d]/g, '');
+  return String(v || '')
+    .replace(/[^\d]/g, '');
 }
 
 function formatMobileDisplay(v) {
