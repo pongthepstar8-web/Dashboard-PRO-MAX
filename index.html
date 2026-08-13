@@ -3787,7 +3787,7 @@ Object.entries(engineers)
     👣 Travel OFF
   </button>
   <div class="search-dropdown" id="departedEngineerDropdown">
-  <button class="search-dropdown-btn" onclick="w.toggleSearchDropdown('departedEngineerDropdown')">
+    <button class="search-dropdown-btn" onclick="window.toggleSearchDropdown('departedEngineerDropdown')">
     <span id="departedEngineerDropdownLabel">🚗 Departed ล่าสุด</span>
     <span>⌄</span>
   </button>
@@ -3797,13 +3797,13 @@ Object.entries(engineers)
       class="search-dropdown-input"
       type="text"
       placeholder="ค้นหา..."
-      oninput="w.filterSearchDropdown('departedEngineerDropdown', this.value)"
+      oninput="window.filterSearchDropdown('departedEngineerDropdown', this.value)"
     >
     <div class="search-dropdown-list" id="departedEngineerDropdownList"></div>
   </div>
 </div>
 <div class="search-dropdown" id="onsiteEngineerDropdown">
-  <button class="search-dropdown-btn" onclick="w.toggleSearchDropdown('onsiteEngineerDropdown')">
+  <button class="search-dropdown-btn" onclick="window.toggleSearchDropdown('onsiteEngineerDropdown')">
     <span id="onsiteEngineerDropdownLabel">🧑‍🔧 On-site ล่าสุด</span>
     <span>⌄</span>
   </button>
@@ -3813,7 +3813,7 @@ Object.entries(engineers)
       class="search-dropdown-input"
       type="text"
       placeholder="ค้นหา..."
-      oninput="w.filterSearchDropdown('onsiteEngineerDropdown', this.value)"
+      oninput="window.filterSearchDropdown('onsiteEngineerDropdown', this.value)"
     >
     <div class="search-dropdown-list" id="onsiteEngineerDropdownList"></div>
   </div>
