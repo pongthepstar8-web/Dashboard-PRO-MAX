@@ -1596,14 +1596,12 @@ function cleanMobileNumber(v) {
 function formatMobileDisplay(v) {
   let s = String(v || '').trim();
 
-  // ถ้ามีเบอร์แบบมีขีด เช่น 065-7152310 ให้ใช้ตัวนี้ก่อน
   let dashed = s.match(/0\d{2}-\d{7}/);
 
   if (dashed) {
     return dashed[0];
   }
 
-  // ถ้าไม่มีขีด ให้หาเบอร์ 10 หลัก เช่น 0657152310
   let digits = s.replace(/[^\d]/g, '');
 
   let match = digits.match(/0\d{9}/);
