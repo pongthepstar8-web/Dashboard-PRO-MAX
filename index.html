@@ -3858,7 +3858,7 @@ Object.entries(engineers)
     👣 Travel OFF
   </button>
   <div class="search-dropdown" id="departedEngineerDropdown">
-    <button class="search-dropdown-btn" onclick="window.toggleSearchDropdown('departedEngineerDropdown')">
+    <button class="search-dropdown-btn" onclick="window.toggleSearchDropdown('departedEngineerDropdown', event)">
     <span id="departedEngineerDropdownLabel">🚗 Departed ล่าสุด</span>
     <span>⌄</span>
   </button>
@@ -3874,7 +3874,7 @@ Object.entries(engineers)
   </div>
 </div>
 <div class="search-dropdown" id="onsiteEngineerDropdown">
-  <button class="search-dropdown-btn" onclick="window.toggleSearchDropdown('onsiteEngineerDropdown')">
+  <button class="search-dropdown-btn" onclick="window.toggleSearchDropdown('onsiteEngineerDropdown', event)">
     <span id="onsiteEngineerDropdownLabel">🧑‍🔧 On-site ล่าสุด</span>
     <span>⌄</span>
   </button>
@@ -5138,6 +5138,67 @@ function isMatchSelectedProvince(provinceName) {
 
   return normalizeProvinceName(provinceName) === normalizeProvinceName(prov);
 }
+
+w.toggleSearchDropdown = function (dropdownId, event) {
+  if (event) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+
+  let box = w.document.getElementById(dropdownId);
+
+  if (!box) return;
+
+  let willOpen = !box.classList.contains('show');
+
+  w.document.querySelectorAll('.search-dropdown').forEach((item) => {
+    item.classList.remove('show');
+  });
+
+  if (willOpen) {
+    box.classList.add('show');
+
+    let input = box.querySelector('.search-dropdown-input');
+
+    if (input) {
+      input.value = '';
+      w.filterSearchDropdown(dropdownId, '');
+
+      setTimeout(() => {
+        input.focus();
+      }, 50);
+    }
+  }
+};
+
+w.filterSearchDropdown = function (dropdownId, keyword) {
+  let box = w.document.getElementById(dropdownId);
+
+  if (!box) return;
+
+  let q = String(keyword || '').toLowerCase().trim();
+
+  box.querySelectorAll('.search-dropdown-item').forEach((item) => {
+    let text = String(item.textContent || '').toLowerCase();
+
+    item.style.display = !q || text.includes(q) ? '' : 'none';
+  });
+};
+
+w.closeSearchDropdowns = function () {
+  w.document.querySelectorAll('.search-dropdown').forEach((box) => {
+    box.classList.remove('show');
+  });
+};
+w.document.addEventListener('click', function (event) {
+  let clickedDropdown = event.target.closest('.search-dropdown');
+
+  if (clickedDropdown) {
+    return;
+  }
+
+  w.closeSearchDropdowns();
+});
 function buildOnsiteEngineerSelect() {
   let select = w.document.getElementById('onsiteEngineerSelect');
 
