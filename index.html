@@ -3793,10 +3793,8 @@ Object.entries(engineers)
   placeholder="ค้นหา Departed..."
   oninput="window.filterEngineerDropdown('departedEngineerSelect', this.value)"
 >
-
 <select id="departedEngineerSelect" onchange="w.focusDepartedEngineer(this.value)">
 </select>
-
 <input
   id="onsiteEngineerSearch"
   class="engineer-search-input"
@@ -3804,7 +3802,6 @@ Object.entries(engineers)
   placeholder="ค้นหา On-site..."
   oninput="window.filterEngineerDropdown('onsiteEngineerSelect', this.value)"
 >
-
 <select id="onsiteEngineerSelect" onchange="w.focusOnsiteEngineer(this.value)">
 </select>
   <div class="map-tools-wrap">
@@ -5231,6 +5228,11 @@ function buildDepartedEngineerSelect() {
   });
 
   select.innerHTML = html;
+  let search = w.document.getElementById('onsiteEngineerSearch');
+
+if (search) {
+  search.value = '';
+}
 }
 
 w.filterEngineerDropdown = function (selectId, keyword) {
