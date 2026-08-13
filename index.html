@@ -4142,6 +4142,29 @@ function selectRouteSimPoint(coord, meta) {
   }
 }
 
+function getRouteSimPointJobId(point, pointNo) {
+  let meta = point && point.meta ? point.meta : {};
+
+  if (
+    meta.jobs &&
+    meta.jobs.length > 0 &&
+    meta.jobs[0] &&
+    meta.jobs[0]['Job ID']
+  ) {
+    return meta.jobs[0]['Job ID'];
+  }
+
+  if (meta.job && meta.job['Job ID']) {
+    return meta.job['Job ID'];
+  }
+
+  if (meta.name) {
+    return String(meta.name).split('|')[0].trim();
+  }
+
+  return 'จุด ' + pointNo;
+}
+
 async function drawRouteSimulator() {
   if (routeSimLine) {
     aiMap.removeLayer(routeSimLine);
@@ -4212,6 +4235,9 @@ routeSimLine = routeSimBaseLine;
     return;
   }
 
+  let fromJb = getRouteSimPointJobId(startPoint, leg.from);
+  let toJb = getRouteSimPointJobId(endPoint, leg.to);
+
   let mid = [
     (Number(startPoint.lat) + Number(endPoint.lat)) / 2,
     (Number(startPoint.lng) + Number(endPoint.lng)) / 2
@@ -4233,13 +4259,15 @@ routeSimLine = routeSimBaseLine;
           font-family:Arial;
           font-size:12px;
           text-align:center;
+          line-height:1.45;
         ">
           🧭 จุด ${leg.from} → จุด ${leg.to}<br>
+          📋 ${fromJb} → ${toJb}<br>
           🛣️ ${leg.distanceKm.toFixed(2)} km | ⏱ ${leg.durationMin.toFixed(0)} min
         </div>
       `,
-      iconSize: [170, 44],
-      iconAnchor: [85, 22],
+      iconSize: [230, 62],
+      iconAnchor: [115, 31],
     }),
   }).addTo(aiMap);
 
