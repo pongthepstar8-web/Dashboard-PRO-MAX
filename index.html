@@ -2715,7 +2715,9 @@ Object.values(shiftStaffMap).forEach((staff) => {
     };
   }
   if (!engineers[eng].mobile && staff.mobile) {
-  engineers[eng].mobile = staff.mobile;
+  engineers[eng].mobile = String(staff.mobile || '')
+    .replace(/^tel:\S+\s*/i, '')
+    .trim();
 }
 });
 
@@ -2742,8 +2744,10 @@ let staff = shiftStaffMap[key] || {};
 
   // ถ้ามีข้อมูล mobile จาก shift ให้เติมให้
   if (!engineers[eng].mobile && staff.mobile) {
-    engineers[eng].mobile = staff.mobile;
-  }
+  engineers[eng].mobile = String(staff.mobile || '')
+    .replace(/^tel:\S+\s*/i, '')
+    .trim();
+}
 
   if (r['District Name']) {
     engineers[eng].districts.add(r['District Name']);
