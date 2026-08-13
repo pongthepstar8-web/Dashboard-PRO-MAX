@@ -2708,7 +2708,9 @@ Object.values(shiftStaffMap).forEach((staff) => {
       jobs: [],
       districts: new Set(),
       fromShift: true,
-      mobile: staff.mobile || '',
+      mobile: String(staff.mobile || '')
+  .replace(/tel:\S+\s*/i, '')
+  .trim(),
       local: staff.local || '',
       shift: staff.shift || '',
       province: staff.province || ''
@@ -2735,7 +2737,9 @@ let staff = shiftStaffMap[key] || {};
       jobs: [],
       districts: new Set(),
       fromShift: false,
-      mobile: staff.mobile || '',
+      mobile: String(staff.mobile || '')
+  .replace(/tel:\S+\s*/i, '')
+  .trim(),
       local: staff.local || '',
       shift: staff.shift || '',
       province: staff.province || ''
