@@ -4152,6 +4152,11 @@ async function drawRouteSimulator() {
     aiMap.removeLayer(routeSimLabel);
     routeSimLabel = null;
   }
+  routeSimMarkers.forEach((m) => {
+  aiMap.removeLayer(m);
+});
+
+routeSimMarkers = [];
 
   if (routeSimPoints.length < 2) {
     return;
@@ -4199,33 +4204,47 @@ routeSimLines.push(routeSimFlowLine);
 // ใช้ routeSimLine อ้างอิง bounds
 routeSimLine = routeSimBaseLine;
 
-    let mid = route.latlngs[Math.floor(route.latlngs.length / 2)];
+(route.legs || []).forEach((leg) => {
+  let startPoint = routeSimPoints[leg.index];
+  let endPoint = routeSimPoints[leg.index + 1];
 
-    routeSimLabel = w.L.marker(mid, {
-      icon: w.L.divIcon({
-        className: '',
-        html: `
-          <div style="
-            background:#020617;
-            color:#bae6fd;
-            padding:7px 11px;
-            border-radius:14px;
-            font-weight:900;
-            border:1px solid #38bdf8;
-            box-shadow:0 0 12px rgba(56,189,248,.7);
-            white-space:nowrap;
-            font-family:Arial;
-            font-size:12px;
-            text-align:center;
-          ">
-            🧭 Route Simulator<br>
-            🛣️ ${route.distanceKm.toFixed(2)} km | ⏱ ${route.durationMin.toFixed(0)} min
-          </div>
-        `,
-        iconSize: [170, 44],
-        iconAnchor: [85, 22],
-      }),
-    }).addTo(aiMap);
+  if (!startPoint || !endPoint) {
+    return;
+  }
+
+  let mid = [
+    (Number(startPoint.lat) + Number(endPoint.lat)) / 2,
+    (Number(startPoint.lng) + Number(endPoint.lng)) / 2
+  ];
+
+  let label = w.L.marker(mid, {
+    icon: w.L.divIcon({
+      className: '',
+      html: `
+        <div style="
+          background:#020617;
+          color:#bae6fd;
+          padding:7px 11px;
+          border-radius:14px;
+          font-weight:900;
+          border:1px solid #38bdf8;
+          box-shadow:0 0 12px rgba(56,189,248,.7);
+          white-space:nowrap;
+          font-family:Arial;
+          font-size:12px;
+          text-align:center;
+        ">
+          🧭 จุด ${leg.from} → จุด ${leg.to}<br>
+          🛣️ ${leg.distanceKm.toFixed(2)} km | ⏱ ${leg.durationMin.toFixed(0)} min
+        </div>
+      `,
+      iconSize: [170, 44],
+      iconAnchor: [85, 22],
+    }),
+  }).addTo(aiMap);
+
+  routeSimMarkers.push(label);
+});
 
     aiMap.fitBounds(routeSimLine.getBounds(), {
       padding: [60, 60],
@@ -4321,6 +4340,11 @@ function clearRouteSimulator() {
     aiMap.removeLayer(routeSimLabel);
     routeSimLabel = null;
   }
+  routeSimMarkers.forEach((m) => {
+  aiMap.removeLayer(m);
+});
+
+routeSimMarkers = [];
 
   routeSimMarkers.forEach((m) => {
     aiMap.removeLayer(m);
@@ -4424,11 +4448,22 @@ function clearRouteSimulator() {
 
           const latlngs = route.geometry.coordinates.map((c) => [c[1], c[0]]);
 
-          return {
-            latlngs: latlngs,
-            distanceKm: route.distance / 1000,
-            durationMin: route.duration / 60,
-          };
+          let legs = (route.legs || []).map((leg, index) => {
+  return {
+    index: index,
+    from: index + 1,
+    to: index + 2,
+    distanceKm: leg.distance / 1000,
+    durationMin: leg.duration / 60
+  };
+});
+
+return {
+  latlngs: latlngs,
+  distanceKm: route.distance / 1000,
+  durationMin: route.duration / 60,
+  legs: legs
+};
         }
 
         function clearDistanceMeasure() {
