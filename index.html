@@ -1592,18 +1592,34 @@ function cleanMobileNumber(v) {
 function formatMobileDisplay(v) {
   let s = String(v || '').trim();
 
-  s = s.replace(/^tel:\S*\s*/i, '').trim();
+  let matches = s.match(/0\d{2}-?\d{7}/g) || [];
 
-  if (s.includes(' ')) {
-    s = s.split(/\s+/).pop();
+  let picked =
+    matches.find((x) => x.includes('-')) ||
+    matches[matches.length - 1] ||
+    '';
+
+  if (!picked) {
+    return '-';
   }
 
-  return s || '-';
+  picked = picked.replace(/\s+/g, '');
+
+  if (!picked.includes('-') && picked.length === 10) {
+    picked = picked.replace(/^(\d{3})(\d{7})$/, '$1-$2');
+  }
+
+  return picked;
 }
 
 function renderMobileLink(mobile) {
   let display = formatMobileDisplay(mobile);
-  let clean = cleanMobileNumber(mobile);
+
+  if (!display || display === '-') {
+    return '-';
+  }
+
+  let clean = cleanMobileNumber(display);
 
   if (!clean) {
     return '-';
