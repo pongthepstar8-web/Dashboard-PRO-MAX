@@ -2642,10 +2642,12 @@ await forceReloadAppsDataForAIBoard();
     siteCoordCount: Object.keys(SITE_COORD || {}).length,
     siteIndexCount: Object.keys(SITE_COORD_INDEX || {}).length
   });
-        let prov = $('#provinceFilter').val();
-        
+  let prov = $('#provinceFilter').val();
 
-        let sourceData = Array.isArray(latestDashboardData) && latestDashboardData.length
+let aiSearchText = ($('#search').val() || '').toLowerCase().trim();
+let aiSearchKeys = aiSearchText ? aiSearchText.split(/\s+/).filter(Boolean) : [];
+
+let sourceData = Array.isArray(latestDashboardData) && latestDashboardData.length
   ? latestDashboardData.map((r) => ({ ...r }))
   : Array.isArray(data)
   ? data.map((r) => ({ ...r }))
@@ -2653,20 +2655,72 @@ await forceReloadAppsDataForAIBoard();
 
 console.log('AI BOARD OPEN DATA:', {
   version: dashboardDataVersion,
-  sourceRows: sourceData.length
+  sourceRows: sourceData.length,
+  search: aiSearchText
 });
 
 let jobs = [];
 
 sourceData.forEach((r) => {
-          let p = mapCol(r, ['Province Name']);
-          if (prov && p !== prov) return;
-          if (!passToolSubFilter(r)) return;
-          let pr = (r['Priority'] || 'NONE').toUpperCase();
-          let hr = getHr(r['Create Time']);
-          let limit = pr === 'CRITICAL' ? 3 : pr === 'MAJOR' ? 10 : 1000;
-          let overdue = Math.max(0, hr - limit);
-          if (!pass(pr, overdue > 0)) return;
+  let p = mapCol(r, ['Province Name']);
+
+  if (prov && p !== prov) return;
+  if (!passToolSubFilter(r)) return;
+
+  let pr = (r['Priority'] || 'NONE').toUpperCase();
+  let hr = getHr(r['Create Time']);
+  let limit = pr === 'CRITICAL' ? 3 : pr === 'MAJOR' ? 10 : 1000;
+  let overdue = Math.max(0, hr - limit);
+
+  let job = String(r['Job ID'] || '').toLowerCase();
+  let title = String(r['Job Title'] || '').toLowerCase();
+  let status = String(r['Status'] || '').toLowerCase();
+  let assign = String(r['Assign to'] || '').toLowerCase();
+  let province = String(p || '').toLowerCase();
+  let district = String(r['District Name'] || '').toLowerCase();
+  let work = String(getWorkType(r['Job Title'] || '').text || '').toLowerCase();
+  let code = String(PROV_CODE[p] || '').toLowerCase();
+
+  let text =
+    job +
+    ' ' +
+    title +
+    ' ' +
+    status +
+    ' ' +
+    assign +
+    ' ' +
+    province +
+    ' ' +
+    district +
+    ' ' +
+    work +
+    ' ' +
+    code;
+
+  if (overdue > 0) text += ' overdue';
+
+  for (let key of aiSearchKeys) {
+    key = String(key || '').toLowerCase().trim();
+
+    if (key === 'overdue' && overdue <= 0) return;
+
+    if (key !== 'overdue') {
+      let groupKeys = TOP_SEARCH_GROUP_MAP[key];
+
+      if (groupKeys) {
+        let matchedGroup = groupKeys.some((g) => {
+          return code === String(g || '').toLowerCase();
+        });
+
+        if (!matchedGroup) return;
+      } else {
+        if (!text.includes(key)) return;
+      }
+    }
+  }
+
+  if (!pass(pr, overdue > 0)) return;
           let score = 0;
           if (pr === 'CRITICAL') score += 100;
           else if (pr === 'MAJOR') score += 60;
