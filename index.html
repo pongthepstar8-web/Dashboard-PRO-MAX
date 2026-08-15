@@ -4166,9 +4166,12 @@ let aiMapInited = false,
   if (!aiMap) return;
 
   if (!aiDistrictSourceGroups || aiDistrictSourceGroups.length === 0) {
-    alert('ไม่พบงานที่ใช้ Source: District Coordinate');
-    return;
-  }
+  w.showAIOperationsNotice(
+    'ไม่พบ District Coordinate',
+    'ไม่พบงานที่ใช้ Source: District Coordinate'
+  );
+  return;
+}
 
   let totalJobs = aiDistrictSourceGroups.reduce((sum, g) => {
     return sum + g.jobs.length;
