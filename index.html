@@ -6106,15 +6106,27 @@ engineerTravelLines.push(fallbackFlowLine);
   }
 
   if (bounds.length > 0) {
-    aiMap.fitBounds(bounds, {
-      padding: [60, 60],
-    });
-  } else {
-    w.showAIOperationsNotice(
-  'ไม่พบข้อมูล Travel',
-  'ยังไม่พบข้อมูล On-site เดิมและ Departed ของช่างคนเดียวกัน'
-);
+  aiMap.fitBounds(bounds, {
+    padding: [60, 60],
+  });
+} else {
+  engineerTravelOn = false;
+
+  let btn = w.document.getElementById('travelToggleBtn');
+
+  if (btn) {
+    btn.innerHTML = '👣 Travel OFF';
+    btn.style.background = '#1e293b';
+    btn.style.color = '#fff';
+    btn.style.borderColor = '#334155';
+    btn.style.boxShadow = 'none';
   }
+
+  w.showAIOperationsNotice(
+    'ไม่พบข้อมูล Travel',
+    'ยังไม่พบข้อมูล On-site เดิมและ Departed ของช่างคนเดียวกัน'
+  );
+}
 };
 async function drawDepartedTravelForEngineer(assignKey) {
   if (!aiMap) return;
