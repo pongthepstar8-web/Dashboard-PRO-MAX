@@ -7731,29 +7731,42 @@ if (networkGroupSubFilters.length > 0 && !isAllNetworkSelected) {
           let limit = pr === 'CRITICAL' ? 3 : pr === 'MAJOR' ? 10 : 1000;
           let od = hr > limit;
           let k = $('#search').val().toLowerCase().trim();
-          let keys = k ? k.split(/\s+/) : [];
-          let code = (PROV_CODE[p] || '').toLowerCase();
-          let text =
-            job +
-            ' ' +
-            title +
-            ' ' +
-            status +
-            ' ' +
-            assign +
-            ' ' +
-            province +
-            ' ' +
-            district +
-            ' ' +
-            work +
-            ' ' +
-            code;
-          if (od) text += ' overdue';
-          for (let key of keys) {
-            if (key === 'overdue' && !od) return;
-            if (key !== 'overdue' && !text.includes(key)) return;
-          }
+let keys = k ? k.split(/\s+/) : [];
+
+let code = (PROV_CODE[p] || '').toLowerCase();
+
+let text =
+  job +
+  ' ' +
+  title +
+  ' ' +
+  status +
+  ' ' +
+  assign +
+  ' ' +
+  province +
+  ' ' +
+  district +
+  ' ' +
+  work +
+  ' ' +
+  code;
+
+if (od) text += ' overdue';
+
+for (let key of keys) {
+  if (key === 'overdue' && !od) return;
+
+  if (key !== 'overdue') {
+    let groupKeys = SEARCH_GROUP_MAP[key] || [key];
+
+    let matched = groupKeys.some((g) => {
+      return text.includes(g);
+    });
+
+    if (!matched) return;
+  }
+}
           if (prov && p !== prov) return;
           if (!passToolSubFilter(r)) return;
           if (pr === 'CRITICAL') c++;
