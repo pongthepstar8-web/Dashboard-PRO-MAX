@@ -2656,15 +2656,6 @@ console.log('AI BOARD OPEN DATA:', {
   sourceRows: sourceData.length
 });
 
-let sourceData = Array.isArray(data)
-  ? data.map((r) => ({ ...r }))
-  : [];
-
-console.log('AI BOARD OPEN DATA:', {
-  version: dashboardDataVersion,
-  sourceRows: sourceData.length
-});
-
 let jobs = [];
 
 sourceData.forEach((r) => {
