@@ -959,6 +959,15 @@
           <button
             class="tools-item mode-tool"
             data-group="work"
+            data-value="Transmission Error"
+            onclick="toggleToolMultiFilter('work','Transmission Error',0,this)"
+          >
+            📡 Transmission Error
+          </button>
+
+          <button
+            class="tools-item mode-tool"
+            data-group="work"
             data-value="Access Power Fail"
             onclick="toggleToolMultiFilter('work','Access Power Fail',0,this)"
           >
@@ -981,15 +990,6 @@
             onclick="toggleToolMultiFilter('work','Business Circuit',0,this)"
           >
             🏢 Business Circuit
-          </button>
-
-          <button
-            class="tools-item mode-tool"
-            data-group="work"
-            data-value="Transmission Error"
-            onclick="toggleToolMultiFilter('work','Transmission Error',0,this)"
-          >
-            📡 Transmission Error
           </button>
 
           <button
@@ -1962,21 +1962,21 @@ function getShiftNamesByProvince(province) {
     };
   }
 
-  if (t.includes('olt') || t.includes('ac fail')) {
-    return {
-      icon: '⚡',
-      text: 'Access Power Fail',
-      full: '⚡ Access Power Fail (OLT AC Fail)',
-      type: 'access',
-    };
-  }
-
   if (t.includes('crc')) {
     return {
       icon: '📡',
       text: 'Transmission Error',
       full: '📡 Transmission Error (CRC)',
       type: 'transmission',
+    };
+  }
+
+  if (t.includes('olt') || t.includes('ac fail')) {
+    return {
+      icon: '⚡',
+      text: 'Access Power Fail',
+      full: '⚡ Access Power Fail (OLT AC Fail)',
+      type: 'access',
     };
   }
 
