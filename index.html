@@ -7249,18 +7249,35 @@ w.document.addEventListener('click', function (e) {
         }
       });
 
-      const TOP_SEARCH_GROUP_MAP = {
-  'KKN#1': ['KKN', 'RET', 'MKM'],
-  'KKN#2': ['SNK', 'NPM', 'MDH', 'KSN'],
+     
+      function getNetworkGroupValue(r) {
+  return String(
+    mapCol(r, [
+      'Zone',
+      'ZONE',
+      'zone',
+      'Network Group',
+      'NETWORK GROUP',
+      'NetworkGroup',
+      'Network group',
+      'Network Groups',
+      'NETWORK GROUPS',
+      'N/W Group'
+    ]) || ''
+  ).trim();
+}
+const TOP_SEARCH_GROUP_MAP = {
+  'kkn#1': ['kkn', 'ret', 'mkm'],
+  'kkn#2': ['snk', 'npm', 'mdh', 'ksn'],
 
-  'UDN#1': ['UDN'],
-  'UDN#2': ['LEI', 'NKI', 'BKN', 'NLP'],
+  'udn#1': ['udn'],
+  'udn#2': ['lei', 'nki', 'bkn', 'nlp'],
 
-  'NMA#1': ['NMA', 'CPM'],
-  'NMA#2': ['SRN', 'BRM'],
+  'nma#1': ['nma', 'cpm'],
+  'nma#2': ['srn', 'brm'],
 
-  'UBN#1': ['UBN'],
-  'UBN#2': ['SSK', 'YST', 'ACR']
+  'ubn#1': ['ubn'],
+  'ubn#2': ['ssk', 'yst', 'acr']
 };
 
 const LOCAL_CODE_NAME_MAP = {
@@ -7340,22 +7357,6 @@ function matchTopSearch(row, q) {
   });
 }
 
-      function getNetworkGroupValue(r) {
-  return String(
-    mapCol(r, [
-      'Zone',
-      'ZONE',
-      'zone',
-      'Network Group',
-      'NETWORK GROUP',
-      'NetworkGroup',
-      'Network group',
-      'Network Groups',
-      'NETWORK GROUPS',
-      'N/W Group'
-    ]) || ''
-  ).trim();
-}
 
 function escapeHtmlAttr(v) {
   return String(v || '')
@@ -7758,7 +7759,7 @@ for (let key of keys) {
   if (key === 'overdue' && !od) return;
 
   if (key !== 'overdue') {
-    let groupKeys = SEARCH_GROUP_MAP[key] || [key];
+    let groupKeys = TOP_SEARCH_GROUP_MAP[key] || [key];
 
     let matched = groupKeys.some((g) => {
       return text.includes(g);
