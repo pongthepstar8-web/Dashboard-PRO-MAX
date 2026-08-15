@@ -2041,27 +2041,33 @@ function getShiftNamesByProvince(province) {
         });
       }
       file.onchange = (e) => {
-        let r = new FileReader();
+  if (window.aiBoardWindow && !window.aiBoardWindow.closed) {
+    window.aiBoardWindow.close();
+    window.aiBoardWindow = null;
+  }
 
-        r.onload = (ev) => {
-          let wb = XLSX.read(new Uint8Array(ev.target.result), {
-            type: 'array',
-          });
+  let r = new FileReader();
 
-          // อ่าน Job จาก Sheet แรก
-          data = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+  r.onload = (ev) => {
+    let wb = XLSX.read(new Uint8Array(ev.target.result), {
+      type: 'array',
+    });
 
-          // อ่าน Shift Daily จาก Sheet: CM FE3BB Shift Daily
-          loadShiftDailyFromCMFE3BBShiftDaily(wb);
+    // อ่าน Job จาก Sheet แรก
+    data = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
 
-          initProvince();
-buildNetworkGroupTools();
-initToolDefaultAll();
-render();
-        };
+    // อ่าน Shift Daily จาก Sheet: CM FE3BB Shift Daily
+    loadShiftDailyFromCMFE3BBShiftDaily(wb);
 
-        r.readAsArrayBuffer(e.target.files[0]);
-      };
+    initProvince();
+    buildNetworkGroupTools();
+    initToolDefaultAll();
+    render();
+  };
+
+  r.readAsArrayBuffer(e.target.files[0]);
+};
+
       function loadShiftDailyFromCMFE3BBShiftDaily(wb) {
         let sheetName = wb.SheetNames.find((name) => {
   let n = String(name || '')
