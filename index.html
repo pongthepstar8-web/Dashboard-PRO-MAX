@@ -1154,6 +1154,7 @@
     <script>
       let data = [];
 let dashboardDataVersion = 0;
+let latestDashboardData = [];
 let selected = [];
 let viewMode = 0;
 let prioritySortMode = 'none';
@@ -2059,6 +2060,15 @@ function getShiftNamesByProvince(province) {
     // อ่าน Job จาก Sheet แรก
     data = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
 
+latestDashboardData = data.map((r) => ({ ...r }));
+
+dashboardDataVersion++;
+
+console.log('DASHBOARD DATA UPDATED:', {
+  version: dashboardDataVersion,
+  rows: latestDashboardData.length
+});
+
     dashboardDataVersion++;
 
     console.log('DASHBOARD DATA UPDATED:', {
@@ -2615,7 +2625,11 @@ w.document.close();
         let prov = $('#provinceFilter').val();
         
 
-        let sourceData = Array.isArray(data) ? data.map((r) => ({ ...r })) : [];
+        let sourceData = Array.isArray(latestDashboardData) && latestDashboardData.length
+  ? latestDashboardData.map((r) => ({ ...r }))
+  : Array.isArray(data)
+  ? data.map((r) => ({ ...r }))
+  : [];
 
 console.log('AI BOARD OPEN DATA:', {
   version: dashboardDataVersion,
