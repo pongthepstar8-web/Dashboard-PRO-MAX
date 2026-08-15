@@ -1529,6 +1529,26 @@ function buildSiteCoordIndex() {
 
   console.log('SITE_COORD_INDEX READY:', Object.keys(SITE_COORD_INDEX).length);
 }
+
+async function forceReloadAppsDataForAIBoard() {
+  appsDataPromise = null;
+  APPS_DATA_READY = false;
+
+  await loadDataFromAppsScript();
+
+  if (!SITE_COORD_INDEX || Object.keys(SITE_COORD_INDEX || {}).length === 0) {
+    buildSiteCoordIndex();
+  }
+
+  console.log('AI BOARD FORCE RELOAD DATA:', {
+    siteCoordCount: Object.keys(SITE_COORD || {}).length,
+    siteIndexCount: Object.keys(SITE_COORD_INDEX || {}).length,
+    travelHistory: Object.keys(TRAVEL_HISTORY || {}).length
+  });
+
+  return true;
+}
+
 async function ensureAppsDataReady() {
   try {
     if (appsDataPromise) {
@@ -2616,7 +2636,7 @@ w.document.write(`
 `);
 w.document.close();
 
-  await ensureAppsDataReady();
+await forceReloadAppsDataForAIBoard();
 
   console.log('OPEN AI BOARD WITH SITE_COORD:', {
     siteCoordCount: Object.keys(SITE_COORD || {}).length,
@@ -2628,6 +2648,15 @@ w.document.close();
         let sourceData = Array.isArray(latestDashboardData) && latestDashboardData.length
   ? latestDashboardData.map((r) => ({ ...r }))
   : Array.isArray(data)
+  ? data.map((r) => ({ ...r }))
+  : [];
+
+console.log('AI BOARD OPEN DATA:', {
+  version: dashboardDataVersion,
+  sourceRows: sourceData.length
+});
+
+let sourceData = Array.isArray(data)
   ? data.map((r) => ({ ...r }))
   : [];
 
