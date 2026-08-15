@@ -2481,6 +2481,8 @@ render();
 
   let w = window.open('', '_blank');
 
+window.aiBoardWindow = w;
+
   if (!w || !w.document) {
     alert('ไม่สามารถเปิด AI Action Board ได้ กรุณาอนุญาต Popup ใน Browser');
     return;
@@ -2590,8 +2592,11 @@ w.document.close();
     siteIndexCount: Object.keys(SITE_COORD_INDEX || {}).length
   });
         let prov = $('#provinceFilter').val();
-        let jobs = [];
-        data.forEach((r) => {
+        let sourceData = Array.isArray(data) ? data.slice() : [];
+
+let jobs = [];
+
+sourceData.forEach((r) => {
           let p = mapCol(r, ['Province Name']);
           if (prov && p !== prov) return;
           if (!passToolSubFilter(r)) return;
