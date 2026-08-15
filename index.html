@@ -1153,6 +1153,7 @@
 
     <script>
       let data = [],
+      let dashboardDataVersion = 0;
         selected = [];
       let viewMode = 0;
       let prioritySortMode = 'none';
@@ -2040,6 +2041,7 @@ function getShiftNamesByProvince(province) {
           document.body.removeChild(box);
         });
       }
+
       file.onchange = (e) => {
   if (window.aiBoardWindow && !window.aiBoardWindow.closed) {
     window.aiBoardWindow.close();
@@ -2055,6 +2057,13 @@ function getShiftNamesByProvince(province) {
 
     // อ่าน Job จาก Sheet แรก
     data = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+
+    dashboardDataVersion++;
+
+    console.log('DASHBOARD DATA UPDATED:', {
+      version: dashboardDataVersion,
+      rows: data.length
+    });
 
     // อ่าน Shift Daily จาก Sheet: CM FE3BB Shift Daily
     loadShiftDailyFromCMFE3BBShiftDaily(wb);
@@ -2485,15 +2494,20 @@ function getShiftNamesByProvince(province) {
     return;
   }
 
-  let w = window.open('', '_blank');
-
-window.aiBoardWindow = w;
-
-  if (!w || !w.document) {
-    alert('ไม่สามารถเปิด AI Action Board ได้ กรุณาอนุญาต Popup ใน Browser');
-    return;
+  if (window.aiBoardWindow && !window.aiBoardWindow.closed) {
+    window.aiBoardWindow.close();
+    window.aiBoardWindow = null;
   }
 
+
+  let w = window.open('', '_blank');
+
+if (!w || !w.document) {
+  alert('ไม่สามารถเปิด AI Action Board ได้ กรุณาอนุญาต Popup ใน Browser');
+  return;
+}
+
+window.aiBoardWindow = w;
   w.document.open();
 w.document.write(`
   <!DOCTYPE html>
@@ -2599,6 +2613,13 @@ w.document.close();
   });
         let prov = $('#provinceFilter').val();
         let sourceData = Array.isArray(data) ? data.slice() : [];
+
+        let sourceData = Array.isArray(data) ? data.map((r) => ({ ...r })) : [];
+
+console.log('AI BOARD OPEN DATA:', {
+  version: dashboardDataVersion,
+  sourceRows: sourceData.length
+});
 
 let jobs = [];
 
