@@ -7759,13 +7759,20 @@ for (let key of keys) {
   if (key === 'overdue' && !od) return;
 
   if (key !== 'overdue') {
-    let groupKeys = TOP_SEARCH_GROUP_MAP[key] || [key];
+    let groupKeys = TOP_SEARCH_GROUP_MAP[key];
 
-    let matched = groupKeys.some((g) => {
-      return text.includes(g);
-    });
+    // ถ้าเป็นกลุ่ม เช่น udn#1, nma#1, kkn#2
+    // ให้เช็กเฉพาะ province code เท่านั้น ห้ามเช็กทั้ง text
+    if (groupKeys) {
+      let matchedGroup = groupKeys.some((g) => {
+        return code === String(g || '').toLowerCase();
+      });
 
-    if (!matched) return;
+      if (!matchedGroup) return;
+    } else {
+      // ถ้าเป็นคำค้นทั่วไป ค่อยค้นทั้ง text เหมือนเดิม
+      if (!text.includes(key)) return;
+    }
   }
 }
           if (prov && p !== prov) return;
