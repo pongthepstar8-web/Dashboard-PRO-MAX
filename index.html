@@ -7248,6 +7248,98 @@ w.document.addEventListener('click', function (e) {
           closeToolsMenu();
         }
       });
+
+      const TOP_SEARCH_GROUP_MAP = {
+  'KKN#1': ['KKN', 'RET', 'MKM'],
+  'KKN#2': ['SNK', 'NPM', 'MDH', 'KSN'],
+
+  'UDN#1': ['UDN'],
+  'UDN#2': ['LEI', 'NKI', 'BKN', 'NLP'],
+
+  'NMA#1': ['NMA', 'CPM'],
+  'NMA#2': ['SRN', 'BRM'],
+
+  'UBN#1': ['UBN'],
+  'UBN#2': ['SSK', 'YST', 'ACR']
+};
+
+const LOCAL_CODE_NAME_MAP = {
+  KKN: ['KKN', 'ขอนแก่น'],
+  RET: ['RET', 'ร้อยเอ็ด'],
+  MKM: ['MKM', 'มหาสารคาม'],
+
+  SNK: ['SNK', 'สกลนคร'],
+  NPM: ['NPM', 'นครพนม'],
+  MDH: ['MDH', 'มุกดาหาร'],
+  KSN: ['KSN', 'กาฬสินธุ์'],
+
+  UDN: ['UDN', 'อุดรธานี'],
+  LEI: ['LEI', 'เลย'],
+  NKI: ['NKI', 'หนองคาย'],
+  BKN: ['BKN', 'บึงกาฬ'],
+  NLP: ['NLP', 'หนองบัวลำภู'],
+
+  NMA: ['NMA', 'นครราชสีมา'],
+  CPM: ['CPM', 'ชัยภูมิ'],
+
+  SRN: ['SRN', 'สุรินทร์'],
+  BRM: ['BRM', 'บุรีรัมย์'],
+
+  UBN: ['UBN', 'อุบลราชธานี'],
+  SSK: ['SSK', 'ศรีสะเกษ'],
+  YST: ['YST', 'ยโสธร'],
+  ACR: ['ACR', 'อำนาจเจริญ']
+};
+
+function normalizeTopSearchText(v) {
+  return String(v || '')
+    .toLowerCase()
+    .replace(/\s+/g, '')
+    .trim();
+}
+
+function getTopSearchKeywords(q) {
+  let raw = String(q || '').trim();
+
+  if (!raw) {
+    return [];
+  }
+
+  let key = raw.toUpperCase();
+
+  if (!TOP_SEARCH_GROUP_MAP[key]) {
+    return [raw];
+  }
+
+  let result = [];
+
+  TOP_SEARCH_GROUP_MAP[key].forEach((code) => {
+    let aliases = LOCAL_CODE_NAME_MAP[code] || [code];
+
+    aliases.forEach((x) => {
+      result.push(x);
+    });
+  });
+
+  return result;
+}
+
+function matchTopSearch(row, q) {
+  let keywords = getTopSearchKeywords(q);
+
+  if (!keywords.length) {
+    return true;
+  }
+
+  let rowText = Object.values(row || {})
+    .join(' ')
+    .toLowerCase();
+
+  return keywords.some((kw) => {
+    return rowText.includes(String(kw || '').toLowerCase());
+  });
+}
+
       function getNetworkGroupValue(r) {
   return String(
     mapCol(r, [
