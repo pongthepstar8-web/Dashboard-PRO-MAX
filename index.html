@@ -2613,7 +2613,7 @@ w.document.close();
     siteIndexCount: Object.keys(SITE_COORD_INDEX || {}).length
   });
         let prov = $('#provinceFilter').val();
-        let sourceData = Array.isArray(data) ? data.slice() : [];
+        
 
         let sourceData = Array.isArray(data) ? data.map((r) => ({ ...r })) : [];
 
