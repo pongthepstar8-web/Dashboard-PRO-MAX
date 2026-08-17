@@ -2917,6 +2917,51 @@ let staff = shiftStaffMap[key] || {};
 
       <style>
 
+        .map-select {
+  height: 46px;
+  min-width: 300px;
+  background: #1e293b;
+  color: #ffffff;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 0 42px 0 14px;
+  font-weight: 900;
+  font-size: 14px;
+  outline: none;
+  cursor: pointer;
+
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+
+  background-image:
+    linear-gradient(45deg, transparent 50%, #e5e7eb 50%),
+    linear-gradient(135deg, #e5e7eb 50%, transparent 50%);
+  background-position:
+    calc(100% - 18px) 19px,
+    calc(100% - 12px) 19px;
+  background-size:
+    6px 6px,
+    6px 6px;
+  background-repeat: no-repeat;
+}
+
+.map-select:hover {
+  border-color: #64748b;
+}
+
+.map-select:focus {
+  border-color: #8b5cf6;
+  box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.25);
+}
+        
+        .district-boundary-path {
+  stroke: #94a3b8 !important;
+  stroke-width: 0.5 !important;
+  stroke-opacity: 0.18 !important;
+  fill-opacity: 0 !important;
+}
+
         .engineer-route-dd {
   position: relative;
   width: 270px;
@@ -3983,7 +4028,7 @@ Object.entries(engineers)
     onclick="window.toggleEngineerRouteDropdown('departedEngineerDropdown', event)"
   >
     <span id="departedEngineerDropdownLabel">🚗 Departed ล่าสุด</span>
-    <span>⌄</span>
+    <span class="dropdown-arrow">▾</span>
   </button>
 
   <div class="engineer-route-dd-panel">
@@ -4004,7 +4049,7 @@ Object.entries(engineers)
     onclick="window.toggleEngineerRouteDropdown('onsiteEngineerDropdown', event)"
   >
     <span id="onsiteEngineerDropdownLabel">🧑‍🔧 On-site ปัจจุบัน / ล่าสุด</span>
-    <span>⌄</span>
+    <span class="dropdown-arrow">▾</span>
   </button>
 
   <div class="engineer-route-dd-panel">
@@ -4061,6 +4106,12 @@ w.document.close();
 let aiMapInited = false,
   aiMap = null,
   aiMarkers = [],
+  aiAllPoints = [];
+
+  const DISTRICT_GEOJSON_URL =
+  'https://pongthepstar8-web.github.io/ADMIN-TEST/thailand-districts.geojson';
+
+let districtBoundaryLayer = null;
   aiAllPoints = [],
   onsiteEngineerIndex = {},
   departedEngineerIndex = {},
@@ -4174,6 +4225,157 @@ let aiMapInited = false,
 
   w.document.body.appendChild(box);
 };
+
+function getProvinceNameFromFeature(feature) {
+  let p = feature.properties || {};
+
+  return String(
+    p.PROVINCE ||
+    p.province ||
+    p.PROV_NAM_T ||
+    p.prov_nam_t ||
+    p.NAME_1 ||
+    p.name ||
+    ''
+  ).trim();
+}
+
+async function renderSelectedProvinceBoundary() {
+  if (!aiMap) return;
+
+  if (provinceBoundaryLayer) {
+    aiMap.removeLayer(provinceBoundaryLayer);
+    provinceBoundaryLayer = null;
+  }
+
+  let selectedProvince = String($('#provinceFilter').val() || '').trim();
+
+  try {
+    let res = await fetch(PROVINCE_GEOJSON_URL + '?ts=' + Date.now());
+    let geojson = await res.json();
+
+    let selectedBounds = null;
+
+    provinceBoundaryLayer = w.L.geoJSON(geojson, {
+      style: function (feature) {
+        let provinceName = getProvinceNameFromFeature(feature);
+        let isSelected =
+          selectedProvince &&
+          provinceName === selectedProvince;
+
+        return {
+          color: isSelected ? '#facc15' : '#64748b',
+          weight: isSelected ? 5 : 1,
+          opacity: isSelected ? 1 : 0.25,
+          fillColor: isSelected ? '#facc15' : '#0f172a',
+          fillOpacity: isSelected ? 0.08 : 0.02
+        };
+      },
+
+      onEachFeature: function (feature, layer) {
+        let provinceName = getProvinceNameFromFeature(feature);
+
+        if (provinceName) {
+          layer.bindTooltip(provinceName, {
+            sticky: true
+          });
+        }
+
+        if (
+          selectedProvince &&
+          provinceName === selectedProvince
+        ) {
+          selectedBounds = layer.getBounds();
+        }
+      }
+    }).addTo(aiMap);
+
+    if (selectedBounds) {
+      aiMap.fitBounds(selectedBounds, {
+        padding: [50, 50]
+      });
+    }
+  } catch (err) {
+    console.warn('โหลด Province Boundary ไม่สำเร็จ:', err);
+  }
+}
+
+function getDistrictNameFromFeature(feature) {
+  let p = feature.properties || {};
+
+  return String(
+    p.shapeName ||
+    p.ADM2_TH ||
+    p.ADM2_EN ||
+    p.DISTRICT ||
+    p.district ||
+    p.NAME_2 ||
+    p.name ||
+    ''
+  ).trim();
+}
+
+function normalizeDistrictBoundaryName(v) {
+  return String(v || '')
+    .trim()
+    .replace(/^อำเภอ/g, '')
+    .replace(/^อ\./g, '')
+    .replace(/\s+/g, '')
+    .toLowerCase();
+}
+
+async function renderDistrictBoundaries() {
+  if (!aiMap) return;
+
+  if (districtBoundaryLayer) {
+    aiMap.removeLayer(districtBoundaryLayer);
+    districtBoundaryLayer = null;
+  }
+
+  try {
+    let res = await fetch(DISTRICT_GEOJSON_URL + '?ts=' + Date.now());
+    let geojson = await res.json();
+
+    if (!aiMap.getPane('districtBoundaryPane')) {
+      aiMap.createPane('districtBoundaryPane');
+    }
+
+    let pane = aiMap.getPane('districtBoundaryPane');
+
+    pane.style.zIndex = 250;
+    pane.style.pointerEvents = 'none';
+
+    districtBoundaryLayer = w.L.geoJSON(geojson, {
+  pane: 'districtBoundaryPane',
+  interactive: false,
+
+  style: function () {
+    return {
+      color: '#64748b',
+      weight: 0.7,
+      opacity: 0.28,
+      fillColor: '#0f172a',
+      fillOpacity: 0
+    };
+  }
+}).addTo(aiMap);
+
+districtBoundaryLayer.setStyle({
+  color: '#64748b',
+  weight: 0.7,
+  opacity: 0.28,
+  fillOpacity: 0
+});
+
+    console.log('DISTRICT BOUNDARY READY:', {
+      count: geojson.features ? geojson.features.length : 0
+    });
+  } catch (err) {
+    console.warn('โหลด District GeoJSON ไม่สำเร็จ:', err);
+  }
+}
+
+
         w.initAIMap = function () {
           if (aiMapInited) {
             setTimeout(() => aiMap && aiMap.invalidateSize(), 250);
@@ -4188,11 +4390,16 @@ let aiMapInited = false,
           );
 
           w.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 19,
-            attribution: '© OpenStreetMap',
-          }).addTo(aiMap);
+  maxZoom: 19,
+  attribution: '© OpenStreetMap',
+}).addTo(aiMap);
 
-          buildAIMapMarkers().then(() => {
+// ปิดไว้ก่อนระหว่างทดสอบเส้นเขตอำเภอ
+// renderSelectedProvinceBoundary();
+
+buildAIMapMarkers().then(() => {
+  renderDistrictBoundaries();
+
   buildOnsiteEngineerSelect();
   buildDepartedEngineerSelect();
   applyMapAdminPermission();
