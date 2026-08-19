@@ -1744,6 +1744,62 @@ function getProvinceCodeFromName(province) {
     })
     .filter((x) => x.name);
 }
+
+function getProvinceCodeForSearchGroup(provinceName) {
+  let raw = String(provinceName || '').trim();
+  let rawLower = raw.toLowerCase();
+
+  if (!raw) {
+    return '';
+  }
+
+  if (PROV_CODE[raw]) {
+    return String(PROV_CODE[raw] || '').toLowerCase().trim();
+  }
+
+  let foundKey = Object.keys(PROV_CODE || {}).find((k) => {
+    return String(k || '').trim().toLowerCase() === rawLower;
+  });
+
+  if (foundKey) {
+    return String(PROV_CODE[foundKey] || '').toLowerCase().trim();
+  }
+
+  return rawLower;
+}
+
+function getActiveTopSearchGroupKeys() {
+  let searchText = String($('#search').val() || '')
+    .toLowerCase()
+    .trim();
+
+  if (!searchText) {
+    return null;
+  }
+
+  let keys = searchText.split(/\s+/).filter(Boolean);
+
+  let groupKey = keys.find((k) => TOP_SEARCH_GROUP_MAP[k]);
+
+  if (!groupKey) {
+    return null;
+  }
+
+  return TOP_SEARCH_GROUP_MAP[groupKey] || null;
+}
+
+function isMatchTopSearchProvinceGroup(provinceName) {
+  let groupKeys = getActiveTopSearchGroupKeys();
+
+  if (!groupKeys) {
+    return true;
+  }
+
+  let provinceCode = getProvinceCodeForSearchGroup(provinceName);
+
+  return groupKeys.includes(provinceCode);
+}
+
 function getShiftStaffMapByProvince(province) {
   let matchKeys = getProvinceMatchKeys(province);
 
@@ -1762,7 +1818,11 @@ function getShiftStaffMapByProvince(province) {
 
       if (!key) return;
 
-      map[key] = {
+      if (!isMatchTopSearchProvinceGroup(x.province)) {
+  return;
+}
+
+map[key] = {
   name: x.name || '',
   mobile: formatMobileDisplay(x.mobile),
   province: x.province || '',
@@ -2836,58 +2896,56 @@ Object.values(shiftStaffMap).forEach((staff) => {
 
   if (!eng) return;
 
+  if (!isMatchTopSearchProvinceGroup(staff.province)) {
+    return;
+  }
+
   if (!engineers[eng]) {
     engineers[eng] = {
       jobs: [],
       districts: new Set(),
       fromShift: true,
       mobile: String(staff.mobile || '')
-  .replace(/tel:\S+\s*/i, '')
-  .trim(),
+        .replace(/tel:\S+\s*/i, '')
+        .trim(),
       local: staff.local || '',
       shift: staff.shift || '',
       province: staff.province || ''
     };
   }
+
   if (!engineers[eng].mobile && staff.mobile) {
-  engineers[eng].mobile = String(staff.mobile || '')
-    .replace(/^tel:\S+\s*/i, '')
-    .trim();
-}
+    engineers[eng].mobile = String(staff.mobile || '')
+      .replace(/^tel:\S+\s*/i, '')
+      .trim();
+  }
 });
 
 // ✅ 2. เติมงานจาก Assign to
 jobs.forEach((r) => {
+  let jobProvince = r['Province Name'] || '';
+
+  if (!isMatchTopSearchProvinceGroup(jobProvince)) {
+    return;
+  }
+
   let eng = (r['Assign to'] || '').trim();
 
   if (!eng) return;
 
   let key = normalizeEngineerName(eng);
-let staff = shiftStaffMap[key] || {};
+  let staff = shiftStaffMap[key] || {};
 
   if (!engineers[eng]) {
     engineers[eng] = {
       jobs: [],
       districts: new Set(),
       fromShift: false,
-      mobile: String(staff.mobile || '')
-  .replace(/tel:\S+\s*/i, '')
-  .trim(),
+      mobile: staff.mobile || '',
       local: staff.local || '',
       shift: staff.shift || '',
       province: staff.province || ''
     };
-  }
-
-  // ถ้ามีข้อมูล mobile จาก shift ให้เติมให้
-  if (!engineers[eng].mobile && staff.mobile) {
-  engineers[eng].mobile = String(staff.mobile || '')
-    .replace(/^tel:\S+\s*/i, '')
-    .trim();
-}
-
-  if (r['District Name']) {
-    engineers[eng].districts.add(r['District Name']);
   }
 
   engineers[eng].jobs.push(r);
@@ -4079,6 +4137,10 @@ Object.entries(engineers)
         🧹 Clear Route
       </button>
 
+      <button class="map-tools-item" onclick="window.scanNearbyJobs()">
+  🔎 Scan Nearby Jobs
+</button>
+
       <button class="map-tools-item" onclick="window.fitAllMarkers()">
         📍 Fit All Jobs
       </button>
@@ -4139,6 +4201,11 @@ let districtBoundaryLayer = null;
   engineerTravelLines = [],
   engineerTravelMarkers = [],
   engineerTravelOn = false;
+
+  let nearbyJobMarkers = [];
+  let nearbyJobLines = [];
+  let currentNearbyEngineer = null;
+  let currentNearbyJobs = [];
 
   w.showAIOperationsNotice = function (title, message) {
   let old = w.document.getElementById('aiOperationsNotice');
@@ -5580,6 +5647,8 @@ if (!w.__engineerRouteDropdownOutsideClickBound) {
   w.__engineerRouteDropdownOutsideClickBound = true;
 }
 
+
+
 function buildOnsiteEngineerSelect() {
   let list = w.document.getElementById('onsiteEngineerDropdownList');
   let labelEl = w.document.getElementById('onsiteEngineerDropdownLabel');
@@ -5595,10 +5664,11 @@ function buildOnsiteEngineerSelect() {
       let province = job['Province Name'] || '';
 
       return (
-        assign &&
-        isOnsiteStatus(status) &&
-        isMatchSelectedProvince(province)
-      );
+  assign &&
+  isOnsiteStatus(status) &&
+  isMatchSelectedProvince(province) &&
+  isMatchTopSearchProvinceGroup(province)
+);
     })
     .sort((a, b) => {
       return new Date(b['Create Time'] || 0) - new Date(a['Create Time'] || 0);
@@ -5625,9 +5695,12 @@ function buildOnsiteEngineerSelect() {
 
     if (!item || !item.assign) return;
 
-    if (!isMatchSelectedProvince(item.province)) {
-      return;
-    }
+    if (
+  !isMatchSelectedProvince(item.province) ||
+  !isMatchTopSearchProvinceGroup(item.province)
+) {
+  return;
+}
 
     let assign = String(item.assign || '').trim();
     let normKey = assign.toLowerCase();
@@ -5716,10 +5789,11 @@ function buildDepartedEngineerSelect() {
       let province = job['Province Name'] || '';
 
       return (
-        assign &&
-        isDepartedStatus(status) &&
-        isMatchSelectedProvince(province)
-      );
+  assign &&
+  isDepartedStatus(status) &&
+  isMatchSelectedProvince(province) &&
+  isMatchTopSearchProvinceGroup(province)
+);
     })
     .sort((a, b) => {
       return new Date(b['Create Time'] || 0) - new Date(a['Create Time'] || 0);
@@ -5888,7 +5962,7 @@ updateDistrictSourceButton();
               group._offsetIndex || 0,
               group._offsetTotal || 1
             );
-
+            
             let marker = w.L.marker(displayCoord, {
   icon: makeMapIcon(mainJob),
 })
@@ -5975,6 +6049,8 @@ group.jobs.forEach((job) => {
   let key = String(name || '').toLowerCase().trim();
 
   if (!key) return;
+  w.currentNearbyEngineerKey = key;
+w.currentNearbyEngineerName = name || '';
 
   // ✅ 1. หา On-site ปัจจุบันจาก marker index ก่อน
   let item = onsiteEngineerIndex[key];
@@ -6079,6 +6155,9 @@ w.focusDepartedEngineer = async function (name) {
 
   if (!key) return;
 
+  w.currentNearbyEngineerKey = key;
+w.currentNearbyEngineerName = name || '';
+
   let item = departedEngineerIndex[key];
 
   if (!item) {
@@ -6113,7 +6192,515 @@ w.focusDepartedEngineer = async function (name) {
   }, 350);
 };
 
+function getCurrentNearbyEngineerLocation() {
+  let key = String(w.currentNearbyEngineerKey || w.selectedEngineer || '')
+    .toLowerCase()
+    .trim();
 
+  if (!key) {
+    return null;
+  }
+
+  let onsiteItem = onsiteEngineerIndex && onsiteEngineerIndex[key];
+
+  if (onsiteItem) {
+    let coord =
+      onsiteItem.coord ||
+      (
+        onsiteItem.group &&
+        !isNaN(Number(onsiteItem.group.lat)) &&
+        !isNaN(Number(onsiteItem.group.lng))
+          ? [Number(onsiteItem.group.lat), Number(onsiteItem.group.lng)]
+          : null
+      );
+
+    if (coord) {
+      return {
+        key: key,
+        name: onsiteItem.assign || w.currentNearbyEngineerName || key,
+        coord: coord,
+        source: 'CURRENT_ONSITE',
+        jobId: onsiteItem.job ? onsiteItem.job['Job ID'] || '' : ''
+      };
+    }
+  }
+
+  let departedItem = departedEngineerIndex && departedEngineerIndex[key];
+
+  if (departedItem) {
+    let coord =
+      departedItem.coord ||
+      (
+        departedItem.group &&
+        !isNaN(Number(departedItem.group.lat)) &&
+        !isNaN(Number(departedItem.group.lng))
+          ? [Number(departedItem.group.lat), Number(departedItem.group.lng)]
+          : null
+      );
+
+    if (coord) {
+      return {
+        key: key,
+        name: departedItem.assign || w.currentNearbyEngineerName || key,
+        coord: coord,
+        source: 'DEPARTED',
+        jobId: departedItem.job ? departedItem.job['Job ID'] || '' : ''
+      };
+    }
+  }
+
+  let history = TRAVEL_HISTORY && TRAVEL_HISTORY[key];
+
+  if (
+    history &&
+    !isNaN(Number(history.lat)) &&
+    !isNaN(Number(history.lng))
+  ) {
+    return {
+      key: key,
+      name: history.assign || w.currentNearbyEngineerName || key,
+      coord: [Number(history.lat), Number(history.lng)],
+      source: 'TRAVEL_HISTORY',
+      jobId: history.jobId || ''
+    };
+  }
+
+  return null;
+}
+
+function clearNearbyJobHighlights() {
+  nearbyJobMarkers.forEach((m) => {
+    if (aiMap && aiMap.hasLayer(m)) {
+      aiMap.removeLayer(m);
+    }
+  });
+
+  nearbyJobLines.forEach((line) => {
+    if (aiMap && aiMap.hasLayer(line)) {
+      aiMap.removeLayer(line);
+    }
+  });
+
+  if (aiMap) {
+    aiMap.eachLayer((layer) => {
+      if (layer && layer.options && layer.options.nearbyJobLayer) {
+        aiMap.removeLayer(layer);
+      }
+    });
+  }
+
+  nearbyJobMarkers = [];
+  nearbyJobLines = [];
+}
+
+function offsetNearbyJobMarkerCoord(coord, index, total) {
+  if (!coord || coord.length !== 2) return coord;
+
+  let lat = Number(coord[0]);
+  let lng = Number(coord[1]);
+
+  if (isNaN(lat) || isNaN(lng)) return coord;
+
+  let radiusMeters = 45;
+  let angle = (2 * Math.PI * index) / Math.max(total, 1);
+
+  let earth = 6378137;
+
+  let dLat = (radiusMeters * Math.cos(angle)) / earth;
+  let dLng =
+    (radiusMeters * Math.sin(angle)) /
+    (earth * Math.cos((Math.PI * lat) / 180));
+
+  let newLat = lat + (dLat * 180) / Math.PI;
+  let newLng = lng + (dLng * 180) / Math.PI;
+
+  return [newLat, newLng];
+}
+
+function drawNearbyJobHighlights(engineer, topJobs) {
+  if (!aiMap || !engineer || !engineer.coord || !topJobs || !topJobs.length) {
+    return;
+  }
+
+  clearNearbyJobHighlights();
+
+  let bounds = [];
+
+  bounds.push(engineer.coord);
+
+  topJobs.forEach((item, idx) => {
+  let job = item.job;
+  let coord = item.coord;
+
+  if (!coord) return;
+
+  let rank = idx + 1;
+  let jobCount = item.count || (item.jobs ? item.jobs.length : 1);
+  
+
+  let displayCoord = coord;
+
+bounds.push(displayCoord);
+
+if (!aiMap.getPane('nearbyJobLinePane')) {
+  aiMap.createPane('nearbyJobLinePane');
+  aiMap.getPane('nearbyJobLinePane').style.zIndex = 430;
+}
+
+  let line = w.L.polyline(
+    [
+      engineer.coord,
+      displayCoord
+    ],
+    {
+      pane: 'nearbyJobLinePane',
+      color: '#38bdf8',
+      weight: 2,
+      opacity: 0.45,
+      dashArray: '6,12',
+      lineCap: 'round',
+      nearbyJobLayer: true
+    }
+  ).addTo(aiMap);
+
+  nearbyJobLines.push(line);
+
+  if (!aiMap.getPane('nearbyJobMarkerPane')) {
+  aiMap.createPane('nearbyJobMarkerPane');
+  aiMap.getPane('nearbyJobMarkerPane').style.zIndex = 680;
+}
+
+let marker = w.L.marker(displayCoord, {
+  pane: 'nearbyJobMarkerPane',
+  zIndexOffset: 10000,
+  nearbyJobLayer: true,
+  icon: w.L.divIcon({
+      className: '',
+      html: `
+        <div style="
+          position:relative;
+          width:28px;
+          height:28px;
+          border-radius:50%;
+          background:#7c3aed;
+          color:white;
+          display:flex;
+          align-items:center;
+          justify-content:center;
+          font-weight:900;
+          font-size:12px;
+          border:3px solid #ffffff;
+          box-shadow:0 0 14px rgba(124,58,237,.9);
+          font-family:Arial;
+        ">
+          ${rank}
+
+          ${
+            jobCount > 1
+              ? `
+                <div style="
+                  position:absolute;
+                  top:-9px;
+                  right:-10px;
+                  min-width:17px;
+                  height:17px;
+                  padding:0 4px;
+                  border-radius:999px;
+                  background:#f97316;
+                  color:white;
+                  border:2px solid white;
+                  font-size:10px;
+                  font-weight:900;
+                  display:flex;
+                  align-items:center;
+                  justify-content:center;
+                  line-height:1;
+                ">
+                  ${jobCount}
+                </div>
+              `
+              : ''
+          }
+        </div>
+      `,
+      iconSize: [28, 28],
+      iconAnchor: [14, 14],
+      popupAnchor: [0, -16]
+    })
+  }).addTo(aiMap);
+
+  let groupItems = item.items || [];
+
+if (!groupItems.length && item.jobs && item.jobs.length) {
+  groupItems = item.jobs.map((j) => {
+    return {
+      job: j,
+      dist: item.dist
+    };
+  });
+}
+
+if (!groupItems.length && item.job) {
+  groupItems = [
+    {
+      job: item.job,
+      dist: item.dist
+    }
+  ];
+}
+
+let groupJobsHtml = groupItems
+  .map((groupItem, jobIdx) => {
+    let groupJob = groupItem.job || {};
+
+    return `
+      <div style="
+        border-top:${jobIdx === 0 ? 'none' : '1px solid #e5e7eb'};
+        padding-top:${jobIdx === 0 ? '0' : '8px'};
+        margin-top:${jobIdx === 0 ? '0' : '8px'};
+      ">
+        <b>${jobIdx + 1}. ${groupJob['Job ID'] || '-'}</b><br>
+        ${Number(groupItem.dist || item.dist || 0).toFixed(2)} km<br>
+        Priority: ${groupJob['Priority'] || '-'}<br>
+        Status: ${groupJob['Status'] || '-'}<br>
+        ${groupJob['Province Name'] || '-'} / ${groupJob['District Name'] || '-'}<br>
+        ${String(groupJob['Job Title'] || '-').slice(0, 90)}
+      </div>
+    `;
+  })
+  .join('');
+
+
+  marker.bindPopup(`
+  <div style="color:#111;font-family:Arial;min-width:260px;max-width:340px">
+    <b>🔎 Nearby Job #${rank}</b><br>
+    ตำแหน่งนี้มี ${jobCount} Job${jobCount > 1 ? 's' : ''}<br><br>
+
+    <div style="
+      max-height:260px;
+      overflow-y:auto;
+      padding-right:6px;
+    ">
+      ${groupJobsHtml}
+    </div>
+
+    <br>
+
+    <button
+      onclick="window.removeNearbyJobByRank(${idx})"
+      style="
+        background:#dc2626;
+        color:white;
+        border:none;
+        border-radius:8px;
+        padding:6px 10px;
+        font-weight:bold;
+        cursor:pointer;
+      "
+    >
+      🗑️ ลบกลุ่มนี้ออกจาก Nearby
+    </button>
+  </div>
+`);
+
+    nearbyJobMarkers.push(marker);
+  });
+
+  if (bounds.length > 1) {
+    aiMap.fitBounds(bounds, {
+      padding: [70, 70]
+    });
+  }
+}
+
+function groupNearbyJobsByLocation(candidates) {
+  let groups = [];
+
+  candidates.forEach((item) => {
+    if (!item || !item.coord) return;
+
+    let foundGroup = null;
+
+    for (const group of groups) {
+      let d = distanceKm(
+        group.coord[0],
+        group.coord[1],
+        item.coord[0],
+        item.coord[1]
+      );
+
+      if (d <= 0.05) {
+        foundGroup = group;
+        break;
+      }
+    }
+
+    if (foundGroup) {
+      foundGroup.jobs.push(item.job);
+      foundGroup.items.push(item);
+
+      if (item.dist < foundGroup.dist) {
+        foundGroup.mainJob = item.job;
+        foundGroup.dist = item.dist;
+        foundGroup.coord = item.coord;
+      }
+    } else {
+      groups.push({
+        mainJob: item.job,
+        job: item.job,
+        jobs: [item.job],
+        items: [item],
+        coord: item.coord,
+        dist: item.dist,
+        count: 1
+      });
+    }
+  });
+
+  groups.forEach((group) => {
+    group.count = group.jobs.length;
+  });
+
+  groups.sort((a, b) => a.dist - b.dist);
+
+  return groups;
+}
+
+w.scanNearbyJobs = async function () {
+  if (!aiMap) return;
+
+  let engineer = getCurrentNearbyEngineerLocation();
+
+  if (!engineer) {
+    w.showAIOperationsNotice(
+      'ยังไม่ได้เลือกช่าง',
+      'กรุณาเลือกช่างจาก Departed ล่าสุด หรือ On-site ปัจจุบัน / ล่าสุด ก่อนใช้งาน Scan Nearby Jobs'
+    );
+    return;
+  }
+
+  let candidates = [];
+
+  for (const job of jobs) {
+    let status = String(job['Status'] || '').toLowerCase();
+
+    if (status.includes('done') || status.includes('cancel')) {
+      continue;
+    }
+
+    if (
+      engineer.jobId &&
+      String(job['Job ID'] || '') === String(engineer.jobId)
+    ) {
+      continue;
+    }
+
+    let coord = await getJobCoord(job);
+
+    if (!coord) {
+      continue;
+    }
+
+    let dist = distanceKm(
+      engineer.coord[0],
+      engineer.coord[1],
+      coord[0],
+      coord[1]
+    );
+
+    candidates.push({
+      job: job,
+      coord: coord,
+      dist: dist
+    });
+  }
+
+  candidates.sort((a, b) => a.dist - b.dist);
+
+  let nearbyGroups = groupNearbyJobsByLocation(candidates);
+let topJobs = nearbyGroups.slice(0, 5);
+
+  if (!topJobs.length) {
+    clearNearbyJobHighlights();
+
+    currentNearbyEngineer = null;
+    currentNearbyJobs = [];
+
+    w.showAIOperationsNotice(
+      'ไม่พบ Nearby Jobs',
+      'ไม่พบงานที่ยังเปิดอยู่ใกล้ตำแหน่งล่าสุดของช่างคนนี้'
+    );
+    return;
+  }
+
+  currentNearbyEngineer = engineer;
+  currentNearbyJobs = topJobs;
+
+  drawNearbyJobHighlights(currentNearbyEngineer, currentNearbyJobs);
+
+  let lines = [];
+
+  lines.push('ช่าง: ' + (engineer.name || '-'));
+  lines.push('ตำแหน่งอ้างอิง: ' + engineer.source);
+  lines.push('');
+
+  topJobs.forEach((item, idx) => {
+    let job = item.job;
+
+    lines.push(
+      (idx + 1) + '. ' +
+      (job['Job ID'] || '-') +
+      ' | ' +
+      item.dist.toFixed(2) + ' km' +
+      ' | ' +
+      (job['Priority'] || '-') +
+      ' | ' +
+      (job['Status'] || '-')
+    );
+
+    lines.push(
+      '   ' +
+      (job['Province Name'] || '-') +
+      ' / ' +
+      (job['District Name'] || '-')
+    );
+
+    lines.push(
+  '   ' +
+  String(job['Job Title'] || '-').slice(0, 80)
+);
+
+lines.push('────────────────');
+  });
+
+  w.showAIOperationsNotice(
+    'Scan Nearby Jobs',
+    lines.join('\n')
+  );
+};
+
+w.removeNearbyJobByRank = function (index) {
+  index = Number(index);
+
+  if (
+    isNaN(index) ||
+    index < 0 ||
+    index >= currentNearbyJobs.length
+  ) {
+    return;
+  }
+
+  currentNearbyJobs.splice(index, 1);
+
+  clearNearbyJobHighlights();
+
+  if (!currentNearbyEngineer || currentNearbyJobs.length === 0) {
+    currentNearbyJobs = [];
+    return;
+  }
+
+  drawNearbyJobHighlights(currentNearbyEngineer, currentNearbyJobs);
+};
 
 function normalizeSiteSearchText(v) {
   let tokens =
@@ -7094,6 +7681,7 @@ if (routeBtn) {
 
   clearDistanceMeasure();
   clearEngineerTravel();
+  clearNearbyJobHighlights();
 
   engineerTravelOn = false;
 
@@ -7401,6 +7989,9 @@ w.document.addEventListener('click', function (e) {
           }
         };
         w.selectedEngineer = '';
+w.currentNearbyEngineerKey = '';
+w.currentNearbyEngineerName = '';
+w.window.changeView = w.changeView;
 
         w.filterEngineer = function (assign, btn) {
           w.selectedEngineer = (assign || '').toLowerCase().trim();
