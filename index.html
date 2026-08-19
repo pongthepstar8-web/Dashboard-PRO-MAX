@@ -2975,6 +2975,25 @@ jobs.forEach((r) => {
 
       <style>
 
+        .nearby-flow-line {
+  stroke-dasharray: 10 18;
+  animation: nearbyFlowMove 0.9s linear infinite;
+}
+
+.nearby-glow-line {
+  filter: drop-shadow(0 0 6px rgba(56, 189, 248, 0.9));
+}
+
+@keyframes nearbyFlowMove {
+  from {
+    stroke-dashoffset: 28;
+  }
+
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
         .map-select {
   height: 46px;
   min-width: 300px;
@@ -4129,37 +4148,42 @@ Object.entries(engineers)
     </button>
 
     <div class="map-tools-menu" id="mapToolsMenu">
-      <button class="map-tools-item" onclick="window.openGoogleRoute()">
-        🧭 Open Google Maps
-      </button>
+  <button class="map-tools-item" onclick="window.scanNearbyJobs()">
+    📍 Scan Nearby Jobs
+  </button>
 
-      <button class="map-tools-item" onclick="window.clearAIRoute()">
-        🧹 Clear Route
-      </button>
+  <button class="map-tools-item" onclick="window.openCoordinateJobScanner()">
+    🔎 Search by Coordinate
+  </button>
 
-      <button class="map-tools-item" onclick="window.scanNearbyJobs()">
-  🔎 Scan Nearby Jobs
-</button>
+  <button class="map-tools-item" onclick="window.openGoogleRoute()">
+    🧭 Open Google Maps
+  </button>
 
-      <button class="map-tools-item" onclick="window.fitAllMarkers()">
-        📍 Fit All Jobs
-      </button>
+  <button class="map-tools-item" onclick="window.fitAllMarkers()">
+    📍 Fit All Jobs
+  </button>
 
-      <button
-  id="districtSourceBtn"
-  class="map-tools-item"
-  onclick="window.showDistrictSourceJobs()"
->
-  🗺️ District Source (0)
-</button>
-      <button
-  id="clearTravelLogBtn"
-  class="map-tools-item"
-  onclick="window.clearTravelLogAdmin()"
->
-  🧹 Clear Travel Log
-</button>
-    </div>
+  <button
+    id="districtSourceBtn"
+    class="map-tools-item"
+    onclick="window.showDistrictSourceJobs()"
+  >
+    🗺️ District Source (0)
+  </button>
+
+  <button class="map-tools-item" onclick="window.clearAIRoute()">
+    🧹 Clear Route
+  </button>
+
+  <button
+    id="clearTravelLogBtn"
+    class="map-tools-item"
+    onclick="window.clearTravelLogAdmin()"
+  >
+    🗑️ Clear Travel Log
+  </button>
+</div>
   </div>
 </div><div id="aiMap"></div></div><script>window.AI_JOBS=${safeJobsJson};<\/script></body></html>`;
   w.document.open();
@@ -4206,6 +4230,7 @@ let districtBoundaryLayer = null;
   let nearbyJobLines = [];
   let currentNearbyEngineer = null;
   let currentNearbyJobs = [];
+  let coordinateSearchMarker = null;
 
   w.showAIOperationsNotice = function (title, message) {
   let old = w.document.getElementById('aiOperationsNotice');
@@ -6347,23 +6372,48 @@ if (!aiMap.getPane('nearbyJobLinePane')) {
   aiMap.getPane('nearbyJobLinePane').style.zIndex = 430;
 }
 
-  let line = w.L.polyline(
-    [
-      engineer.coord,
-      displayCoord
-    ],
-    {
-      pane: 'nearbyJobLinePane',
-      color: '#38bdf8',
-      weight: 2,
-      opacity: 0.45,
-      dashArray: '6,12',
-      lineCap: 'round',
-      nearbyJobLayer: true
-    }
-  ).addTo(aiMap);
+if (!aiMap.getPane('nearbyJobLinePane')) {
+  aiMap.createPane('nearbyJobLinePane');
+  aiMap.getPane('nearbyJobLinePane').style.zIndex = 430;
+}
 
-  nearbyJobLines.push(line);
+let baseLine = w.L.polyline(
+  [
+    engineer.coord,
+    displayCoord
+  ],
+  {
+    pane: 'nearbyJobLinePane',
+    color: '#0284c7',
+    weight: 7,
+    opacity: 0.45,
+    lineCap: 'round',
+    lineJoin: 'round',
+    className: 'nearby-glow-line',
+    nearbyJobLayer: true
+  }
+).addTo(aiMap);
+
+let flowLine = w.L.polyline(
+  [
+    engineer.coord,
+    displayCoord
+  ],
+  {
+    pane: 'nearbyJobLinePane',
+    color: '#e0f2fe',
+    weight: 3,
+    opacity: 1,
+    dashArray: '10,18',
+    lineCap: 'round',
+    lineJoin: 'round',
+    className: 'nearby-flow-line',
+    nearbyJobLayer: true
+  }
+).addTo(aiMap);
+
+nearbyJobLines.push(baseLine);
+nearbyJobLines.push(flowLine);
 
   if (!aiMap.getPane('nearbyJobMarkerPane')) {
   aiMap.createPane('nearbyJobMarkerPane');
@@ -6566,6 +6616,312 @@ function groupNearbyJobsByLocation(candidates) {
   return groups;
 }
 
+function parseCoordinateInput(value) {
+  let text = String(value || '').trim();
+
+  if (!text) {
+    return null;
+  }
+
+  text = text.replace(/\s+/g, '');
+
+  let parts = text.split(',');
+
+  if (parts.length !== 2) {
+    return null;
+  }
+
+  let lat = Number(parts[0]);
+  let lng = Number(parts[1]);
+
+  if (
+    isNaN(lat) ||
+    isNaN(lng) ||
+    lat < -90 ||
+    lat > 90 ||
+    lng < -180 ||
+    lng > 180
+  ) {
+    return null;
+  }
+
+  return [lat, lng];
+}
+
+w.openCoordinateJobScanner = function () {
+  let old = w.document.getElementById('coordinateJobScannerBox');
+
+  if (old) {
+    old.remove();
+  }
+
+  let box = w.document.createElement('div');
+
+  box.id = 'coordinateJobScannerBox';
+
+  box.innerHTML = `
+    <div style="
+      position:fixed;
+      inset:0;
+      background:rgba(2,6,23,.65);
+      z-index:999999;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-family:Arial;
+    ">
+      <div style="
+        width:min(460px,90vw);
+        background:#020617;
+        color:#e5e7eb;
+        border:1px solid #334155;
+        border-radius:18px;
+        box-shadow:0 20px 60px rgba(0,0,0,.55);
+        padding:20px;
+      ">
+        <div style="
+          font-size:20px;
+          font-weight:900;
+          margin-bottom:12px;
+          color:#a78bfa;
+        ">
+          📍 Search by Coordinate
+        </div>
+
+        <div style="
+          font-size:13px;
+          color:#cbd5e1;
+          line-height:1.5;
+          margin-bottom:12px;
+        ">
+          ใส่พิกัดรูปแบบ Lat,Lng<br>
+          ตัวอย่าง: 14.974321,102.083456
+        </div>
+
+        <input
+          id="coordinateJobScannerInput"
+          type="text"
+          placeholder="14.974321,102.083456"
+          style="
+            width:100%;
+            height:42px;
+            background:#0f172a;
+            color:#ffffff;
+            border:1px solid #334155;
+            border-radius:12px;
+            padding:0 12px;
+            outline:none;
+            font-weight:800;
+            box-sizing:border-box;
+            margin-bottom:16px;
+          "
+        >
+
+        <div style="
+          display:flex;
+          justify-content:flex-end;
+          gap:10px;
+        ">
+          <button
+            onclick="document.getElementById('coordinateJobScannerBox').remove()"
+            style="
+              background:#334155;
+              color:white;
+              border:none;
+              border-radius:12px;
+              padding:9px 16px;
+              font-weight:800;
+              cursor:pointer;
+            "
+          >
+            Cancel
+          </button>
+
+          <button
+            onclick="window.runCoordinateJobScanner()"
+            style="
+              background:#7c3aed;
+              color:white;
+              border:none;
+              border-radius:12px;
+              padding:9px 16px;
+              font-weight:900;
+              cursor:pointer;
+            "
+          >
+            Scan
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  w.document.body.appendChild(box);
+
+  let input = w.document.getElementById('coordinateJobScannerInput');
+
+  if (input) {
+    setTimeout(() => input.focus(), 50);
+  }
+};
+
+w.runCoordinateJobScanner = async function () {
+  let input = w.document.getElementById('coordinateJobScannerInput');
+
+  let coord = parseCoordinateInput(input ? input.value : '');
+
+  if (!coord) {
+    w.showAIOperationsNotice(
+      'พิกัดไม่ถูกต้อง',
+      'กรุณาใส่พิกัดในรูปแบบ Lat,Lng\nตัวอย่าง: 14.974321,102.083456'
+    );
+    return;
+  }
+
+  let box = w.document.getElementById('coordinateJobScannerBox');
+
+  if (box) {
+    box.remove();
+  }
+
+  if (coordinateSearchMarker && aiMap.hasLayer(coordinateSearchMarker)) {
+    aiMap.removeLayer(coordinateSearchMarker);
+    coordinateSearchMarker = null;
+  }
+
+  coordinateSearchMarker = w.L.marker(coord, {
+    zIndexOffset: 12000,
+    icon: w.L.divIcon({
+      className: '',
+      html: `
+        <div style="
+          width:34px;
+          height:34px;
+          border-radius:50%;
+          background:#0ea5e9;
+          color:white;
+          display:flex;
+          align-items:center;
+          justify-content:center;
+          font-weight:900;
+          font-size:17px;
+          border:3px solid #ffffff;
+          box-shadow:0 0 16px rgba(14,165,233,.9);
+          font-family:Arial;
+        ">
+          📍
+        </div>
+      `,
+      iconSize: [34, 34],
+      iconAnchor: [17, 17],
+      popupAnchor: [0, -18]
+    })
+  }).addTo(aiMap).bindPopup(`
+    <div style="color:#111;font-family:Arial">
+      <b>📍 Coordinate Search Point</b><br>
+      ${coord[0]}, ${coord[1]}
+    </div>
+  `);
+
+  let candidates = [];
+
+  for (const job of jobs) {
+    let status = String(job['Status'] || '').toLowerCase();
+
+    if (status.includes('done') || status.includes('cancel')) {
+      continue;
+    }
+
+    let jobCoord = await getJobCoord(job);
+
+    if (!jobCoord) {
+      continue;
+    }
+
+    let dist = distanceKm(
+      coord[0],
+      coord[1],
+      jobCoord[0],
+      jobCoord[1]
+    );
+
+    candidates.push({
+      job: job,
+      coord: jobCoord,
+      dist: dist
+    });
+  }
+
+  candidates.sort((a, b) => a.dist - b.dist);
+
+  let nearbyGroups = groupNearbyJobsByLocation(candidates);
+  let topJobs = nearbyGroups.slice(0, 5);
+
+  if (!topJobs.length) {
+    clearNearbyJobHighlights();
+
+    w.showAIOperationsNotice(
+      'ไม่พบ Job ใกล้พิกัด',
+      'ไม่พบงานที่ยังเปิดอยู่ใกล้พิกัดนี้'
+    );
+    return;
+  }
+
+  let pseudoEngineer = {
+    name: 'Coordinate Search',
+    source: 'COORDINATE',
+    coord: coord,
+    jobId: ''
+  };
+
+  currentNearbyEngineer = pseudoEngineer;
+  currentNearbyJobs = topJobs;
+
+  drawNearbyJobHighlights(currentNearbyEngineer, currentNearbyJobs);
+
+  let lines = [];
+
+  lines.push('จุดค้นหา: ' + coord[0] + ', ' + coord[1]);
+  lines.push('ตำแหน่งอ้างอิง: COORDINATE');
+  lines.push('');
+
+  topJobs.forEach((item, idx) => {
+    let mainJob = item.mainJob || item.job || {};
+    let jobCount = item.count || (item.jobs ? item.jobs.length : 1);
+
+    lines.push(
+      (idx + 1) + '. ' +
+      (mainJob['Job ID'] || '-') +
+      ' | ' +
+      item.dist.toFixed(2) + ' km' +
+      ' | ' +
+      (mainJob['Priority'] || '-') +
+      ' | ' +
+      (mainJob['Status'] || '-') +
+      (jobCount > 1 ? ' | ' + jobCount + ' Jobs' : '')
+    );
+
+    lines.push(
+      '   ' +
+      (mainJob['Province Name'] || '-') +
+      ' / ' +
+      (mainJob['District Name'] || '-')
+    );
+
+    lines.push(
+      '   ' +
+      String(mainJob['Job Title'] || '-').slice(0, 90)
+    );
+
+    lines.push('────────────────');
+  });
+
+  w.showAIOperationsNotice(
+    'Search by Coordinate',
+    lines.join('\n')
+  );
+};
+
 w.scanNearbyJobs = async function () {
   if (!aiMap) return;
 
@@ -6618,7 +6974,7 @@ w.scanNearbyJobs = async function () {
   candidates.sort((a, b) => a.dist - b.dist);
 
   let nearbyGroups = groupNearbyJobsByLocation(candidates);
-let topJobs = nearbyGroups.slice(0, 5);
+  let topJobs = nearbyGroups.slice(0, 5);
 
   if (!topJobs.length) {
     clearNearbyJobHighlights();
@@ -6645,32 +7001,34 @@ let topJobs = nearbyGroups.slice(0, 5);
   lines.push('');
 
   topJobs.forEach((item, idx) => {
-    let job = item.job;
+    let mainJob = item.mainJob || item.job || {};
+    let jobCount = item.count || (item.jobs ? item.jobs.length : 1);
 
     lines.push(
       (idx + 1) + '. ' +
-      (job['Job ID'] || '-') +
+      (mainJob['Job ID'] || '-') +
       ' | ' +
       item.dist.toFixed(2) + ' km' +
       ' | ' +
-      (job['Priority'] || '-') +
+      (mainJob['Priority'] || '-') +
       ' | ' +
-      (job['Status'] || '-')
+      (mainJob['Status'] || '-') +
+      (jobCount > 1 ? ' | ' + jobCount + ' Jobs' : '')
     );
 
     lines.push(
       '   ' +
-      (job['Province Name'] || '-') +
+      (mainJob['Province Name'] || '-') +
       ' / ' +
-      (job['District Name'] || '-')
+      (mainJob['District Name'] || '-')
     );
 
     lines.push(
-  '   ' +
-  String(job['Job Title'] || '-').slice(0, 80)
-);
+      '   ' +
+      String(mainJob['Job Title'] || '-').slice(0, 90)
+    );
 
-lines.push('────────────────');
+    lines.push('────────────────');
   });
 
   w.showAIOperationsNotice(
@@ -7682,6 +8040,11 @@ if (routeBtn) {
   clearDistanceMeasure();
   clearEngineerTravel();
   clearNearbyJobHighlights();
+
+  if (coordinateSearchMarker && aiMap.hasLayer(coordinateSearchMarker)) {
+  aiMap.removeLayer(coordinateSearchMarker);
+  coordinateSearchMarker = null;
+}
 
   engineerTravelOn = false;
 
