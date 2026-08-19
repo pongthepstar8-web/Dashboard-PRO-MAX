@@ -6648,6 +6648,15 @@ function parseCoordinateInput(value) {
   return [lat, lng];
 }
 
+function clearCoordinateSearchMarker() {
+  if (coordinateSearchMarker && aiMap && aiMap.hasLayer(coordinateSearchMarker)) {
+    aiMap.removeLayer(coordinateSearchMarker);
+  }
+
+  coordinateSearchMarker = null;
+}
+
+
 w.openCoordinateJobScanner = function () {
   let old = w.document.getElementById('coordinateJobScannerBox');
 
@@ -6694,14 +6703,14 @@ w.openCoordinateJobScanner = function () {
           line-height:1.5;
           margin-bottom:12px;
         ">
-          ใส่พิกัดรูปแบบ Lat,Lng<br>
-          ตัวอย่าง: 14.974321,102.083456
+        ใส่พิกัด Lat,Lng หรือเลข Job ID<br>
+ตัวอย่าง: 14.974321,102.083456 หรือ JB26-1731605
         </div>
 
         <input
           id="coordinateJobScannerInput"
           type="text"
-          placeholder="14.974321,102.083456"
+          placeholder="14.974321,102.083456 หรือ JB26-1731605"
           style="
             width:100%;
             height:42px;
@@ -6765,15 +6774,138 @@ w.openCoordinateJobScanner = function () {
   }
 };
 
+function findJobByIdForCoordinateSearch(value) {
+  let q = String(value || '').trim().toLowerCase();
+
+  if (!q) return null;
+
+  let qDigits = q.replace(/[^\d]/g, '');
+
+  return jobs.find((job) => {
+    let jobId = String(job['Job ID'] || '').trim().toLowerCase();
+    let jobDigits = jobId.replace(/[^\d]/g, '');
+
+    return (
+      jobId === q ||
+      jobId.includes(q) ||
+      (qDigits && jobDigits.endsWith(qDigits))
+    );
+  }) || null;
+}
+
 w.runCoordinateJobScanner = async function () {
   let input = w.document.getElementById('coordinateJobScannerInput');
+  let rawValue = input ? input.value : '';
 
-  let coord = parseCoordinateInput(input ? input.value : '');
+  let coord = parseCoordinateInput(rawValue);
+  let referenceJob = null;
+  let referenceLabel = 'COORDINATE';
+
+  if (!coord) {
+    referenceJob = findJobByIdForCoordinateSearch(rawValue);
+
+    if (referenceJob) {
+      coord = await getJobCoord(referenceJob);
+
+      if (!coord) {
+        w.showAIOperationsNotice(
+          'ไม่พบพิกัดของ Job',
+          'พบเลข Job นี้ แต่ไม่พบพิกัดสำหรับแสดงบนแผนที่\n\nJob ID: ' +
+            (referenceJob['Job ID'] || '-')
+        );
+        return;
+      }
+
+      referenceLabel = 'JOB: ' + (referenceJob['Job ID'] || '-');
+
+      let box = w.document.getElementById('coordinateJobScannerBox');
+
+      if (box) {
+        box.remove();
+      }
+
+      clearNearbyJobHighlights();
+
+      if (coordinateSearchMarker && aiMap.hasLayer(coordinateSearchMarker)) {
+        aiMap.removeLayer(coordinateSearchMarker);
+        coordinateSearchMarker = null;
+      }
+
+      coordinateSearchMarker = w.L.marker(coord, {
+        zIndexOffset: 12000,
+        icon: w.L.divIcon({
+          className: '',
+          html: `
+            <div style="
+              width:36px;
+              height:36px;
+              border-radius:50%;
+              background:#dc2626;
+              color:white;
+              display:flex;
+              align-items:center;
+              justify-content:center;
+              font-weight:900;
+              font-size:18px;
+              border:3px solid #ffffff;
+              box-shadow:0 0 18px rgba(220,38,38,.9);
+              font-family:Arial;
+            ">
+              🎯
+            </div>
+          `,
+          iconSize: [36, 36],
+          iconAnchor: [18, 18],
+          popupAnchor: [0, -18]
+        })
+      }).addTo(aiMap).bindPopup(`
+        <div style="color:#111;font-family:Arial;min-width:250px">
+          <b>🎯 Job Search Result</b><br>
+          <b>${referenceJob['Job ID'] || '-'}</b><br>
+          Priority: ${referenceJob['Priority'] || '-'}<br>
+          Status: ${referenceJob['Status'] || '-'}<br>
+          ${referenceJob['Province Name'] || '-'} / ${referenceJob['District Name'] || '-'}<br><br>
+          ${String(referenceJob['Job Title'] || '-').slice(0, 120)}
+
+          <br><br>
+
+          <button
+            onclick="window.clearAIRoute()"
+            style="
+              background:#dc2626;
+              color:white;
+              border:none;
+              border-radius:8px;
+              padding:7px 12px;
+              font-weight:900;
+              cursor:pointer;
+              font-family:Arial;
+              margin-right:6px;
+            "
+          >
+            🧹 Clear Route
+          </button> 
+      `);
+
+      aiMap.flyTo(coord, 14, {
+        animate: true,
+        duration: 0.8
+      });
+
+      setTimeout(() => {
+        if (coordinateSearchMarker) {
+          coordinateSearchMarker.openPopup();
+        }
+      }, 500);
+
+      return;
+    }
+  }
 
   if (!coord) {
     w.showAIOperationsNotice(
-      'พิกัดไม่ถูกต้อง',
-      'กรุณาใส่พิกัดในรูปแบบ Lat,Lng\nตัวอย่าง: 14.974321,102.083456'
+      'ข้อมูลค้นหาไม่ถูกต้อง',
+      'กรุณาใส่พิกัดรูปแบบ Lat,Lng หรือเลข Job ID\n\nตัวอย่าง:\n14.974321,102.083456\nJB26-1731605'
     );
     return;
   }
@@ -6785,43 +6917,77 @@ w.runCoordinateJobScanner = async function () {
   }
 
   if (coordinateSearchMarker && aiMap.hasLayer(coordinateSearchMarker)) {
-    aiMap.removeLayer(coordinateSearchMarker);
-    coordinateSearchMarker = null;
-  }
+  aiMap.removeLayer(coordinateSearchMarker);
+  coordinateSearchMarker = null;
+}
 
-  coordinateSearchMarker = w.L.marker(coord, {
-    zIndexOffset: 12000,
-    icon: w.L.divIcon({
-      className: '',
-      html: `
-        <div style="
-          width:34px;
-          height:34px;
-          border-radius:50%;
-          background:#0ea5e9;
-          color:white;
-          display:flex;
-          align-items:center;
-          justify-content:center;
-          font-weight:900;
-          font-size:17px;
-          border:3px solid #ffffff;
-          box-shadow:0 0 16px rgba(14,165,233,.9);
-          font-family:Arial;
-        ">
-          📍
-        </div>
-      `,
-      iconSize: [34, 34],
-      iconAnchor: [17, 17],
-      popupAnchor: [0, -18]
-    })
-  }).addTo(aiMap).bindPopup(`
-    <div style="color:#111;font-family:Arial">
-      <b>📍 Coordinate Search Point</b><br>
-      ${coord[0]}, ${coord[1]}
-    </div>
-  `);
+clearNearbyJobHighlights();
+
+coordinateSearchMarker = w.L.marker(coord, {
+  zIndexOffset: 12000,
+  icon: w.L.divIcon({
+    className: '',
+    html: `
+      <div style="
+        width:36px;
+        height:36px;
+        border-radius:50%;
+        background:#0ea5e9;
+        color:white;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        font-weight:900;
+        font-size:18px;
+        border:3px solid #ffffff;
+        box-shadow:0 0 18px rgba(14,165,233,.9);
+        font-family:Arial;
+      ">
+        📍
+      </div>
+    `,
+    iconSize: [36, 36],
+    iconAnchor: [18, 18],
+    popupAnchor: [0, -18]
+  })
+}).addTo(aiMap).bindPopup(`
+  <div style="color:#111;font-family:Arial;min-width:250px">
+    <b>📍 ผลการค้นหาพิกัด</b><br>
+    <b>Lat,Lng</b><br>
+    ${coord[0]}, ${coord[1]}
+
+    <br><br>
+
+    <button
+      onclick="window.clearAIRoute()"
+      style="
+        background:#dc2626;
+        color:white;
+        border:none;
+        border-radius:8px;
+        padding:7px 12px;
+        font-weight:900;
+        cursor:pointer;
+        font-family:Arial;
+      "
+    >
+      🧹 Clear Route
+    </button>
+  </div>
+`);
+
+aiMap.flyTo(coord, 14, {
+  animate: true,
+  duration: 0.8
+});
+
+setTimeout(() => {
+  if (coordinateSearchMarker) {
+    coordinateSearchMarker.openPopup();
+  }
+}, 500);
+
+return;
 
   let candidates = [];
 
@@ -8040,6 +8206,7 @@ if (routeBtn) {
   clearDistanceMeasure();
   clearEngineerTravel();
   clearNearbyJobHighlights();
+  clearCoordinateSearchMarker();
 
   if (coordinateSearchMarker && aiMap.hasLayer(coordinateSearchMarker)) {
   aiMap.removeLayer(coordinateSearchMarker);
