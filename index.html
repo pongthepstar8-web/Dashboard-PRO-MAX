@@ -1169,6 +1169,7 @@ let networkGroupSubFilters = [];
       let SITE_COORD = {};
       let TRAVEL_HISTORY = {};
       let SITE_COORD_INDEX = {};
+      let SPECIAL_SITE_COORD_INDEX = {};
       let APPS_DATA_READY = false;
       let appsDataPromise = null;
 
@@ -1479,8 +1480,28 @@ function normalizeSiteCodeKey(v) {
 
   return parts.join('|');
 }
+
+function normalizeSpecialSiteKey(value) {
+  return String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, '')
+    .replace(/[()[\]{}|,./\\_-]/g, '');
+}
+
+function isSpecialSiteType(type, siteName) {
+  let typeText = String(type || '').trim().toUpperCase();
+  let nameText = String(siteName || '').trim().toUpperCase();
+
+  return (
+    ['INF', 'IPV', 'BIPV', 'INL'].includes(typeText) ||
+    /^(?:BINF|BIPV|BINL|INF|IPV|INL)/i.test(nameText)
+  );
+}
+
 function buildSiteCoordIndex() {
   SITE_COORD_INDEX = {};
+  SPECIAL_SITE_COORD_INDEX = {};
 
   const source = SITE_COORD || {};
   const keys = Object.keys(source);
@@ -1508,26 +1529,132 @@ function buildSiteCoordIndex() {
 
     const norm = normalizeSiteCodeKey(key);
 
-    if (!norm) return;
+    if (norm) {
+      if (SITE_COORD_INDEX[norm]) {
+        console.warn('Duplicate normalized site key:', {
+          norm,
+          oldKey: SITE_COORD_INDEX[norm].key,
+          newKey: key
+        });
+      }
 
-    if (SITE_COORD_INDEX[norm]) {
-      console.warn('Duplicate normalized site key:', {
-        norm,
-        oldKey: SITE_COORD_INDEX[norm].key,
-        newKey: key
-      });
+      SITE_COORD_INDEX[norm] = {
+        key: key,
+        lat: lat,
+        lng: lng,
+        type: item.type || '',
+        address: item.address || ''
+      };
     }
 
-    SITE_COORD_INDEX[norm] = {
-      key: key,
-      lat: lat,
-      lng: lng,
-      type: item.type || '',
-      address: item.address || ''
-    };
+    if (isSpecialSiteType(item.type, key)) {
+      let specialKey = normalizeSpecialSiteKey(key);
+
+      if (specialKey) {
+        SPECIAL_SITE_COORD_INDEX[specialKey] = {
+          key: key,
+          lat: lat,
+          lng: lng,
+          type: item.type || '',
+          address: item.address || '',
+          matchSource: 'SITE_NAME'
+        };
+      }
+
+      let addressKey = normalizeSpecialSiteKey(item.address);
+
+      if (addressKey && addressKey.length >= 6) {
+        SPECIAL_SITE_COORD_INDEX[addressKey] = {
+          key: key,
+          lat: lat,
+          lng: lng,
+          type: item.type || '',
+          address: item.address || '',
+          matchSource: 'ADDRESS'
+        };
+      }
+    }
   });
 
   console.log('SITE_COORD_INDEX READY:', Object.keys(SITE_COORD_INDEX).length);
+
+  console.log(
+    'SPECIAL_SITE_COORD_INDEX READY:',
+    Object.keys(SPECIAL_SITE_COORD_INDEX).length
+  );
+}
+
+console.log('CHECK BINF3750012 INDEX:', {
+  siteCoord: SITE_COORD['BINF3750012'],
+  normalKey: normalizeSpecialSiteKey('BINF3750012'),
+  specialCoord:
+    SPECIAL_SITE_COORD_INDEX[
+      normalizeSpecialSiteKey('BINF3750012')
+    ],
+  specialCount: Object.keys(SPECIAL_SITE_COORD_INDEX || {}).length
+});
+
+function extractSpecialSiteCodeFromTitle(title) {
+  let text = String(title || '');
+
+  let match = text.match(
+    /\b(?:BINF|BIPV|BINL|INF|IPV|INL)[A-Z0-9_-]*\b/i
+  );
+
+  return match ? match[0].trim() : '';
+}
+
+function findSpecialSiteCoordFromTitle(title) {
+  let text = String(title || '').trim();
+
+  if (!text) {
+    return null;
+  }
+
+  let specialCode = extractSpecialSiteCodeFromTitle(text);
+
+  if (specialCode) {
+    let codeKey = normalizeSpecialSiteKey(specialCode);
+    let codeItem = SPECIAL_SITE_COORD_INDEX[codeKey];
+
+    if (codeItem) {
+      return {
+        lat: Number(codeItem.lat),
+        lng: Number(codeItem.lng),
+        key: codeItem.key,
+        type: codeItem.type,
+        address: codeItem.address,
+        matchedBy: 'SPECIAL_CODE',
+        matchedValue: specialCode
+      };
+    }
+  }
+
+  let normalizedTitle = normalizeSpecialSiteKey(text);
+
+  let matchedKey = Object.keys(SPECIAL_SITE_COORD_INDEX).find((key) => {
+    if (!key || key.length < 6) {
+      return false;
+    }
+
+    return normalizedTitle.includes(key);
+  });
+
+  if (!matchedKey) {
+    return null;
+  }
+
+  let matchedItem = SPECIAL_SITE_COORD_INDEX[matchedKey];
+
+  return {
+    lat: Number(matchedItem.lat),
+    lng: Number(matchedItem.lng),
+    key: matchedItem.key,
+    type: matchedItem.type,
+    address: matchedItem.address,
+    matchedBy: matchedItem.matchSource || 'SPECIAL_NAME',
+    matchedValue: matchedItem.key
+  };
 }
 
 async function forceReloadAppsDataForAIBoard() {
@@ -5229,6 +5356,13 @@ return {
       return '📍 Source: GPS in Title';
     }
 
+    if (group.source === 'SPECIAL_SITE') {
+  return (
+    '🏢 Source: INF / IPV / BIPV / INL' +
+    (group.siteName ? ' - ' + escapeHtml(group.siteName) : '')
+  );
+}
+
     if (group.source === 'SITE_SHEET') {
       return (
         '📡 Source: OLT / ME / MME Sheet' +
@@ -5275,11 +5409,13 @@ let gmapUrl =
       let district = job['District Name'] || '-';
 
       let coordSource =
-        group.source === 'GPS_TITLE'
-          ? '📍 GPS from Title'
-          : group.source === 'SITE_SHEET'
-          ? '📡 Site Coordinate'
-          : '🗺️ Area Coordinate';
+  group.source === 'GPS_TITLE'
+    ? '📍 GPS from Title'
+    : group.source === 'SPECIAL_SITE'
+    ? `🏢 ${group.siteName || 'INF / IPV / BIPV / INL'} Coordinate`
+    : group.source === 'SITE_SHEET'
+    ? '📡 Site Coordinate'
+    : '🗺️ Area Coordinate';
 
       return `
         <details class="map-job-box">
@@ -5921,7 +6057,13 @@ function updateDistrictSourceButton() {
 
             let gps = extractGPS(title);
 
-let siteCoord = !gps ? findSiteCoordFromTitle(title) : null;
+let specialCoord = !gps
+  ? findSpecialSiteCoordFromTitle(title)
+  : null;
+
+let siteCoord = !gps && !specialCoord
+  ? findSiteCoordFromTitle(title)
+  : null;
 
 let key = '';
 let source = 'AREA_COORD';
@@ -5930,6 +6072,10 @@ let siteName = '';
 if (gps) {
   key = `GPS|${lat.toFixed(5)}|${lng.toFixed(5)}`;
   source = 'GPS_TITLE';
+} else if (specialCoord) {
+  key = `SPECIAL|${specialCoord.key}`;
+  source = 'SPECIAL_SITE';
+  siteName = specialCoord.key;
 } else if (siteCoord) {
   key = `SITE|${siteCoord.key}`;
   source = 'SITE_SHEET';
@@ -5941,14 +6087,15 @@ if (gps) {
 
 if (!groups[key]) {
   groups[key] = {
-    lat,
-    lng,
+    lat: lat,
+    lng: lng,
     jobs: [],
     source: source,
     siteName: siteName
   };
 }
-            groups[key].jobs.push(job);
+
+groups[key].jobs.push(job);
           }
 
           let groupList = Object.values(groups);
@@ -7845,6 +7992,7 @@ function debugFindSite(title, code) {
     siteCoordItem: SITE_COORD[code]
   });
 }
+
 function findSiteCoordFromTitle(title) {
   if (!title || !SITE_COORD) {
     return null;
@@ -7955,27 +8103,38 @@ function findSiteCoordFromTitle(title) {
 
 async function getJobCoord(job) {
   let title = job['Job Title'] || '';
-  if (String(title).includes('3702_087')) {
-  console.log('CHECK 3702_087:', {
-    title: title,
-    siteCoordCount: Object.keys(SITE_COORD || {}).length,
-    siteIndexCount: Object.keys(SITE_COORD_INDEX || {}).length,
-    directIndex: SITE_COORD_INDEX[normalizeSiteCodeKey('3702_087')],
-    found: findSiteCoordFromTitle(title)
-  });
-}
+
   let gps = extractGPS(title);
 
   if (gps) {
     return [gps.lat, gps.lng];
   }
 
-  let siteCoord = findSiteCoordFromTitle(title);
+  // 1. ค้นหารหัสหรือชื่อ INF / IPV / BIPV / INL ก่อน
+let specialCoord = findSpecialSiteCoordFromTitle(title);
 
-  if (siteCoord) {
-    return [siteCoord.lat, siteCoord.lng];
-  }
+if (specialCoord) {
+  console.log('SPECIAL SITE COORD FOUND:', {
+    jobId: job['Job ID'] || '',
+    type: specialCoord.type,
+    key: specialCoord.key,
+    matchedBy: specialCoord.matchedBy,
+    matchedValue: specialCoord.matchedValue,
+    lat: specialCoord.lat,
+    lng: specialCoord.lng
+  });
 
+  return [specialCoord.lat, specialCoord.lng];
+}
+
+// 2. ถ้าไม่พบชื่อหรือรหัสพิเศษ ให้ใช้ Site code เช่น 454_095
+let siteCoord = findSiteCoordFromTitle(title);
+
+if (siteCoord) {
+  return [siteCoord.lat, siteCoord.lng];
+}
+
+  // 3. ถ้ายังไม่พบ ให้ใช้ District Coordinate
   let province = job['Province Name'] || '';
   let district = job['District Name'] || '';
 
@@ -7991,6 +8150,7 @@ async function getJobCoord(job) {
 
   return null;
 }
+
 
         function getLatestOnsiteJob() {
           let selected = (w.selectedEngineer || '').toLowerCase().trim();
