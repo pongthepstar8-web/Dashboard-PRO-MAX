@@ -2229,27 +2229,231 @@ function getShiftNamesByProvince(province) {
         if (t === 'minor') return pr === 'MINOR' || pr === 'NONE';
         return true;
       }
-      function exportJPG(p) {
-        let box = document.createElement('div');
-        box.style.background = '#0f172a';
-        box.style.padding = '20px';
-        box.appendChild(document.getElementById('kpiBar').cloneNode(true));
-        box.appendChild(document.getElementById(p).cloneNode(true));
-        document.body.appendChild(box);
-        html2canvas(box, {
-          scale: 2,
-          useCORS: true,
-          width: box.scrollWidth,
-          height: box.scrollHeight,
-          windowWidth: box.scrollWidth,
-        }).then((c) => {
-          let a = document.createElement('a');
-          a.href = c.toDataURL('image/jpeg');
-          a.download = 'NOC_' + p + '.jpg';
-          a.click();
-          document.body.removeChild(box);
-        });
-      }
+
+      async function exportJPG(p) {
+  let source = document.getElementById(p);
+
+  if (!source) {
+    console.warn('ไม่พบการ์ดจังหวัดสำหรับ Export:', p);
+    return;
+  }
+
+  /*
+   * นับเฉพาะแถว Job ที่อยู่ในการ์ดจังหวัดนี้
+   * ไม่ใช้ตัวเลขจาก kpiBar รวมของ Dashboard
+   */
+  let rows = Array.from(
+    source.querySelectorAll('table tr')
+  ).filter((row) => {
+    return row.querySelectorAll('td').length > 0;
+  });
+
+  let critical = 0;
+  let major = 0;
+  let minor = 0;
+  let overdue = 0;
+
+  rows.forEach((row) => {
+    let priorityBadge = row.querySelector('.badge');
+    let priority = String(
+      priorityBadge ? priorityBadge.textContent : ''
+    )
+      .trim()
+      .toUpperCase();
+
+    if (priority === 'CRITICAL') {
+      critical++;
+    } else if (priority === 'MAJOR') {
+      major++;
+    } else if (priority === 'MINOR') {
+      minor++;
+    }
+
+    if (row.classList.contains('overdue')) {
+      overdue++;
+    }
+  });
+
+  let total = rows.length;
+
+  /*
+   * สร้าง KPI ของจังหวัดที่ Export
+   */
+  let provinceKpi = document.createElement('div');
+
+  provinceKpi.className = 'province-export-kpi';
+
+  provinceKpi.style.display = 'flex';
+  provinceKpi.style.alignItems = 'center';
+  provinceKpi.style.justifyContent = 'center';
+  provinceKpi.style.flexWrap = 'wrap';
+  provinceKpi.style.gap = '12px';
+  provinceKpi.style.margin = '0 0 18px 0';
+  provinceKpi.style.padding = '0';
+
+  provinceKpi.innerHTML = `
+    <div style="
+      min-width:118px;
+      padding:12px 18px;
+      border-radius:14px;
+      background:#b33b3f;
+      color:#e5e7eb;
+      text-align:center;
+      font-size:18px;
+      font-weight:900;
+      box-sizing:border-box;
+    ">
+      Critical:${critical}
+    </div>
+
+    <div style="
+      min-width:118px;
+      padding:12px 18px;
+      border-radius:14px;
+      background:#b87812;
+      color:#e5e7eb;
+      text-align:center;
+      font-size:18px;
+      font-weight:900;
+      box-sizing:border-box;
+    ">
+      Major:${major}
+    </div>
+
+    <div style="
+      min-width:118px;
+      padding:12px 18px;
+      border-radius:14px;
+      background:#16924d;
+      color:#e5e7eb;
+      text-align:center;
+      font-size:18px;
+      font-weight:900;
+      box-sizing:border-box;
+    ">
+      Minor:${minor}
+    </div>
+
+    <div style="
+      min-width:118px;
+      padding:12px 18px;
+      border-radius:14px;
+      background:#53627b;
+      color:#e5e7eb;
+      text-align:center;
+      font-size:18px;
+      font-weight:900;
+      box-sizing:border-box;
+    ">
+      Total:${total}
+    </div>
+
+    <div style="
+      min-width:130px;
+      padding:12px 18px;
+      border-radius:14px;
+      background:#822326;
+      color:#e5e7eb;
+      text-align:center;
+      font-size:18px;
+      font-weight:900;
+      box-sizing:border-box;
+    ">
+      Overdue:${overdue}
+    </div>
+  `;
+
+  /*
+   * สร้างพื้นที่ชั่วคราวสำหรับ Export
+   */
+  let box = document.createElement('div');
+
+  box.style.position = 'fixed';
+  box.style.left = '-100000px';
+  box.style.top = '0';
+  box.style.background = '#0f172a';
+  box.style.padding = '30px';
+  box.style.width = Math.max(source.scrollWidth, 1400) + 'px';
+  box.style.height = 'auto';
+  box.style.maxHeight = 'none';
+  box.style.overflow = 'visible';
+  box.style.boxSizing = 'border-box';
+  box.style.zIndex = '-1';
+
+  let provinceClone = source.cloneNode(true);
+
+  /*
+   * ป้องกัน ID ซ้ำกับการ์ดต้นฉบับ
+   */
+  provinceClone.removeAttribute('id');
+
+  provinceClone.style.display = 'block';
+  provinceClone.style.width = '100%';
+  provinceClone.style.height = 'auto';
+  provinceClone.style.maxHeight = 'none';
+  provinceClone.style.overflow = 'visible';
+
+  /*
+   * ยกเลิก scroll และ max-height ภายใน clone
+   * เพื่อให้ Export Job ครบทุกแถว
+   */
+  provinceClone.querySelectorAll('*').forEach((el) => {
+    let computed = window.getComputedStyle(el);
+
+    if (
+      computed.overflow === 'auto' ||
+      computed.overflow === 'scroll' ||
+      computed.overflowY === 'auto' ||
+      computed.overflowY === 'scroll'
+    ) {
+      el.style.height = 'auto';
+      el.style.maxHeight = 'none';
+      el.style.overflow = 'visible';
+      el.style.overflowY = 'visible';
+    }
+  });
+
+  box.appendChild(provinceKpi);
+  box.appendChild(provinceClone);
+
+  document.body.appendChild(box);
+
+  /*
+   * รอให้ clone จัด layout เสร็จก่อนจับภาพ
+   */
+  await new Promise((resolve) => {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(resolve);
+    });
+  });
+
+  try {
+    let canvas = await html2canvas(box, {
+      scale: 2,
+      useCORS: true,
+      backgroundColor: '#0f172a',
+      width: box.scrollWidth,
+      height: box.scrollHeight,
+      windowWidth: box.scrollWidth,
+      windowHeight: box.scrollHeight,
+      scrollX: 0,
+      scrollY: 0
+    });
+
+    let a = document.createElement('a');
+
+    a.href = canvas.toDataURL('image/jpeg', 0.95);
+    a.download = 'NOC_' + p + '.jpg';
+
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  } catch (err) {
+    console.error('Export JPG failed:', err);
+  } finally {
+    box.remove();
+  }
+}
 
       file.onchange = (e) => {
   if (window.aiBoardWindow && !window.aiBoardWindow.closed) {
