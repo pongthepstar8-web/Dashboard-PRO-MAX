@@ -3306,6 +3306,25 @@ jobs.forEach((r) => {
 
       <style>
 
+        .engineer-job-scan-flow {
+  stroke-dasharray: 10 18;
+  animation: engineerJobScanFlow 1s linear infinite alternate;
+}
+
+.engineer-job-scan-glow {
+  filter: drop-shadow(0 0 6px currentColor);
+}
+
+@keyframes engineerJobScanFlow {
+  from {
+    stroke-dashoffset: 28;
+  }
+
+  to {
+    stroke-dashoffset: -28;
+  }
+}
+
         .nearby-flow-line {
   stroke-dasharray: 10 18;
   animation: nearbyFlowMove 0.9s linear infinite;
@@ -4481,6 +4500,10 @@ Object.entries(engineers)
     <div class="map-tools-menu" id="mapToolsMenu">
   <button class="map-tools-item" onclick="window.scanNearbyJobs()">
     📍 Scan Nearby Jobs
+  </button>
+
+  <button class="map-tools-item" onclick="window.scanEngineerJobs()">
+    🧑‍🔧 Scan Engineer Jobs
   </button>
 
   <button class="map-tools-item" onclick="window.openCoordinateJobScanner()">
@@ -6967,6 +6990,268 @@ function groupNearbyJobsByLocation(candidates) {
   return groups;
 }
 
+let engineerJobScanMarkers = [];
+let engineerJobScanLines = [];
+const ENGINEER_JOB_NEAR_LIMIT_KM = 20;
+const ENGINEER_JOB_MIDDLE_LIMIT_KM = 50;
+
+function getEngineerJobDistanceInfo(distanceKmValue) {
+  let distance = Number(distanceKmValue);
+
+  if (isNaN(distance)) {
+    distance = 0;
+  }
+
+  if (distance <= ENGINEER_JOB_NEAR_LIMIT_KM) {
+    return {
+      key: 'near',
+      text: 'ใกล้',
+      color: '#22c55e',
+      lightColor: '#bbf7d0',
+      glowColor: 'rgba(34,197,94,.85)'
+    };
+  }
+
+  if (distance <= ENGINEER_JOB_MIDDLE_LIMIT_KM) {
+    return {
+      key: 'middle',
+      text: 'ระยะกลาง',
+      color: '#f97316',
+      lightColor: '#fed7aa',
+      glowColor: 'rgba(249,115,22,.85)'
+    };
+  }
+
+  return {
+    key: 'far',
+    text: 'ไกล',
+    color: '#dc2626',
+    lightColor: '#fecaca',
+    glowColor: 'rgba(220,38,38,.85)'
+  };
+}
+
+function clearEngineerJobScan() {
+  engineerJobScanMarkers.forEach((marker) => {
+    if (aiMap && aiMap.hasLayer(marker)) {
+      aiMap.removeLayer(marker);
+    }
+  });
+
+  engineerJobScanLines.forEach((line) => {
+    if (aiMap && aiMap.hasLayer(line)) {
+      aiMap.removeLayer(line);
+    }
+  });
+
+    engineerJobScanMarkers = [];
+    engineerJobScanLines = [];
+}
+
+w.clearEngineerJobScan = clearEngineerJobScan;
+
+function drawEngineerJobScan(engineer, groups) {
+  if (
+    !aiMap ||
+    !engineer ||
+    !engineer.coord ||
+    !Array.isArray(groups) ||
+    !groups.length
+  ) {
+    return;
+  }
+
+  clearEngineerJobScan();
+
+  if (!aiMap.getPane('engineerJobScanLinePane')) {
+    aiMap.createPane('engineerJobScanLinePane');
+    aiMap.getPane('engineerJobScanLinePane').style.zIndex = 440;
+    aiMap.getPane('engineerJobScanLinePane').style.pointerEvents = 'none';
+  }
+
+  if (!aiMap.getPane('engineerJobScanMarkerPane')) {
+    aiMap.createPane('engineerJobScanMarkerPane');
+    aiMap.getPane('engineerJobScanMarkerPane').style.zIndex = 690;
+  }
+
+  let bounds = [engineer.coord];
+
+  groups.forEach((item, idx) => {
+    if (!item || !item.coord) {
+      return;
+    }
+
+    let rank = idx + 1;
+    let jobCount =
+      item.count ||
+      (Array.isArray(item.jobs) ? item.jobs.length : 1);
+
+    let distanceInfo = getEngineerJobDistanceInfo(item.dist);
+    let displayCoord = item.coord;
+
+    bounds.push(displayCoord);
+
+    let baseLine = w.L.polyline(
+      [engineer.coord, displayCoord],
+      {
+        pane: 'engineerJobScanLinePane',
+        color: distanceInfo.color,
+        weight: 7,
+        opacity: 0.5,
+        lineCap: 'round',
+        lineJoin: 'round',
+        className: 'engineer-job-scan-glow'
+      }
+    ).addTo(aiMap);
+
+    let flowLine = w.L.polyline(
+      [engineer.coord, displayCoord],
+      {
+        pane: 'engineerJobScanLinePane',
+        color: distanceInfo.lightColor,
+        weight: 3,
+        opacity: 1,
+        dashArray: '10,18',
+        lineCap: 'round',
+        lineJoin: 'round',
+        className: 'engineer-job-scan-flow'
+      }
+    ).addTo(aiMap);
+
+    engineerJobScanLines.push(baseLine);
+    engineerJobScanLines.push(flowLine);
+
+    let groupItems = Array.isArray(item.items)
+      ? item.items
+      : [];
+
+    if (!groupItems.length && Array.isArray(item.jobs)) {
+      groupItems = item.jobs.map((job) => {
+        return {
+          job: job,
+          dist: item.dist
+        };
+      });
+    }
+
+    let jobsHtml = groupItems
+      .map((groupItem, jobIndex) => {
+        let job = groupItem.job || {};
+
+        return `
+          <div style="
+            border-top:${
+              jobIndex === 0
+                ? 'none'
+                : '1px solid #e5e7eb'
+            };
+            margin-top:${jobIndex === 0 ? '0' : '8px'};
+            padding-top:${jobIndex === 0 ? '0' : '8px'};
+          ">
+            <b>${jobIndex + 1}. ${job['Job ID'] || '-'}</b><br>
+            Priority: ${job['Priority'] || '-'}<br>
+            Status: ${job['Status'] || '-'}<br>
+            ${job['Province Name'] || '-'} /
+            ${job['District Name'] || '-'}<br>
+            ${String(job['Job Title'] || '-').slice(0, 100)}
+          </div>
+        `;
+      })
+      .join('');
+
+    let marker = w.L.marker(displayCoord, {
+      pane: 'engineerJobScanMarkerPane',
+      zIndexOffset: 11000,
+      icon: w.L.divIcon({
+        className: '',
+        html: `
+          <div style="
+            position:relative;
+            width:34px;
+            height:34px;
+            border-radius:50%;
+            background:${distanceInfo.color};
+            color:#ffffff;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            border:3px solid #ffffff;
+            font-family:Arial;
+            font-size:14px;
+            font-weight:900;
+            box-shadow:0 0 16px ${distanceInfo.glowColor};
+          ">
+            ${rank}
+
+            ${
+              jobCount > 1
+                ? `
+                  <div style="
+                    position:absolute;
+                    top:-10px;
+                    right:-11px;
+                    min-width:18px;
+                    height:18px;
+                    padding:0 4px;
+                    border-radius:999px;
+                    background:#0f172a;
+                    color:#ffffff;
+                    border:2px solid #ffffff;
+                    display:flex;
+                    align-items:center;
+                    justify-content:center;
+                    font-size:10px;
+                    font-weight:900;
+                  ">
+                    ${jobCount}
+                  </div>
+                `
+                : ''
+            }
+          </div>
+        `,
+        iconSize: [34, 34],
+        iconAnchor: [17, 17],
+        popupAnchor: [0, -18]
+      })
+    }).addTo(aiMap);
+
+    marker.bindPopup(`
+      <div style="
+        color:#111827;
+        font-family:Arial;
+        min-width:270px;
+        max-width:360px;
+      ">
+        <b>🧑‍🔧 Engineer Job #${rank}</b><br>
+        ช่าง: ${engineer.name || '-'}<br>
+        ระยะทาง: ${Number(item.dist || 0).toFixed(2)} km<br>
+        ระดับ:
+        <b style="color:${distanceInfo.color}">
+          ${distanceInfo.text}
+        </b><br>
+        ตำแหน่งนี้มี ${jobCount} Job<br><br>
+
+        <div style="
+          max-height:280px;
+          overflow-y:auto;
+          padding-right:6px;
+        ">
+          ${jobsHtml}
+        </div>
+      </div>
+    `);
+
+    engineerJobScanMarkers.push(marker);
+  });
+
+  if (bounds.length > 1) {
+    aiMap.fitBounds(bounds, {
+      padding: [70, 70]
+    });
+  }
+}
+
 function parseCoordinateInput(value) {
   let text = String(value || '').trim();
 
@@ -7369,6 +7654,15 @@ return;
     });
   }
 
+  console.log('SCAN ENGINEER JOBS RESULT:', {
+  engineerName: engineer.name,
+  engineerKey: engineerKey,
+  matchedJobs: candidates.length,
+  matchedJobIds: candidates.map((item) => {
+    return item.job['Job ID'] || '';
+  })
+});
+
   candidates.sort((a, b) => a.dist - b.dist);
 
   let nearbyGroups = groupNearbyJobsByLocation(candidates);
@@ -7554,27 +7848,201 @@ w.scanNearbyJobs = async function () {
   );
 };
 
-w.removeNearbyJobByRank = function (index) {
-  index = Number(index);
+w.scanEngineerJobs = async function () {
+  console.log('SCAN ENGINEER JOBS CLICKED');
+  if (!aiMap) {
+    return;
+  }
 
-  if (
-    isNaN(index) ||
-    index < 0 ||
-    index >= currentNearbyJobs.length
-  ) {
-    return;
-  }
 
-  currentNearbyJobs.splice(index, 1);
+  let engineer = getCurrentNearbyEngineerLocation();
 
-  clearNearbyJobHighlights();
 
-  if (!currentNearbyEngineer || currentNearbyJobs.length === 0) {
-    currentNearbyJobs = [];
-    return;
-  }
+  if (!engineer) {
+    w.showAIOperationsNotice(
+      'ยังไม่ได้เลือกช่าง',
+      'กรุณาเลือกช่างจาก Departed ล่าสุด หรือ On-site ปัจจุบัน / ล่าสุด ก่อนใช้ Scan Engineer Jobs'
+    );
+    return;
+  }
 
-  drawNearbyJobHighlights(currentNearbyEngineer, currentNearbyJobs);
+
+  let engineerKey = String(
+  w.currentNearbyEngineerKey ||
+  normalizeEngineerName(
+    engineer.name ||
+    w.currentNearbyEngineerName ||
+    ''
+  )
+)
+  .toLowerCase()
+  .replace(/\s+/g, '')
+  .trim();
+
+
+
+  if (!engineerKey) {
+    w.showAIOperationsNotice(
+      'ไม่พบชื่อช่าง',
+      'ไม่สามารถระบุชื่อช่างที่เลือกได้'
+    );
+    return;
+  }
+
+
+  let candidates = [];
+
+
+  for (const job of jobs) {
+    let status = String(job['Status'] || '')
+      .toLowerCase()
+      .trim();
+
+
+    if (
+      status.includes('done') ||
+      status.includes('cancel')
+    ) {
+      continue;
+    }
+
+
+    let assignKey = String(
+  normalizeEngineerName(job['Assign to'] || '')
+)
+  .toLowerCase()
+  .replace(/\s+/g, '')
+  .trim();
+
+let matchedEngineer =
+  assignKey === engineerKey ||
+  assignKey.includes(engineerKey) ||
+  engineerKey.includes(assignKey);
+
+if (!matchedEngineer) {
+  continue;
+}
+
+
+    let coord = await getJobCoord(job);
+
+
+    if (!coord) {
+      continue;
+    }
+
+
+    let dist = distanceKm(
+      engineer.coord[0],
+      engineer.coord[1],
+      coord[0],
+      coord[1]
+    );
+
+
+    candidates.push({
+      job: job,
+      coord: coord,
+      dist: dist
+    });
+  }
+
+
+  candidates.sort((a, b) => a.dist - b.dist);
+
+
+  let groups = groupNearbyJobsByLocation(candidates);
+
+
+  if (!groups.length) {
+    clearEngineerJobScan();
+
+
+    w.showAIOperationsNotice(
+      'ไม่พบงานของช่าง',
+      'ไม่พบ Job ที่ยังเปิดอยู่และ Assign ให้ช่างคนนี้'
+    );
+    return;
+  }
+
+
+  drawEngineerJobScan(engineer, groups);
+
+
+  let nearGroups = groups.filter((item) => {
+    return item.dist <= ENGINEER_JOB_NEAR_LIMIT_KM;
+  });
+
+
+  let middleGroups = groups.filter((item) => {
+    return (
+      item.dist > ENGINEER_JOB_NEAR_LIMIT_KM &&
+      item.dist <= ENGINEER_JOB_MIDDLE_LIMIT_KM
+    );
+  });
+
+
+  let farGroups = groups.filter((item) => {
+    return item.dist > ENGINEER_JOB_MIDDLE_LIMIT_KM;
+  });
+
+
+  let totalJobs = groups.reduce((sum, item) => {
+    return (
+      sum +
+      (
+        item.count ||
+        (Array.isArray(item.jobs) ? item.jobs.length : 1)
+      )
+    );
+  }, 0);
+
+
+  let lines = [];
+
+
+  lines.push('ช่าง: ' + (engineer.name || '-'));
+  lines.push('ตำแหน่งอ้างอิง: ' + (engineer.source || '-'));
+  lines.push('Job ทั้งหมด: ' + totalJobs);
+  lines.push('ตำแหน่งงานทั้งหมด: ' + groups.length);
+  lines.push('');
+  lines.push('🟢 ใกล้ไม่เกิน 20 km: ' + nearGroups.length + ' จุด');
+  lines.push('🟠 ระยะกลาง 20-50 km: ' + middleGroups.length + ' จุด');
+  lines.push('🔴 ไกลมากกว่า 50 km: ' + farGroups.length + ' จุด');
+
+
+  w.showAIOperationsNotice(
+    'Scan Engineer Jobs',
+    lines.join('\n')
+  );
+};
+
+w.removeNearbyJobByRank = function (index) {
+  index = Number(index);
+
+
+  if (
+    isNaN(index) ||
+    index < 0 ||
+    index >= currentNearbyJobs.length
+  ) {
+    return;
+  }
+
+
+  currentNearbyJobs.splice(index, 1);
+
+
+  clearNearbyJobHighlights();
+
+
+  if (!currentNearbyEngineer || currentNearbyJobs.length === 0) {
+    currentNearbyJobs = [];
+    return;
+  }
+
+
+  drawNearbyJobHighlights(currentNearbyEngineer, currentNearbyJobs);
 };
 
 function normalizeSiteSearchText(v) {
@@ -8571,6 +9039,7 @@ if (routeBtn) {
   clearEngineerTravel();
   clearNearbyJobHighlights();
   clearCoordinateSearchMarker();
+  clearEngineerJobScan();
 
   if (coordinateSearchMarker && aiMap.hasLayer(coordinateSearchMarker)) {
   aiMap.removeLayer(coordinateSearchMarker);
