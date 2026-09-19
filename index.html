@@ -4089,7 +4089,10 @@ jobs.forEach((r) => {
 .engineer-travel-flow {
   animation: travelDashMove 0.65s linear infinite;
   stroke-linecap: round;
-  filter: drop-shadow(0 0 5px rgba(253, 224, 71, 0.95))
+  filter:
+    drop-shadow(0 0 5px rgba(253, 224, 71, 0.95))
+    drop-shadow(0 0 10px rgba(249, 115, 22, 0.65));
+}
     drop-shadow(0 0 10px
             <\/style></head><body><div class="title"><h2>🧠 AI OPERATIONS BOARD</h2><div class="view-bar"><button class="view-btn active" onclick="window.changeView('district',this)">📋 Job Queue</button><button class="view-btn" onclick="window.changeView('root',this)">⚠️ Root Cause</button><button class="view-btn" onclick="window.changeView('engineer',this)">👨‍🔧 Engineer Workload</button><button class="view-btn" onclick="window.changeView('map',this)">🗺️ AI Map</button></div><div id="districtFilterBar" class="district-bar">
         <button class="district-btn active" onclick="window.filterDistrict('', this)">
@@ -5085,10 +5088,10 @@ routeSimMarkers = [];
 try {
   let route = await getRoadRouteFromOSRM(points);
 
-    if (!route || !route.latlngs || !route.latlngs.length) {
-      drawRouteSimulatorFallback(points[0], points[points.length - 1]);
-      return;
-    }
+  if (!route || !route.latlngs || !route.latlngs.length) {
+  drawRouteSimulatorFallback(points);
+  return;
+}
 
     // ✅ เส้นฐานสีฟ้า
 let routeSimBaseLine = w.L.polyline(route.latlngs, {
@@ -5172,78 +5175,157 @@ iconAnchor: [110, 23],
       padding: [60, 60],
     });
   } catch (err) {
-    console.warn('Route simulator failed:', err);
-    drawRouteSimulatorFallback(start, end);
-  }
+  console.warn('Route simulator failed:', err);
+
+  drawRouteSimulatorFallback(points);
+}
 }
 
-function drawRouteSimulatorFallback(start, end) {
-  let fallbackBaseLine = w.L.polyline([start, end], {
-  color: '#0ea5e9',
-  weight: 7,
-  opacity: 0.6,
-  dashArray: '8,8',
-  lineCap: 'round',
-  lineJoin: 'round',
-  className: 'route-sim-glow'
-}).addTo(aiMap);
+function drawRouteSimulatorFallback(points) {
+  if (
+    !aiMap ||
+    !Array.isArray(points) ||
+    points.length < 2
+  ) {
+    return;
+  }
 
-let fallbackFlowLine = w.L.polyline([start, end], {
-  color: '#e0f2fe',
-  weight: 4,
-  opacity: 1,
-  dashArray: '8,16',
-  lineCap: 'round',
-  lineJoin: 'round',
-  className: 'route-sim-flow'
-}).addTo(aiMap);
+  let validPoints = points
+    .map((point) => {
+      if (
+        Array.isArray(point) &&
+        point.length >= 2
+      ) {
+        let lat = Number(point[0]);
+        let lng = Number(point[1]);
 
-routeSimLines.push(fallbackBaseLine);
-routeSimLines.push(fallbackFlowLine);
+        if (!isNaN(lat) && !isNaN(lng)) {
+          return [lat, lng];
+        }
+      }
 
-routeSimLine = fallbackBaseLine;
+      return null;
+    })
+    .filter(Boolean);
 
-  let km = distanceKm(
-    start[0],
-    start[1],
-    end[0],
-    end[1]
+  if (validPoints.length < 2) {
+    return;
+  }
+
+  /*
+   * วาดเส้นต่อเนื่อง:
+   * A → B → C → D
+   */
+  let fallbackBaseLine = w.L.polyline(
+    validPoints,
+    {
+      color: '#0ea5e9',
+      weight: 7,
+      opacity: 0.6,
+      dashArray: '8,8',
+      lineCap: 'round',
+      lineJoin: 'round',
+      className: 'route-sim-glow'
+    }
+  ).addTo(aiMap);
+
+  let fallbackFlowLine = w.L.polyline(
+    validPoints,
+    {
+      color: '#e0f2fe',
+      weight: 4,
+      opacity: 1,
+      dashArray: '8,16',
+      lineCap: 'round',
+      lineJoin: 'round',
+      className: 'route-sim-flow'
+    }
+  ).addTo(aiMap);
+
+  routeSimLines.push(fallbackBaseLine);
+  routeSimLines.push(fallbackFlowLine);
+
+  routeSimLine = fallbackBaseLine;
+
+  /*
+   * สร้างป้ายระยะทางให้แต่ละช่วง:
+   * A → B
+   * B → C
+   * C → D
+   */
+  for (let i = 0; i < validPoints.length - 1; i++) {
+    let start = validPoints[i];
+    let end = validPoints[i + 1];
+
+    let startPoint = routeSimPoints[i];
+    let endPoint = routeSimPoints[i + 1];
+
+    if (!startPoint || !endPoint) {
+      continue;
+    }
+
+    let km = distanceKm(
+      start[0],
+      start[1],
+      end[0],
+      end[1]
+    );
+
+    let fromJob = formatRouteLabelJobId(
+      getRouteSimPointJobId(startPoint, i + 1)
+    );
+
+    let toJob = formatRouteLabelJobId(
+      getRouteSimPointJobId(endPoint, i + 2)
+    );
+
+    let mid = [
+      (start[0] + end[0]) / 2,
+      (start[1] + end[1]) / 2
+    ];
+
+    let label = w.L.marker(mid, {
+      icon: w.L.divIcon({
+        className: '',
+        html: `
+          <div style="
+            background:#020617;
+            color:#bae6fd;
+            padding:7px 11px;
+            border-radius:14px;
+            font-weight:900;
+            border:1px solid #38bdf8;
+            box-shadow:0 0 12px rgba(56,189,248,.7);
+            white-space:nowrap;
+            font-family:Arial;
+            font-size:12px;
+            text-align:center;
+            line-height:1.45;
+          ">
+            📋 ${fromJob} → ${toJob}<br>
+            📏 ${km.toFixed(2)} km<br>
+            <span style="
+              color:#94a3b8;
+              font-size:10px;
+            ">
+              เส้นตรงสำรอง
+            </span>
+          </div>
+        `,
+        iconSize: [220, 58],
+        iconAnchor: [110, 29]
+      })
+    }).addTo(aiMap);
+
+    routeSimMarkers.push(label);
+  }
+
+  aiMap.fitBounds(
+    fallbackBaseLine.getBounds(),
+    {
+      padding: [60, 60]
+    }
   );
-
-  let mid = [
-    (start[0] + end[0]) / 2,
-    (start[1] + end[1]) / 2
-  ];
-
-  routeSimLabel = w.L.marker(mid, {
-    icon: w.L.divIcon({
-      className: '',
-      html: `
-        <div style="
-          background:#020617;
-          color:#bae6fd;
-          padding:7px 11px;
-          border-radius:14px;
-          font-weight:900;
-          border:1px solid #38bdf8;
-          box-shadow:0 0 12px rgba(56,189,248,.7);
-          white-space:nowrap;
-          font-family:Arial;
-          font-size:12px;
-          text-align:center;
-        ">
-          🧭 Route Simulator<br>
-          📏 ${km.toFixed(2)} km
-        </div>
-      `,
-      iconSize: [150, 44],
-      iconAnchor: [75, 22],
-    }),
-  }).addTo(aiMap);
-
-  aiMap.fitBounds([start, end], {
-    padding: [60, 60],
-  });
 }
 
 function clearRouteSimulator() {
@@ -5341,52 +5423,142 @@ routeSimMarkers = [];
             alert('Routing error: ไม่สามารถดึงเส้นทางจาก OSRM ได้');
           }
         }
+
         async function getRoadRouteFromOSRM(points) {
-          if (!points || points.length < 2) {
-            return null;
-          }
+  if (!Array.isArray(points) || points.length < 2) {
+    return null;
+  }
 
-          const coords = points.map((p) => `${p[1]},${p[0]}`).join(';');
+  let validPoints = points
+    .map((point) => {
+      if (Array.isArray(point) && point.length >= 2) {
+        return [
+          Number(point[0]),
+          Number(point[1])
+        ];
+      }
 
-          const url =
-            `https://router.project-osrm.org/route/v1/driving/${coords}` +
-            `?overview=full&geometries=geojson&steps=false`;
+      if (
+        point &&
+        !isNaN(Number(point.lat)) &&
+        !isNaN(Number(point.lng))
+      ) {
+        return [
+          Number(point.lat),
+          Number(point.lng)
+        ];
+      }
 
-          const res = await fetch(url);
+      return null;
+    })
+    .filter((point) => {
+      return (
+        point &&
+        !isNaN(point[0]) &&
+        !isNaN(point[1])
+      );
+    });
 
-          const json = await res.json();
+  if (validPoints.length < 2) {
+    return null;
+  }
 
-          if (
-            !json ||
-            json.code !== 'Ok' ||
-            !json.routes ||
-            !json.routes.length
-          ) {
-            console.warn('OSRM route failed:', json);
-            return null;
-          }
+  let coords = validPoints
+    .map((point) => {
+      return point[1] + ',' + point[0];
+    })
+    .join(';');
 
-          const route = json.routes[0];
+  let url =
+    'https://router.project-osrm.org/route/v1/driving/' +
+    coords +
+    '?overview=full&geometries=geojson&steps=false';
 
-          const latlngs = route.geometry.coordinates.map((c) => [c[1], c[0]]);
+  let controller = new AbortController();
 
-          let legs = (route.legs || []).map((leg, index) => {
-  return {
-    index: index,
-    from: index + 1,
-    to: index + 2,
-    distanceKm: leg.distance / 1000,
-    durationMin: leg.duration / 60
-  };
-});
+  let timeoutId = setTimeout(() => {
+    controller.abort();
+  }, 5000);
 
-return {
-  latlngs: latlngs,
-  distanceKm: route.distance / 1000,
-  durationMin: route.duration / 60,
-  legs: legs
-};
-        }
+  try {
+    let response = await fetch(url, {
+      method: 'GET',
+      signal: controller.signal,
+      cache: 'no-store'
+    });
+
+    if (!response.ok) {
+      console.warn(
+        'OSRM HTTP ERROR:',
+        response.status,
+        response.statusText
+      );
+
+      return null;
+    }
+
+    let json = await response.json();
+
+    if (
+      !json ||
+      json.code !== 'Ok' ||
+      !json.routes ||
+      !json.routes.length
+    ) {
+      console.warn('OSRM ROUTE NOT FOUND:', json);
+      return null;
+    }
+
+    let route = json.routes[0];
+
+    let latlngs = route.geometry.coordinates.map(
+      (coord) => {
+        return [
+          Number(coord[1]),
+          Number(coord[0])
+        ];
+      }
+    );
+
+    let legs = (route.legs || []).map(
+      (leg, index) => {
+        return {
+          index: index,
+          from: index + 1,
+          to: index + 2,
+          distanceKm:
+            Number(leg.distance || 0) / 1000,
+          durationMin:
+            Number(leg.duration || 0) / 60
+        };
+      }
+    );
+
+    return {
+      latlngs: latlngs,
+      distanceKm:
+        Number(route.distance || 0) / 1000,
+      durationMin:
+        Number(route.duration || 0) / 60,
+      legs: legs
+    };
+  } catch (err) {
+    if (err && err.name === 'AbortError') {
+      console.warn(
+        'OSRM TIMEOUT: ใช้เส้นตรงสำรอง'
+      );
+    } else {
+      console.warn(
+        'OSRM FETCH FAILED: ใช้เส้นตรงสำรอง',
+        err
+      );
+    }
+
+    return null;
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
 
         function clearDistanceMeasure() {
           if (measureLine) {
