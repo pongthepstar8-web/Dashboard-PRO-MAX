@@ -3060,7 +3060,7 @@ sourceData.forEach((r) => {
 
   let pr = (r['Priority'] || 'NONE').toUpperCase();
   let hr = getHr(r['Create Time']);
-  let limit = pr === 'CRITICAL' ? 3 : pr === 'MAJOR' ? 10 : 1000;
+  let limit = pr === 'CRITICAL' ? 3 : pr === 'MAJOR' ? 10 : 72;
   let overdue = Math.max(0, hr - limit);
 
   let job = String(r['Job ID'] || '').toLowerCase();
@@ -5604,7 +5604,7 @@ routeSimMarkers = [];
           let pr = (job['Priority'] || 'NONE').toUpperCase();
 
           let limit =
-            job.limit || (pr === 'CRITICAL' ? 3 : pr === 'MAJOR' ? 10 : 1000);
+            job.limit || (pr === 'CRITICAL' ? 3 : pr === 'MAJOR' ? 10 : 72);
 
           let hr = getHr(job['Create Time']);
 
@@ -9647,7 +9647,7 @@ if (networkGroupSubFilters.length > 0 && !isAllNetworkSelected) {
           let district = (mapCol(r, ['District Name']) || '').toLowerCase();
           let work = getWorkType(title).text.toLowerCase();
           let hr = getHr(r['Create Time']);
-          let limit = pr === 'CRITICAL' ? 3 : pr === 'MAJOR' ? 10 : 1000;
+          let limit = pr === 'CRITICAL' ? 3 : pr === 'MAJOR' ? 10 : 72;
           let od = hr > limit;
           let k = $('#search').val().toLowerCase().trim();
 let keys = k ? k.split(/\s+/) : [];
